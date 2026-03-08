@@ -1,0 +1,1607 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Live!</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --bg-body: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%); --bg-carte: rgba(255, 255, 255, 0.9); --border-carte: rgba(0, 0, 0, 0.05); --text-main: #0f172a; --text-muted: #334155; --text-faded: #64748b; --bg-input: #ffffff; --border-input: #cbd5e1; --bg-box: #f1f5f9; --border-ligne: #e2e8f0; --hover-ligne: rgba(59, 130, 246, 0.08); --zebra-bg: rgba(0, 0, 0, 0.02); --card-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        body.dark-mode { --bg-body: radial-gradient(circle at 50% 0%, #1e293b 0%, #080f1e 100%); --bg-carte: rgba(30, 41, 59, 0.6); --border-carte: rgba(255, 255, 255, 0.08); --text-main: #f8fafc; --text-muted: #cbd5e1; --text-faded: #94a3b8; --bg-input: rgba(15, 23, 42, 0.8); --border-input: #334155; --bg-box: rgba(15, 23, 42, 0.4); --border-ligne: rgba(51, 65, 85, 0.5); --hover-ligne: rgba(59, 130, 246, 0.05); --zebra-bg: rgba(255, 255, 255, 0.015); --card-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { overflow-x: hidden; width: 100%; max-width: 100%; margin: 0; padding: 0; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg-body); background-attachment: fixed; color: var(--text-main); padding: 20px; line-height: 1.6; transition: background 0.3s, color 0.3s; scroll-behavior: smooth; }
+        
+        #auth-section { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
+        .auth-box { background: var(--bg-carte); padding: 40px; border-radius: 20px; box-shadow: var(--card-shadow); border: 1px solid var(--border-carte); width: 100%; max-width: 400px; text-align: center; backdrop-filter: blur(12px);}
+        .auth-box h2 { font-weight: 800; margin-bottom: 25px; }
+        .toggle-auth { color: #3b82f6; cursor: pointer; font-size: 13px; font-weight: 600; display: block; margin-top: 10px;}
+        .toggle-auth:hover { text-decoration: underline; }
+        .auth-link-forgot { font-size: 12px; color: var(--text-faded); text-decoration: none; transition: color 0.2s; }
+        .auth-link-forgot:hover { color: #3b82f6; text-decoration: underline; }
+
+        #app-section { display: none; position: relative; width: 100%; max-width: 1200px; margin: 0 auto; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; padding-right: 60px;}
+        .view-dropdown { font-size: 16px; font-weight: 700; padding: 10px 20px; border-radius: 12px; background: var(--bg-carte); color: var(--text-main); border: 1px solid #3b82f6; cursor: pointer; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2); outline: none;}
+        
+        .nav-onglets-wrapper { width: 100%; margin-bottom: 15px; }
+        .nav-onglets { display: flex; flex-wrap: wrap; gap: 10px; background: var(--bg-carte); padding: 15px; border-radius: 15px; border: 1px solid var(--border-carte); backdrop-filter: blur(10px); width: 100%; box-sizing: border-box; }
+        .onglet { padding: 12px 15px; border-radius: 10px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all 0.3s; font-size: 14px; white-space: nowrap; display: flex; align-items: center; flex: 1 1 auto; }
+        .onglet:hover { color: var(--text-main); background: rgba(100,116,139,0.1); }
+        .onglet.actif { background: #3b82f6; color: white; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+        
+        .btn-logout-absolute { position: fixed; top: 15px; right: 15px; background: var(--bg-carte); border: 1px solid var(--border-carte); border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; box-shadow: var(--card-shadow); transition: all 0.3s; backdrop-filter: blur(10px); z-index: 10000; }
+        .btn-logout-absolute:hover { transform: scale(1.1); background: rgba(239, 68, 68, 0.1); }
+        .btn-flottant { position: fixed; z-index: 9999; background: var(--bg-carte); border: 1px solid var(--border-carte); border-radius: 50%; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: all 0.3s; color: var(--text-main); backdrop-filter: blur(10px); }
+        .btn-theme { bottom: 30px; right: 30px; }
+        .btn-top { bottom: 30px; left: 30px; display: none; opacity: 0; transition: opacity 0.3s; }
+        .btn-flottant:hover { transform: scale(1.1); }
+
+        #clone-sticky-banner { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--bg-carte); backdrop-filter:blur(15px); border-top:1px solid var(--border-carte); padding:15px 20px; z-index:10001; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); flex-wrap:wrap; justify-content:center; align-items:center; gap:20px; animation: slideUp 0.3s ease forwards; }
+        #toast-container { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { background: var(--bg-carte); color: var(--text-main); padding: 12px 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); backdrop-filter: blur(12px); font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border-carte); animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; pointer-events: auto;}
+        .toast.success { border-left: 4px solid #10b981; } .toast.warning { border-left: 4px solid #f59e0b; } .toast.error { border-left: 4px solid #ef4444; } .toast.info { border-left: 4px solid #3b82f6; }
+        .toast.fade-out { animation: fadeOut 0.3s ease forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
+
+        #modal-propose { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:10002; align-items:center; justify-content:center; backdrop-filter:blur(5px); }
+        .modal-content { background:var(--bg-carte); padding:25px; border-radius:20px; border:1px solid var(--border-carte); max-width:400px; width:90%; box-shadow:0 15px 30px rgba(0,0,0,0.2); }
+
+        #propositions-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        #bannieres-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 10px; }
+        #meteo-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+        .banniere { padding: 15px 20px; border-radius: 12px; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 12px; animation: fadeIn 0.6s ease; box-shadow: var(--card-shadow); text-align: center; flex-wrap: wrap;}
+        .banniere-hype { background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%); color: white; font-size: 16px; cursor: pointer; transition: transform 0.2s;}
+        .banniere-hype:hover { transform: scale(1.02); }
+        .banniere-hype span.jour { background: rgba(255,255,255,0.25); padding: 4px 10px; border-radius: 8px; backdrop-filter: blur(5px); }
+        .banniere-meteo { background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: white; font-size: 15px; }
+        .banniere-souvenir { background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%); color: white; }
+        .banniere-proposition { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); color: white; justify-content:space-between;}
+
+        .vue-onglet { display: none; animation: fadeIn 0.4s ease; pointer-events: auto; }
+        .vue-onglet.actif { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .carte { background: var(--bg-carte); backdrop-filter: blur(12px); padding: 35px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); margin-bottom: 35px; border: 1px solid var(--border-carte); transition: background 0.3s, border 0.3s; }
+        .titre-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;}
+        .titre-section h2 { margin: 0; text-align: left; font-weight: 800; letter-spacing: 0.5px;}
+        .actions-titre { display: flex; gap: 10px; flex-wrap: wrap;}
+        h1 { text-align: center; font-weight: 800; margin-bottom: 30px; letter-spacing: 0.5px; }
+        
+        .form-group { margin-bottom: 18px; text-align: left;}
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
+        input[type="text"], input[type="password"], input[type="email"], input[type="date"], input[type="number"], select, input[type="file"] { width: 100%; padding: 12px 16px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-input); border-radius: 10px; box-sizing: border-box; font-family: 'Outfit'; font-size: 14px; transition: all 0.3s; }
+        input[type="file"] { padding: 9px 16px; cursor: pointer; }
+        input[type="file"]::file-selector-button { background: var(--bg-box); border: 1px solid var(--border-input); padding: 6px 12px; border-radius: 6px; color: var(--text-main); cursor: pointer; font-family: 'Outfit'; font-weight: 600; margin-right: 15px;}
+        input:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+        
+        .flex-row { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap;} .flex-1 { flex: 1; min-width: 200px;}
+        .autocomplete-wrapper { position: relative; width: 100%; }
+        .autocomplete-list { position: absolute; top: calc(100% + 5px); left: 0; right: 0; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: 10px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .autocomplete-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid var(--border-ligne); font-size: 14px; color: var(--text-main);}
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { background: var(--hover-ligne); color: #3b82f6; font-weight: 600;}
+
+        .btn-principal { width: 100%; padding: 14px; background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 15px; transition: all 0.3s; }
+        .btn-principal:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3); }
+        .btn-annuler { width: 100%; padding: 14px; background: transparent; color: var(--text-faded); border: 1px solid var(--border-input); border-radius: 10px; margin-top: 10px; cursor: pointer; display: none; font-weight: 600; }
+        
+        .btn-mini { padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; border: none; transition: all 0.2s; display: flex; align-items: center; gap: 6px; justify-content:center;}
+        .btn-excel { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .btn-excel:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(16,185,129,0.3); }
+        .btn-reset { background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .btn-reset:hover { background: rgba(245, 158, 11, 0.25); transform: translateY(-2px); }
+        .btn-vue { background: var(--bg-box); color: var(--text-main); border: 1px solid var(--border-input); }
+        .btn-vue:hover { background: var(--border-input); transform: translateY(-2px); }
+        .btn-google { display: inline-block; background-color: #4285F4; color: white; padding: 12px 20px; border-radius: 10px; text-decoration: none; font-weight: bold; transition: background 0.2s; text-align: center; width: 100%; box-sizing: border-box; box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);}
+        .btn-google:hover { background-color: #357ae8; transform: translateY(-2px); }
+
+        #alerte-conflit { display: none; margin-top: 5px; color: #ef4444; font-size: 13px; font-weight: 600; background: rgba(239,68,68,0.1); padding: 8px 12px; border-radius: 8px; }
+
+        .filtres-top { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; justify-content: space-between; align-items: flex-end;}
+        .filtres-checkboxes { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+        .box-checkbox { flex: 1; min-width: 250px; background: var(--bg-box); border: 1px solid var(--border-input); border-radius: 12px; padding: 15px; }
+        .box-checkbox h3 { margin: 0 0 12px 0; font-size: 12px; color: var(--text-faded); text-transform: uppercase; }
+        .liste-scrollable { max-height: 130px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .chk-label { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
+        .chk-label input[type="checkbox"] { appearance: none; width: 18px; height: 18px; border: 2px solid var(--border-input); border-radius: 5px; background: transparent; cursor: pointer; position: relative; }
+        .chk-label input[type="checkbox"]:checked { background: #3b82f6; border-color: #3b82f6; }
+        .chk-label input[type="checkbox"]:checked::after { content: ''; position: absolute; left: 5px; top: 1px; width: 4px; height: 9px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+        
+        .stats-container { display: flex; justify-content: space-around; background: var(--bg-box); padding: 20px; border-radius: 16px; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; border: 1px solid var(--border-carte); }
+        .stat-box { text-align: center; color: var(--text-faded); font-size: 12px; font-weight: 600; text-transform: uppercase;}
+        .stat-box span { display: block; font-size: 30px; font-weight: 800; color: var(--text-main); margin-top: 4px; text-transform: none;}
+        .stat-box span.highlight { color: #3b82f6; }
+
+        .entete-grille { display: grid; grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 110px 70px; gap: 10px; padding: 12px 20px; border-bottom: 1px solid var(--border-input); color: var(--text-faded); font-weight: 600; font-size: 11px; text-transform: uppercase; }
+        .concert-item { display: grid; grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 110px 70px; gap: 10px; align-items: center; padding: 14px 20px; font-size: 14px; cursor: pointer; }
+        
+        body.hide-role .entete-grille { grid-template-columns: 85px 2fr 1.5fr 60px 80px 45px 55px 110px 70px; }
+        body.hide-role .concert-item { grid-template-columns: 85px 2fr 1.5fr 60px 80px 45px 55px 110px 70px; }
+        body.hide-role .col-role, body.hide-role .form-role, body.hide-role .filtre-role { display: none !important; }
+
+        body.mode-vitrine .entete-grille { grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 120px; }
+        body.mode-vitrine .concert-item { grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 120px; }
+        
+        body.mode-vitrine.hide-role .entete-grille { grid-template-columns: 85px 2fr 1.5fr 60px 80px 45px 55px 120px; }
+        body.mode-vitrine.hide-role .concert-item { grid-template-columns: 85px 2fr 1.5fr 60px 80px 45px 55px 120px; }
+
+        .col-triable { cursor: pointer; user-select: none; transition: color 0.2s; display: flex; align-items: center; gap: 4px;}
+        .col-triable:hover { color: var(--text-main); }
+        .indicateur-tri { font-size: 10px; color: #3b82f6; }
+        .col-note { font-weight: bold; color: #f59e0b; text-align: center; }
+        
+        .row-container { border-bottom: 1px solid var(--border-ligne); transition: background-color 0.2s, border-radius 0.2s; }
+        .row-container:nth-child(odd) { background-color: var(--zebra-bg); }
+        .row-container:hover { background-color: var(--hover-ligne); border-radius: 8px; }
+        
+        .row-coup-de-coeur { background-color: rgba(236, 72, 153, 0.05) !important; border-radius: 8px; border-left: 3px solid #ec4899; }
+        .row-coup-de-coeur:hover { background-color: rgba(236, 72, 153, 0.1) !important; }
+        
+        .row-container.prochain-concert { border-left: 4px solid #34d399 !important; background-color: rgba(52, 211, 153, 0.08) !important; border-radius: 8px; box-shadow: 0 0 15px rgba(52, 211, 153, 0.15); }
+        
+        .concert-details { padding: 0 20px 15px 85px; display: none; gap: 40px; animation: fadeIn 0.2s ease; cursor: default; }
+        .concert-details.open { display: flex; flex-wrap: wrap; }
+        .details-section { display: flex; flex-direction: column; gap: 8px; }
+        .details-label { font-size: 11px; color: var(--text-faded); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        
+        .star { transition: transform 0.2s; user-select: none; }
+        .star:hover { transform: scale(1.2); }
+        .star-active { color: #f59e0b; text-shadow: 0 0 5px rgba(245,158,11,0.3); }
+        .star-inactive { color: var(--border-input); }
+        .comm-textarea { flex: 1; min-width: 250px; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: 8px; padding: 10px; font-family: 'Outfit'; color: var(--text-main); font-size: 13px; resize: vertical; min-height: 40px; outline: none; transition: border-color 0.2s; }
+        .comm-textarea:focus { border-color: #3b82f6; }
+
+        .entete-abo { display: grid; grid-template-columns: 1.5fr 1.2fr 1fr 1fr 80px 80px; gap: 15px; padding: 12px 20px; border-bottom: 1px solid var(--border-input); color: var(--text-faded); font-weight: 600; font-size: 11px; text-transform: uppercase; }
+        .abo-item { display: grid; grid-template-columns: 1.5fr 1.2fr 1fr 1fr 80px 80px; gap: 15px; align-items: center; border-bottom: 1px solid var(--border-ligne); padding: 14px 20px; transition: all 0.2s; font-size: 14px; }
+        .abo-item:nth-child(odd) { background-color: var(--zebra-bg); }
+        .abo-item:hover { background-color: var(--hover-ligne); border-radius: 8px; }
+        .abo-expire { opacity: 0.6; }
+        
+        .col-date { font-size: 13px; font-weight: 500; display: flex; flex-direction: column; align-items: flex-start;}
+        .col-artiste { font-weight: 700; color: var(--text-main); white-space: normal; overflow-wrap: break-word; line-height: 1.4; display: flex; align-items: center; gap:5px;}
+        .col-lieu { color: var(--text-muted); white-space: normal; overflow-wrap: break-word; font-size: 13px; line-height: 1.4;}
+        .col-prix { font-weight: 600; color: var(--text-muted);}
+        .col-billet, .col-statut, .col-role, .col-bieres { text-align: center; }
+        .col-liens { display: flex; justify-content: flex-start; gap: 6px; flex-wrap: wrap; align-items: center;}
+
+        .date-badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 12px; text-align: center; width: 100%; box-sizing: border-box;}
+        .date-avenir { background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .date-passe { background: rgba(100, 116, 139, 0.15); color: var(--text-faded); border: 1px solid rgba(100,116,139,0.2); }
+
+        .badge-statut { font-size: 11px; padding: 4px 6px; border-radius: 12px; font-weight: 700; text-transform: uppercase; display: inline-block; text-align: center; width: 100%; box-sizing: border-box;}
+        .badge-billet-ok { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-billet-attente { background: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-billet-cadeau { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .badge-role-spectateur { background: rgba(100, 116, 139, 0.1); color: var(--text-muted); border: 1px solid rgba(100, 116, 139, 0.3); }
+        .badge-role-benevole { background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); }
+        .donnee-manquante { color: #f87171; font-size: 12px; font-weight: 500;}
+
+        .biere-control { display: inline-flex; align-items: center; justify-content: center; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; overflow: hidden; width: 100%; max-width: 80px; margin: 0 auto;}
+        .btn-biere-mod { background: transparent; border: none; color: #d97706; cursor: pointer; font-weight: bold; padding: 4px 6px; transition: 0.2s; font-size: 14px; display: flex; align-items: center; justify-content: center; width: 25px;}
+        .btn-biere-mod:hover { background: rgba(245, 158, 11, 0.2); }
+        .biere-count { font-size: 12px; font-weight: 700; color: #d97706; flex: 1; pointer-events: none;}
+        .boutons-actions { display: flex; gap: 6px; justify-content: flex-end; }
+        .btn-icon { border: none; padding: 6px; border-radius: 8px; cursor: pointer; background: var(--bg-box); color: var(--text-faded); transition: all 0.2s; font-size: 14px; display: flex; align-items: center; justify-content: center; text-decoration: none;}
+        .btn-icon:hover { transform: scale(1.1); }
+        .btn-setlist:hover { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+        .btn-spotify:hover { background: rgba(30, 215, 96, 0.15); color: #1ed760; }
+        .btn-calendar:hover { background: rgba(66, 133, 244, 0.15); color: #4285F4; }
+        .btn-ticket:hover { background: rgba(236, 72, 153, 0.15); color: #ec4899; }
+        .btn-edit:hover { background: rgba(59, 130, 246, 0.15); color: #3b82f6;}
+        .btn-del:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444;}
+        
+        .btn-clone { background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .btn-clone:hover { background: rgba(16, 185, 129, 0.25); transform: scale(1.05); }
+        .btn-propose:hover { background: rgba(245, 158, 11, 0.15); color: #f59e0b; transform: scale(1.1); }
+        
+        .timeline-container { position: relative; max-width: 800px; margin: 0 auto; padding: 20px 0; }
+        .timeline-container::after { content: ''; position: absolute; width: 4px; background: var(--border-input); top: 0; bottom: 0; left: 50%; margin-left: -2px; border-radius: 2px;}
+        .timeline-annee { text-align: center; margin: 40px 0 20px 0; position: relative; z-index: 2; }
+        .timeline-annee span { background: #3b82f6; color: white; padding: 8px 20px; border-radius: 20px; font-weight: 800; font-size: 18px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);}
+        .timeline-item { padding: 10px 40px; position: relative; width: 50%; box-sizing: border-box; }
+        .timeline-item.gauche { left: 0; }
+        .timeline-item.droite { left: 50%; }
+        .timeline-item::after { content: ''; position: absolute; width: 16px; height: 16px; background: var(--bg-body); border: 4px solid #3b82f6; border-radius: 50%; top: 50%; transform: translateY(-50%); z-index: 1; }
+        .timeline-item.gauche::after { right: -12px; }
+        .timeline-item.droite::after { left: -12px; }
+        .timeline-content { padding: 20px; background: var(--bg-box); border-radius: 15px; border: 1px solid var(--border-input); position: relative; transition: all 0.3s; box-shadow: var(--card-shadow);}
+        .timeline-content:hover { transform: scale(1.03); border-color: #3b82f6; }
+        .timeline-date { color: #3b82f6; font-weight: 700; font-size: 12px; margin-bottom: 5px; }
+        .timeline-art { font-size: 18px; font-weight: 800; color: var(--text-main); margin-bottom: 2px;}
+        .timeline-lieu { font-size: 13px; color: var(--text-faded); }
+
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 20px;}
+        .chart-box { background: var(--bg-box); border: 1px solid var(--border-input); border-radius: 16px; padding: 20px; }
+        .chart-box h3 { text-align: center; font-size: 16px; color: var(--text-muted); margin-top: 0; }
+        canvas { max-width: 100%; }
+
+        .table-artistes-wrapper { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
+        .table-artistes { width: 100%; border-collapse: collapse; min-width: 600px;}
+        .table-artistes th { text-align: left; padding: 12px 15px; border-bottom: 2px solid var(--border-input); color: var(--text-faded); text-transform: uppercase; font-size: 12px;}
+        .table-artistes td { padding: 15px; border-bottom: 1px solid var(--border-ligne); font-size: 15px; }
+        .table-artistes tr:nth-child(odd) { background-color: var(--zebra-bg); }
+        .table-artistes tr:hover { background-color: var(--hover-ligne); }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-input); border-radius: 10px; }
+        
+        @media (max-width: 900px) {
+            .onglet { flex: 1 1 calc(50% - 10px); justify-content: flex-start; }
+            .entete-grille, .entete-abo { display: none; }
+            .badge-statut { width: auto; padding: 4px 8px; font-size: 10.5px; }
+            .concert-item { display: grid; grid-template-columns: 1fr max-content max-content; grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet role" "liens bieres note" "actions actions actions"; gap: 8px 10px; padding: 15px 12px; align-items: center; }
+            body.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" "liens note actions"; }
+            body.mode-vitrine .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet role" "liens bieres note"; }
+            body.mode-vitrine.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" "liens note ."; }
+            .col-artiste { grid-area: artiste; font-size: 17px; width: 100%;} .col-lieu { grid-area: lieu; font-size: 14px;}
+            .col-prix { grid-area: prix; text-align: right; font-size: 14px; font-weight: 700; } 
+            .col-date { grid-area: date; width:100%; display:flex; flex-direction:column; justify-content:center; align-items:flex-start;}
+            .col-billet { grid-area: billet; text-align: right; } .col-role { grid-area: role; text-align: right; }
+            .col-bieres { grid-area: bieres; text-align: center; } .col-note { grid-area: note; text-align: center; } .col-liens { grid-area: liens; display: flex; justify-content: flex-start; gap: 8px; }
+            .boutons-actions { grid-area: actions; width: 100%; justify-content: flex-end; border-top: none; padding-top: 0; }
+            .concert-details { padding: 0 15px 15px 15px; gap: 20px; }
+            .abo-item { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 18px; }
+            .abo-item > div { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+            .abo-item .col-salle { justify-content: flex-start; font-size: 18px; font-weight: 700; margin-bottom: 5px; white-space: normal; }
+            .abo-item > div[data-label]::before { content: attr(data-label); font-size: 12px; color: var(--text-faded); text-transform: uppercase; font-weight: 600; }
+            .timeline-container::after { left: 20px; } .timeline-item { width: 100%; padding-left: 50px; padding-right: 0; }
+            .timeline-item.gauche, .timeline-item.droite { left: 0; } 
+            .timeline-item.gauche::after, .timeline-item.droite::after { left: 8px; right: auto; }
+        }
+        .mode-vitrine .admin-only { display: none !important; }
+    </style>
+</head>
+<body> 
+    <div id="toast-container"></div>
+    <button class="btn-flottant btn-top" id="btn-top" onclick="window.scrollTo(0,0)" title="Remonter tout en haut">⬆️</button>
+    <button class="btn-flottant btn-theme" id="btn-theme" title="Changer le thème">🌙</button>
+
+    <div id="auth-section">
+        <div class="auth-box">
+            <h2 id="auth-title">Connexion à Live!</h2>
+            <form id="auth-form">
+                <div class="form-group" id="group-pseudo" style="display: none;">
+                    <label>Votre Pseudo (Visible par la Team)</label>
+                    <input type="text" id="auth-pseudo" placeholder="Ex: Julien">
+                </div>
+                <div class="form-group" id="group-benevole" style="display: none; align-items: center; justify-content: center; gap: 8px;">
+                    <input type="checkbox" id="auth-is-benevole" style="width: auto; margin:0; cursor:pointer;">
+                    <label for="auth-is-benevole" style="margin: 0; cursor:pointer; font-weight:normal;">🎪 Je suis parfois bénévole</label>
+                </div>
+                <div class="form-group" id="group-email">
+                    <label>Adresse Email</label>
+                    <input type="email" id="auth-email" required placeholder="nom@email.com">
+                </div>
+                <div class="form-group" id="group-password">
+                    <label id="label-password">Mot de passe</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••">
+                </div>
+                <div style="text-align: right; margin-top: -10px; margin-bottom: 15px;" id="group-forgot-link">
+                    <a href="#" onclick="setAuthMode('forgot')" class="auth-link-forgot">Mot de passe oublié ?</a>
+                </div>
+                <button type="submit" class="btn-principal" id="auth-btn-submit">Se connecter</button>
+            </form>
+            <div id="auth-links" style="margin-top: 15px;">
+                <span class="toggle-auth" id="auth-toggle-link" onclick="setAuthMode('signup')">Pas de compte ? Créer mon agenda</span>
+                <span class="toggle-auth" id="auth-back-login" style="display:none;" onclick="setAuthMode('login')">Retour à la connexion</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="clone-sticky-banner">
+        <span id="clone-count" style="font-weight:bold; color:var(--text-main); font-size:15px;">0 concert(s) sélectionné(s)</span>
+        <button class="btn-mini" style="background:#10b981; color:white; font-size:14px; padding:10px 20px; border:none;" onclick="clonerSelection()">💾 Valider l'ajout</button>
+        <button class="btn-mini btn-reset" onclick="toggleCloneMode()" style="font-size:14px; padding:10px 20px;">❌ Annuler</button>
+    </div>
+
+    <div id="modal-propose">
+        <div class="carte modal-content">
+            <h3 style="margin-top:0; color:var(--text-main);">📣 Proposer à la Team</h3>
+            <p id="propose-concert-details" style="font-size:14px; color:var(--text-faded); margin-bottom:20px;"></p>
+            <div id="propose-friends-list" style="max-height:200px; overflow-y:auto; margin-bottom:20px; display:flex; flex-direction:column; gap:10px;"></div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-principal" onclick="envoyerPropositions()" style="margin:0; flex:2;">Envoyer l'invitation</button>
+                <button class="btn-annuler" onclick="fermerModalProposition()" style="display:block; margin:0; flex:1;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-section">
+        <button class="btn-logout-absolute" onclick="deconnexion()" title="Se déconnecter">🚪</button>
+        <div class="header-top">
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <select id="view-selector" onchange="changerVueUtilisateur(this.value)" class="view-dropdown">
+                    <option value="ME">👤 Mon Agenda</option>
+                    <optgroup label="👀 Agendas de la Team" id="crew-list"></optgroup>
+                </select>
+                <div class="nav-onglets-wrapper">
+                    <div class="nav-onglets" id="nav-onglets-container">
+                        <div class="onglet actif" onclick="changerOnglet('tab-concerts')" id="onglet-concerts">🎸 Concerts</div>
+                        <div class="onglet" onclick="changerOnglet('tab-crew-avenir')" id="onglet-crew-avenir">📅 À venir (Team)</div>
+                        <div class="onglet" onclick="changerOnglet('tab-artistes')" id="onglet-artistes">🎤 Artistes</div>
+                        <div class="onglet" onclick="changerOnglet('tab-timeline')" id="onglet-timeline">🛤️ Timeline</div>
+                        <div class="onglet" onclick="changerOnglet('tab-stats')" id="onglet-stats">📊 Statistiques</div>
+                        <div class="onglet" onclick="changerOnglet('tab-abos')" id="onglet-abos">🎟️ Abonnements</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-concerts" class="vue-onglet actif">
+            <div id="propositions-container"></div>
+            <div id="meteo-container"></div>
+            <div id="bannieres-container"></div>
+
+            <div class="carte admin-only form-carte">
+                <h1 id="titre-formulaire">🎸 Ajouter un Concert</h1>
+                <form id="concertForm">
+                    <input type="hidden" id="concert_id">
+                    <div class="flex-row">
+                        <div class="form-group flex-1">
+                            <label>Artiste(s) / Line-up :</label>
+                            <div class="autocomplete-wrapper">
+                                <input type="text" id="artiste_principal" autocomplete="off" placeholder="Optionnel (ex: Muse, Royal Blood)">
+                                <div id="autocomplete-artistes" class="autocomplete-list"></div>
+                            </div>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Lieu / Salle :</label>
+                            <div class="autocomplete-wrapper">
+                                <input type="text" id="lieu" list="salles-list" autocomplete="off" placeholder="Ex: Zenith, Lille">
+                                <datalist id="salles-list"></datalist>
+                            </div>
+                            <label style="font-size: 13px; font-weight: normal; margin-top: 8px; display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-main);">
+                                <input type="checkbox" id="is_festival" style="width: auto;"> 🎪 Mode Festival (Pass multi-artistes)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex-row">
+                        <div class="form-group flex-1">
+                            <label>Date :</label>
+                            <input type="date" id="date">
+                            <div id="alerte-conflit"></div>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Prix (€) :</label>
+                            <input type="number" id="prix" step="0.01" placeholder="Optionnel">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Billet (PDF/Image) 🎟️ :</label>
+                            <input type="file" id="ticket_file" accept=".pdf,image/*">
+                            <input type="hidden" id="ticket_url_existant">
+                            <div id="ticket_nom_existant_container" style="display:none; align-items:center; gap:10px; margin-top:4px;">
+                                <span id="ticket_nom_existant" style="font-size:12px; color:#10b981; font-weight:bold;"></span>
+                                <button type="button" id="btn_supprimer_ticket" style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:12px; text-decoration:underline; padding:0;">🗑️ Retirer ce billet</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-row">
+                        <div class="form-group flex-1">
+                            <label>Statut Billet :</label>
+                            <select id="statut_billet">
+                                <option value="achetee">✅ Acheté</option>
+                                <option value="a_acheter">⏳ À acheter</option>
+                                <option value="cadeau">🎁 Cadeau</option>
+                            </select>
+                        </div>
+                        <div class="form-group flex-1 form-role">
+                            <label>Rôle :</label>
+                            <select id="role">
+                                <option value="spectateur">👤 Spectateur</option>
+                                <option value="benevole">🤝 Bénévole</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" id="btn-submit" class="btn-principal" style="position: relative;">
+                        <span id="btn-text">💾 Enregistrer le concert</span>
+                        <span id="btn-loader" style="display:none;">⏳ Enregistrement et envoi en cours...</span>
+                    </button>
+                    <button type="button" id="btn-annuler" class="btn-annuler" onclick="annulerEdition()">Annuler la modification</button>
+                </form>
+                <div id="zone-agenda" style="text-align: center;"></div>
+            </div>
+
+            <div class="carte">
+                <div class="titre-section">
+                    <h2 id="titre-collection">🎛️ Mon Agenda</h2>
+                    <div class="actions-titre">
+                        <button id="btn-activer-clone" class="btn-mini btn-clone" style="display:none; font-size:13px;" onclick="toggleCloneMode()">➕ Ajouts de dates à mon agenda</button>
+                        <button id="btn-select-all" class="btn-mini btn-vue" style="display:none; font-size:13px;" onclick="toggleSelectAll()">✅ Tout cocher</button>
+                        <button id="btn-excel" class="btn-mini btn-excel admin-only" onclick="exporterExcel()">📊 Exporter (.csv)</button>
+                        <button class="btn-mini btn-reset" onclick="reinitialiserFiltres()">🔄 Réinitialiser</button>
+                    </div>
+                </div>
+                
+                <div class="filtres-top">
+                    <div class="flex-1">
+                        <label>Date</label>
+                        <select id="filtre-statut" onchange="afficherConcerts()">
+                            <option value="tous">Tous les concerts</option>
+                            <option value="avenir">À venir</option>
+                            <option value="passe">Passés</option>
+                            <option value="inconnu">Date à compléter</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label>Billet</label>
+                        <select id="filtre-billet" onchange="afficherConcerts()">
+                            <option value="tous">Tous les billets</option>
+                            <option value="achetee">Achetés</option>
+                            <option value="a_acheter">À acheter</option>
+                            <option value="cadeau">Cadeaux</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 filtre-role">
+                        <label>Rôle</label>
+                        <select id="filtre-role" onchange="afficherConcerts()">
+                            <option value="tous">Tous les rôles</option>
+                            <option value="spectateur">Spectateur</option>
+                            <option value="benevole">Bénévole</option>
+                        </select>
+                    </div>
+                    <div class="flex-1" style="flex: 2;">
+                        <label>Recherche</label>
+                        <input type="text" id="filtre-recherche" placeholder="Artiste, salle..." oninput="afficherConcerts()">
+                    </div>
+                </div>
+
+                <div class="filtres-checkboxes">
+                    <div class="box-checkbox">
+                        <h3>📅 Années</h3>
+                        <div class="liste-scrollable" id="container-chk-annees"></div>
+                    </div>
+                    <div class="box-checkbox">
+                        <h3>📍 Salles</h3>
+                        <div class="liste-scrollable" id="container-chk-salles"></div>
+                    </div>
+                </div>
+
+                <div class="stats-container">
+                    <div class="stat-box">Concerts vus<span id="stat-jours">0</span></div>
+                    <div class="stat-box">Artistes vus<span id="stat-artistes">0</span></div>
+                    <div class="stat-box">Bières bues<span id="stat-bieres" class="highlight">0</span></div>
+                    <div class="stat-box">Budget total<span id="stat-prix" class="highlight">0,00 €</span></div>
+                </div>
+
+                <div class="entete-grille">
+                    <div class="col-triable" onclick="changerTri('date')">Date <span id="ind-tri-date" class="indicateur-tri">🔽</span></div>
+                    <div class="col-triable" onclick="changerTri('artiste')">Artiste(s) <span id="ind-tri-artiste" class="indicateur-tri"></span></div>
+                    <div class="col-triable" onclick="changerTri('salle')">Salle <span id="ind-tri-salle" class="indicateur-tri"></span></div>
+                    <div class="col-triable" onclick="changerTri('prix')">Prix <span id="ind-tri-prix" class="indicateur-tri"></span></div>
+                    <div style="text-align: center;">Billet</div>
+                    <div style="text-align: center;" class="col-role">Rôle</div>
+                    <div style="text-align: center;" title="Bières bues">🍺</div>
+                    <div class="col-triable" onclick="changerTri('note')" style="justify-content:center;" title="Trier par note">⭐ <span id="ind-tri-note" class="indicateur-tri"></span></div>
+                    <div style="text-align: center;">Liens</div>
+                    <div style="text-align: right;" id="col-header-actions" class="admin-only">Actions</div>
+                </div>
+                <div id="liste-concerts"></div>
+            </div>
+        </div>
+
+        <div id="tab-crew-avenir" class="vue-onglet">
+            <div class="carte">
+                <h2>📅 Concerts à venir de la Team</h2>
+                <p style="text-align: center; color: var(--text-faded); margin-bottom: 20px;">Qui va voir quoi prochainement ?</p>
+                <div style="margin-bottom: 30px; text-align: center;">
+                    <input type="text" id="recherche-crew-avenir" placeholder="Rechercher un artiste, une salle, un pote..." oninput="afficherConcertsCrewAvenir()" style="max-width: 500px; text-align: center; margin: 0 auto; display: block;">
+                </div>
+                <div id="liste-crew-avenir"><div style="text-align:center; color:var(--text-faded);">Chargement...</div></div>
+            </div>
+        </div>
+
+        <div id="tab-artistes" class="vue-onglet">
+            <div class="carte">
+                <h2>🎤 Tous mes Artistes</h2>
+                <div style="margin-bottom: 25px; display: flex; justify-content: center;">
+                    <input type="text" id="recherche-artiste-tab" placeholder="Rechercher un artiste précis..." oninput="afficherOngletArtistes()" style="max-width: 400px; text-align: center;">
+                </div>
+                <div class="table-artistes-wrapper">
+                    <table class="table-artistes">
+                        <thead><tr><th>Artiste</th><th>Nombre de concerts</th><th>Année(s)</th><th>Dépense totale</th></tr></thead>
+                        <tbody id="liste-artistes-tab"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-timeline" class="vue-onglet">
+            <div class="carte">
+                <h2>🛤️ Ma Frise Chronologique</h2>
+                <p style="text-align: center; color: var(--text-faded); margin-bottom: 30px;">(Concerts passés uniquement)</p>
+                <div class="timeline-container" id="liste-timeline"></div>
+            </div>
+        </div>
+
+        <div id="tab-stats" class="vue-onglet">
+            <div class="carte admin-only">
+                <h2>🤝 La Team & Moi (Concerts en commun)</h2>
+                <p style="text-align: center; color: var(--text-faded); margin-bottom: 20px;">Avec qui partages-tu le plus de concerts (passés et prévus) ?</p>
+                <div id="affinite-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+            </div>
+
+            <div class="carte">
+                <h2>📈 Mes Statistiques Visuelles</h2>
+                <div class="filtres-top" style="justify-content: center; margin-bottom: 20px; align-items:center;">
+                    <div style="min-width: 250px; text-align: center;">
+                        <label>Filtrer l'année globale :</label>
+                        <select id="filtre-stats-annee" onchange="genererGraphiques()" style="text-align: center;">
+                            <option value="tous">Toutes les années</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-box">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                            <h3 id="titre-chart-principal" style="margin:0; flex:1; text-align:left;">Évolution</h3>
+                            <select id="filtre-stats-type" onchange="genererGraphiques()" style="padding:6px; font-size:12px; width:auto; border-radius:8px;">
+                                <option value="concerts">Nombre de Concerts</option>
+                                <option value="artistes">Artistes vus</option>
+                                <option value="depenses">Budget Dépensé (€)</option>
+                            </select>
+                        </div>
+                        <canvas id="chartPrincipal"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3 id="titre-chart-salles">Toutes les salles fréquentées</h3>
+                        <canvas id="chartSalles"></canvas>
+                        <div id="details-salles" style="margin-top:20px; font-size:13px; color:var(--text-faded); line-height:1.6; max-height:250px; overflow-y:auto; padding-right:10px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-abos" class="vue-onglet">
+            <div class="carte">
+                <div class="titre-section">
+                    <h2>🎫 Mes Cartes & Abonnements</h2>
+                    <div class="actions-titre">
+                        <button class="btn-mini btn-vue admin-only" onclick="toggleFormAbo()">➕ Nouvel Abonnement</button>
+                    </div>
+                </div>
+                <div class="stats-container" style="margin-bottom: 20px;">
+                    <div class="stat-box">Abonnements Actifs<span id="stat-abos-actifs">0</span></div>
+                    <div class="stat-box">Budget Abonnements<span id="stat-abos-prix" class="highlight">0,00 €</span></div>
+                </div>
+                <div class="entete-abo">
+                    <div>Salle</div><div>N° Abonné</div><div>Achat / Renouv.</div><div>Fin Validité</div><div>Prix</div><div style="text-align: right;" class="admin-only">Actions</div>
+                </div>
+                <div id="liste-abos"></div>
+            </div>
+
+            <div class="carte admin-only form-carte" id="form-abo-container" style="display: none;">
+                <h1>🎟️ Ajouter un Abonnement</h1>
+                <form id="aboForm">
+                    <input type="hidden" id="abo_id">
+                    <div class="flex-row">
+                        <div class="form-group flex-1">
+                            <label>Salle concernée :</label>
+                            <input type="text" id="abo_salle" required placeholder="Ex: L'Aéronef, Le Grand Mix">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Numéro d'abonné :</label>
+                            <input type="text" id="abo_numero" placeholder="Ex: 123456789 (Optionnel)">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Prix de la carte (€) :</label>
+                            <input type="number" id="abo_prix" step="0.01" required placeholder="Ex: 15">
+                        </div>
+                    </div>
+                    <div class="flex-row">
+                        <div class="form-group flex-1">
+                            <label>Date d'achat :</label>
+                            <input type="date" id="abo_debut" required>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Date de fin de validité :</label>
+                            <input type="date" id="abo_fin" required>
+                        </div>
+                    </div>
+                    <button type="submit" id="btn-submit-abo" class="btn-principal">💾 Enregistrer l'abonnement</button>
+                    <button type="button" id="btn-annuler-abo" class="btn-annuler" onclick="annulerEditionAbo()">Annuler</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://vrjmvhmcizgrozjwkcoy.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZyam12aG1jaXpncm96andrY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzM3NDYsImV4cCI6MjA4ODA0OTc0Nn0.eoMEiJjkUMfMw5NB8E-A1qQAdqIdbndK8-jCCGZ9vOc";
+        const clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null; let viewingUserId = null; let profilsData = []; let pendingProposals = []; let currentProposeConcertId = null; let authMode = 'login'; 
+        let mesConcertsPersos = []; let lastFetchedMeteoConcertId = null; let lastFetchedMeteoHTML = ""; let lastFetchedTeamConcertId = null; let lastFetchedTeamHTML = "";
+        let isFirstLoad = true;
+        let tousLesConcerts = [];
+        let listeArtistesGlobale = [];
+        let triActuel = 'date';
+        let ordreDescendant = true;
+        let tousLesAbos = [];
+        let isCloneMode = false;
+        let chartInstance1 = null;
+        let chartInstance2 = null;
+
+        function normaliserTexte(t) { return t ? String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : ""; }
+        function uniformiserArtistes(artistesStr) { if (!artistesStr) return "inconnu"; return artistesStr.split(',').map(a => normaliserTexte(a).trim()).filter(a => a !== "").sort().join(','); }
+        function uniformiserSalle(salleStr) { if (!salleStr) return "inconnu"; let s = normaliserTexte(String(salleStr)); s = s.replace(/🎪/g, '').trim(); s = s.replace(/^(le |la |les |l'|l’)/, ''); s = s.replace(/\(.*?\)/g, '').trim(); s = s.split(/[,-]/)[0].trim(); return s || "inconnu"; }
+
+        function setAuthMode(mode) {
+            authMode = mode; const title = document.getElementById('auth-title'); const btnSubmit = document.getElementById('auth-btn-submit');
+            document.getElementById('group-pseudo').style.display = 'none'; document.getElementById('group-benevole').style.display = 'none';
+            document.getElementById('group-email').style.display = 'block'; document.getElementById('group-password').style.display = 'block';
+            document.getElementById('group-forgot-link').style.display = 'none'; document.getElementById('auth-toggle-link').style.display = 'none'; document.getElementById('auth-back-login').style.display = 'none';
+            document.getElementById('auth-pseudo').removeAttribute('required'); document.getElementById('auth-password').setAttribute('required', 'true'); document.getElementById('label-password').innerText = "Mot de passe";
+
+            if (mode === 'login') {
+                title.innerText = "Connexion à Live!"; btnSubmit.innerText = "Se connecter"; document.getElementById('group-forgot-link').style.display = 'block';
+                // 🛑 Lien d'inscription masqué pour garder le mode "Club Privé"
+                document.getElementById('auth-toggle-link').style.display = 'none'; 
+            } else if (mode === 'forgot') {
+                title.innerText = "Mot de passe oublié"; btnSubmit.innerText = "M'envoyer le lien"; document.getElementById('group-password').style.display = 'none';
+                document.getElementById('auth-password').removeAttribute('required'); document.getElementById('auth-back-login').style.display = 'block';
+            } else if (mode === 'update_password') {
+                title.innerText = "Bienvenue ! Finalise ton compte"; btnSubmit.innerText = "Enregistrer et entrer"; 
+                document.getElementById('group-email').style.display = 'none'; document.getElementById('auth-email').removeAttribute('required'); 
+                document.getElementById('label-password').innerText = "Choisis ton mot de passe";
+                document.getElementById('group-pseudo').style.display = 'block'; document.getElementById('auth-pseudo').setAttribute('required', 'true'); document.getElementById('group-benevole').style.display = 'flex';
+            }
+        }
+
+        function setAuthMode(mode) {
+            authMode = mode; 
+            const title = document.getElementById('auth-title'); 
+            const btnSubmit = document.getElementById('auth-btn-submit');
+            document.getElementById('group-pseudo').style.display = 'none'; 
+            document.getElementById('group-benevole').style.display = 'none';
+            document.getElementById('group-email').style.display = 'block'; 
+            document.getElementById('group-password').style.display = 'block';
+            document.getElementById('group-forgot-link').style.display = 'none'; 
+            document.getElementById('auth-toggle-link').style.display = 'none'; 
+            document.getElementById('auth-back-login').style.display = 'none';
+            document.getElementById('auth-pseudo').removeAttribute('required'); 
+            document.getElementById('auth-password').setAttribute('required', 'true'); 
+            document.getElementById('label-password').innerText = "Mot de passe";
+
+            if (mode === 'login') {
+                title.innerText = "Connexion à Live!"; 
+                btnSubmit.innerText = "Se connecter"; 
+                document.getElementById('group-forgot-link').style.display = 'block';
+            } else if (mode === 'forgot') {
+                title.innerText = "Mot de passe oublié"; 
+                btnSubmit.innerText = "M'envoyer le lien"; 
+                document.getElementById('group-password').style.display = 'none';
+                document.getElementById('auth-password').removeAttribute('required'); 
+                document.getElementById('auth-back-login').style.display = 'block';
+            } else if (mode === 'update_password') {
+                title.innerText = "Bienvenue ! Finalise ton compte"; 
+                btnSubmit.innerText = "Enregistrer et entrer"; 
+                document.getElementById('group-email').style.display = 'none'; 
+                document.getElementById('auth-email').removeAttribute('required'); 
+                document.getElementById('label-password').innerText = "Choisis ton mot de passe";
+                document.getElementById('group-pseudo').style.display = 'block'; 
+                document.getElementById('auth-pseudo').setAttribute('required', 'true'); 
+                document.getElementById('group-benevole').style.display = 'flex';
+            }
+        }
+
+        clientSupabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                document.getElementById('auth-section').style.display = 'flex';
+                document.getElementById('app-section').style.display = 'none';
+                setAuthMode('update_password');
+                return;
+            }
+
+            if (session) {
+                currentUser = session.user;
+                const { data: profil } = await clientSupabase.from('Profils').select('pseudo').eq('id', currentUser.id).single();
+
+                if (!profil || !profil.pseudo) {
+                    document.getElementById('auth-section').style.display = 'flex';
+                    document.getElementById('app-section').style.display = 'none';
+                    setAuthMode('update_password'); // On bloque sur la finalisation
+                } else {
+                    viewingUserId = currentUser.id;
+                    if(authMode !== 'update_password') { afficherApplication(); }
+                }
+            } else {
+                document.getElementById('auth-section').style.display = 'flex';
+                document.getElementById('app-section').style.display = 'none';
+                setAuthMode('signup');
+            }
+        });
+
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const email = document.getElementById('auth-email').value; 
+            const password = document.getElementById('auth-password').value; 
+            const btnSubmit = document.getElementById('auth-btn-submit'); 
+            btnSubmit.disabled = true;
+
+            try {
+                if (authMode === 'login') {
+                    const { error } = await clientSupabase.auth.signInWithPassword({ email, password });
+                    if (error) showToast("Erreur : Email ou mot de passe incorrect.", "error"); 
+                    else showToast("Connexion réussie !", "success");
+                } else if (authMode === 'forgot') {
+                    const { error } = await clientSupabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+                    if (error) showToast("Erreur : " + error.message, "error"); 
+                    else showToast("Vérifiez votre boîte mail (et vos spams) !", "success");
+                } else if (authMode === 'update_password') {
+                    const pseudo = document.getElementById('auth-pseudo').value; 
+                    const isBenevole = document.getElementById('auth-is-benevole').checked;
+                    
+                    // L'utilisateur est DÉJÀ invité et connecté en coulisses, on met juste à jour son mot de passe
+                    const { error: errAuth } = await clientSupabase.auth.updateUser({ password: password });
+                    
+                    if (errAuth) { 
+                        showToast("Erreur : Le mot de passe doit faire 6 caractères minimum.", "error"); 
+                    } else { 
+                        await clientSupabase.from('Profils').upsert({ id: currentUser.id, pseudo: pseudo, est_benevole: isBenevole });
+                        showToast("Compte finalisé avec succès ! Bienvenue 🤘", "success"); 
+                        setAuthMode('signup'); 
+                        window.location.hash = ''; 
+                        afficherApplication(); 
+                    }
+                }
+            } catch(e) { console.error(e); }
+            btnSubmit.disabled = false;
+        });
+
+        async function deconnexion() { await clientSupabase.auth.signOut(); location.reload(); }
+
+        async function afficherApplication() {
+            document.getElementById('auth-section').style.display = 'none'; document.getElementById('app-section').style.display = 'block';
+            await chargerProfils(); await chargerMesConcerts(); await verifierPropositions(); changerVueUtilisateur("ME");
+        }
+
+        async function chargerProfils() {
+            const { data, error } = await clientSupabase.from('Profils').select('*');
+            if (!error && data) { profilsData = data; let options = ''; data.forEach(p => { if (p.id !== currentUser.id) { options += `<option value="${p.id}">👀 Agenda de ${p.pseudo || 'Anonyme'}</option>`; } }); document.getElementById('crew-list').innerHTML = options; }
+        }
+
+        async function verifierPropositions() {
+            const { data, error } = await clientSupabase.from('Propositions').select('*').eq('receiver_id', currentUser.id);
+            if (!error && data) {
+                pendingProposals = data; let html = '';
+                data.forEach(p => {
+                    let sender = profilsData.find(profil => String(profil.id) === String(p.sender_id)); let senderPseudo = sender ? sender.pseudo : "Un ami";
+                    let dFR = ""; if(p.date) { dFR = " le " + new Date(p.date).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'}); }
+                    let txtEvent = (p.lieu || "").includes('🎪') ? (p.lieu || "").replace(/🎪/g, '').trim() : `${p.artiste} à ${p.lieu}`;
+                    html += `<div class="banniere banniere-proposition" id="prop-banner-${p.id}"><div>📣 <b>${senderPseudo}</b> te propose d'aller à <b>${txtEvent}</b>${dFR} !</div><div style="display:flex; gap:10px;"><button class="btn-mini" style="background:white; color:#f59e0b;" onclick="accepterProposition('${p.id}')">Ajouter</button><button class="btn-mini" style="background:transparent; border:1px solid white; color:white;" onclick="refuserProposition('${p.id}')">Ignorer</button></div></div>`;
+                });
+                document.getElementById('propositions-container').innerHTML = html;
+            }
+        }
+
+        window.accepterProposition = async function(propId) {
+            const p = pendingProposals.find(x => x.id === propId); if(!p) return;
+            document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME");
+            document.getElementById('artiste_principal').value = p.artiste || ""; document.getElementById('lieu').value = p.lieu ? p.lieu.replace(/🎪/g, '').trim() : ""; document.getElementById('is_festival').checked = (p.lieu || "").includes('🎪');
+            document.getElementById('date').value = p.date || ""; document.getElementById('prix').value = p.prix || ""; document.getElementById('statut_billet').value = "a_acheter";
+            if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
+            document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = "";
+            document.getElementById('titre-formulaire').innerHTML = `🎸 Ajouter ce concert proposé`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
+            await clientSupabase.from('Propositions').delete().eq('id', propId); const banner = document.getElementById('prop-banner-'+propId); if(banner) banner.remove();
+            changerOnglet('tab-concerts'); setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert pré-rempli ! Vérifie les infos et valide.", "success"); }, 100);
+        }
+
+        window.refuserProposition = async function(propId) { await clientSupabase.from('Propositions').delete().eq('id', propId); const banner = document.getElementById('prop-banner-'+propId); if(banner) banner.remove(); }
+
+        window.ouvrirModalProposition = function(concertId) {
+            const c = tousLesConcerts.find(x => String(x.id) === String(concertId)); if(!c) return; currentProposeConcertId = c.id;
+            let isFest = (c.Lieu || "").includes('🎪'); let lieuPropre = (c.Lieu || "").replace(/🎪/g, '').trim(); let dFR = c.Date ? new Date(c.Date).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'}) : "";
+            let txt = isFest ? `🎪 ${lieuPropre}` : `🎸 ${c.Artiste_principal} @ ${lieuPropre}`; if(dFR) txt += ` le ${dFR}`; document.getElementById('propose-concert-details').innerHTML = txt;
+            let friendsHTML = '';
+            profilsData.forEach(p => { if(p.id !== currentUser.id) { friendsHTML += `<label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px; background:var(--bg-box); border-radius:8px;"><input type="checkbox" class="chk-friend-propose" value="${p.id}" style="width:18px; height:18px; cursor:pointer;"><span style="color:var(--text-main); font-weight:600;">${p.pseudo || 'Anonyme'}</span></label>`; } });
+            document.getElementById('propose-friends-list').innerHTML = friendsHTML || "<p style='color:var(--text-faded);'>Aucun ami dans la Team pour l'instant.</p>";
+            document.getElementById('modal-propose').style.display = 'flex';
+        }
+        window.fermerModalProposition = function() { document.getElementById('modal-propose').style.display = 'none'; currentProposeConcertId = null; }
+
+        window.envoyerPropositions = async function() {
+            const checkboxes = document.querySelectorAll('.chk-friend-propose:checked'); if(checkboxes.length === 0) { showToast("Sélectionne au moins un ami !", "warning"); return; }
+            const c = tousLesConcerts.find(x => String(x.id) === String(currentProposeConcertId)); if(!c) return;
+            const receivers = Array.from(checkboxes).map(cb => cb.value);
+            const payloads = receivers.map(rid => ({ sender_id: currentUser.id, receiver_id: rid, artiste: c.Artiste_principal || null, lieu: c.Lieu || null, date: c.Date ? c.Date : null, prix: c.Prix || null }));
+            const { error } = await clientSupabase.from('Propositions').insert(payloads);
+            if(error) { showToast("Erreur d'envoi.", "error"); console.error(error); } else { showToast("Invitations envoyées à la Team ! 🚀", "success"); fermerModalProposition(); }
+        }
+
+        window.changerVueUtilisateur = async function(userId) {
+            let actualTargetId = userId; isCloneMode = false; let currentActiveTabId = document.querySelector('.vue-onglet.actif').id;
+            
+            if (userId === "ME") {
+                actualTargetId = currentUser.id; viewingUserId = currentUser.id; document.body.classList.remove('mode-vitrine'); document.getElementById('titre-collection').innerText = "🎛️ Mon Agenda";
+                document.getElementById('btn-activer-clone').style.display = 'none'; document.getElementById('btn-select-all').style.display = 'none'; document.getElementById('btn-excel').style.display = 'flex'; document.getElementById('clone-sticky-banner').style.display = 'none'; document.getElementById('propositions-container').style.display = 'flex';
+            } else {
+                viewingUserId = userId; document.body.classList.add('mode-vitrine'); const optionList = document.getElementById('view-selector').options;
+                for(let i=0; i<optionList.length; i++) { if(optionList[i].value === userId) { document.getElementById('titre-collection').innerText = optionList[i].text.replace('👀 ', ''); } }
+                document.getElementById('btn-activer-clone').style.display = 'flex'; document.getElementById('btn-select-all').style.display = 'none'; document.getElementById('btn-excel').style.display = 'none'; document.getElementById('btn-select-all').innerHTML = "✅ Tout cocher"; document.getElementById('propositions-container').style.display = 'none';
+            }
+            
+            let currentProfile = profilsData.find(p => String(p.id) === String(actualTargetId));
+            if (currentProfile && currentProfile.est_benevole === false) { document.body.classList.add('hide-role'); } else { document.body.classList.remove('hide-role'); }
+            
+            await chargerConcerts(); await chargerAbos(); changerOnglet(currentActiveTabId);
+        }
+
+        window.toggleCloneMode = function() {
+            isCloneMode = !isCloneMode;
+            if (isCloneMode) { document.getElementById('btn-activer-clone').style.display = 'none'; document.getElementById('btn-select-all').style.display = 'flex'; document.getElementById('clone-sticky-banner').style.display = 'flex'; updateCloneCount(); } 
+            else { document.getElementById('btn-activer-clone').style.display = 'flex'; document.getElementById('btn-select-all').style.display = 'none'; document.getElementById('clone-sticky-banner').style.display = 'none'; }
+            afficherConcerts(); 
+        }
+
+        window.updateCloneCount = function() { const checkboxes = document.querySelectorAll('.chk-clone:checked'); document.getElementById('clone-count').innerText = `${checkboxes.length} concert(s) sélectionné(s)`; }
+
+        window.clonerConcert = function(id) {
+            const c = tousLesConcerts.find(x => String(x.id) === String(id)); if(!c) return;
+            if (c.Date) {
+                const doublon = mesConcertsPersos.find(myC => myC.Date === c.Date);
+                if (doublon) {
+                    let artDoublon = doublon.Artiste_principal || "un artiste";
+                    if (!confirm(`⚠️ Attention : Tu as déjà prévu d'aller voir "${artDoublon}" le ${new Date(c.Date).toLocaleDateString('fr-FR')} (même date).\n\nVeux-tu tout de même pré-remplir le formulaire pour ajouter ce concert à ton agenda ?`)) { return; }
+                }
+            }
+            document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME");
+            document.getElementById('artiste_principal').value = c.Artiste_principal || "";
+            let lieuBrut = c.Lieu ? String(c.Lieu) : ""; document.getElementById('is_festival').checked = lieuBrut.includes('🎪'); document.getElementById('lieu').value = lieuBrut.replace(/🎪/g, '').trim();
+            document.getElementById('date').value = c.Date || ""; document.getElementById('prix').value = c.Prix || ""; document.getElementById('statut_billet').value = "a_acheter";
+            if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
+            
+            document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = ""; 
+            document.getElementById('titre-formulaire').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
+            changerOnglet('tab-concerts'); setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert prêt ! Vérifie ton prix et valide.", "info"); }, 100);
+        }
+
+        window.toggleSelectAll = function() {
+            const checkboxes = document.querySelectorAll('.chk-clone'); const allChecked = Array.from(checkboxes).every(cb => cb.checked); checkboxes.forEach(cb => cb.checked = !allChecked);
+            const btn = document.getElementById('btn-select-all'); btn.innerHTML = !allChecked ? "☑️ Tout décocher" : "✅ Tout cocher"; updateCloneCount();
+        }
+
+        window.clonerSelection = async function() {
+            const checkboxes = document.querySelectorAll('.chk-clone:checked'); if(checkboxes.length === 0) { showToast("Sélectionne au moins un concert !", "warning"); return; }
+            const btn = document.getElementById('clone-sticky-banner').querySelector('.btn-mini'); btn.disabled = true;
+
+            const idsToClone = Array.from(checkboxes).map(cb => cb.value); const concertsToClone = tousLesConcerts.filter(c => idsToClone.includes(String(c.id)));
+            let distinctConcerts = []; let nbDoublons = 0; let premierDoublonDate = null;
+
+            concertsToClone.forEach(c => {
+                if (c.Date) {
+                    const estDoublon = mesConcertsPersos.some(myC => myC.Date === c.Date);
+                    if (estDoublon) { nbDoublons++; if(!premierDoublonDate) premierDoublonDate = new Date(c.Date).toLocaleDateString('fr-FR'); } 
+                    else { distinctConcerts.push(c); }
+                } else { distinctConcerts.push(c); }
+            });
+
+            if (nbDoublons > 0) {
+                if (distinctConcerts.length === 0) { alert(`❌ Annulation : Tous les concerts sélectionnés (${nbDoublons}) sont déjà prévus dans ton agenda (par exemple à la date du ${premierDoublonDate}).`); btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false; return; }
+                if (!confirm(`⚠️ Attention : ${nbDoublons} concert(s) sélectionnés sont déjà prévus dans ton agenda (ex: le ${premierDoublonDate}).\n\nAjouter les ${distinctConcerts.length} NOUVEAUX concerts restants ?`)) { btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false; return; }
+            } else {
+                if(!confirm(`Tu vas copier ${distinctConcerts.length} concert(s) dans ton agenda.\nLeur statut sera "À acheter". Continuer ?`)) { btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false; return; }
+            }
+
+            btn.innerHTML = "⏳ Ajout en cours...";
+            const payloads = distinctConcerts.map(c => ({ user_id: currentUser.id, Artiste_principal: c.Artiste_principal, Lieu: c.Lieu, Date: c.Date ? c.Date : null, Prix: c.Prix, Statut_billet: 'a_acheter', Role: 'spectateur', Ticket_PDF: null, Bieres: 0, Coup_de_coeur: false }));
+            const { error } = await clientSupabase.from('Concerts').insert(payloads);
+            
+            btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false;
+            if(error) { showToast("Erreur lors de l'ajout.", "error"); console.error(error); } else { 
+                showToast(`${distinctConcerts.length} concert(s) ajouté(s) ! 🎉`, "success"); await chargerMesConcerts(); document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME"); 
+            }
+        }
+
+        window.addEventListener('scroll', () => { const btnTop = document.getElementById('btn-top'); if (window.scrollY > 300) { btnTop.style.display = 'flex'; setTimeout(()=>btnTop.style.opacity = '1', 10); } else { btnTop.style.opacity = '0'; setTimeout(()=>btnTop.style.display = 'none', 300); } });
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container'); const toast = document.createElement('div'); let icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : (type === 'warning' ? '⚠️' : 'ℹ️'));
+            toast.className = `toast ${type}`; toast.innerHTML = `${icon} ${message}`; container.appendChild(toast); setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        const btnTheme = document.getElementById('btn-theme');
+        if (localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); btnTheme.textContent = '☀️'; }
+        btnTheme.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) { localStorage.setItem('theme', 'dark'); btnTheme.textContent = '☀️'; } 
+            else { localStorage.setItem('theme', 'light'); btnTheme.textContent = '🌙'; }
+            if (document.getElementById('tab-stats').classList.contains('actif')) genererGraphiques(); 
+        });
+
+        function changerOnglet(idTab) {
+            document.querySelectorAll('.vue-onglet').forEach(tab => tab.classList.remove('actif')); document.querySelectorAll('.onglet').forEach(btn => btn.classList.remove('actif'));
+            let elementTab = document.getElementById(idTab); if(elementTab) elementTab.classList.add('actif');
+            let btnID = idTab.replace('tab-', 'onglet-'); let btnElement = document.getElementById(btnID); if(btnElement) btnElement.classList.add('actif');
+            if (idTab === 'tab-stats') { genererGraphiques(); if (viewingUserId === currentUser.id) genererAffinite(); }
+            if (idTab === 'tab-timeline') afficherTimeline();
+            if (idTab === 'tab-artistes') afficherOngletArtistes();
+            if (idTab === 'tab-crew-avenir') afficherConcertsCrewAvenir(); 
+            if(btnElement) { btnElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }
+        }
+
+        function setupAutocomplete(inputId, listId, isMulti) {
+            const input = document.getElementById(inputId); const list = document.getElementById(listId);
+            input.addEventListener('input', function() {
+                let val = this.value; list.innerHTML = ''; if (!val) { list.style.display = 'none'; return; }
+                let searchVal = val; if (isMulti) { let parts = val.split(','); searchVal = parts[parts.length - 1].trim(); }
+                if(!searchVal) { list.style.display = 'none'; return; }
+                let matches = listeArtistesGlobale.filter(item => normaliserTexte(item).includes(normaliserTexte(searchVal)));
+                if(matches.length > 0) {
+                    list.style.display = 'block';
+                    matches.forEach(match => {
+                        let div = document.createElement('div'); div.className = 'autocomplete-item'; div.textContent = match;
+                        div.onclick = function() {
+                            if(isMulti) { let parts = input.value.split(','); parts[parts.length - 1] = " " + match; input.value = parts.join(',').trim() + ", "; } else { input.value = match; }
+                            list.style.display = 'none'; input.focus();
+                        };
+                        list.appendChild(div);
+                    });
+                } else { list.style.display = 'none'; }
+            });
+            document.addEventListener('click', function(e) { if (e.target !== input && e.target !== list) { list.style.display = 'none'; } });
+        }
+        setupAutocomplete('artiste_principal', 'autocomplete-artistes', true);
+
+        async function chargerMesConcerts() {
+             const { data, error } = await clientSupabase.from('Concerts').select('*').eq('user_id', currentUser.id);
+             if (!error) mesConcertsPersos = data || [];
+        }
+
+        async function chargerConcerts() {
+            try {
+                const { data, error } = await clientSupabase.from('Concerts').select('*').eq('user_id', viewingUserId);
+                if (!error) { 
+                    tousLesConcerts = data || []; mettreAJourMenusFiltres();
+                    if (isFirstLoad) { const currYear = new Date().getFullYear().toString(); const chk = document.querySelector(`.chk-annee[value="${currYear}"]`); if (chk) chk.checked = true; isFirstLoad = false; }
+                    afficherConcerts(); 
+                    if(document.getElementById('tab-artistes').classList.contains('actif')) afficherOngletArtistes();
+                    if(document.getElementById('tab-timeline').classList.contains('actif')) afficherTimeline();
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        window.toggleRow = function(e, id) {
+            let tag = e.target.tagName.toLowerCase();
+            let isAction = e.target.closest('.boutons-actions') || e.target.closest('.col-liens') || e.target.closest('.biere-control') || e.target.closest('.chk-clone') || e.target.closest('.star') || e.target.closest('.comm-textarea') || e.target.closest('.btn-vue') || e.target.closest('.btn-reset');
+            if (tag === 'button' || tag === 'input' || tag === 'select' || tag === 'a' || isAction) return;
+            const el = document.getElementById('details-' + id);
+            if (el) el.classList.toggle('open');
+        }
+
+        window.sauvegarderNote = async function(id, note) {
+            let index = tousLesConcerts.findIndex(c => String(c.id) === String(id));
+            if(index !== -1) {
+                tousLesConcerts[index].Note = note;
+                const { error } = await clientSupabase.from('Concerts').update({ Note: note }).eq('id', id);
+                if (error) showToast("Erreur DB : " + error.message, "error");
+                else { showToast(note === 0 ? "Note retirée" : "Note enregistrée ! ⭐", "success"); afficherConcerts(); setTimeout(()=>document.getElementById('details-'+id).classList.add('open'), 50); }
+            }
+        }
+        
+        window.toggleCoupDeCoeur = async function(id) {
+            let index = tousLesConcerts.findIndex(c => String(c.id) === String(id));
+            if(index !== -1) {
+                let newVal = !tousLesConcerts[index].Coup_de_coeur;
+                tousLesConcerts[index].Coup_de_coeur = newVal;
+                const { error } = await clientSupabase.from('Concerts').update({ Coup_de_coeur: newVal }).eq('id', id);
+                if (error) showToast("Erreur DB : " + error.message, "error");
+                else { showToast(newVal ? "Coup de cœur ajouté ! 💖" : "Coup de cœur retiré.", "success"); afficherConcerts(); setTimeout(()=>document.getElementById('details-'+id).classList.add('open'), 50); }
+            }
+        }
+
+        window.toggleEditComm = function(id) {
+            const viewDiv = document.getElementById('comm-view-' + id); const editDiv = document.getElementById('comm-edit-' + id);
+            if (viewDiv && editDiv) {
+                if (viewDiv.style.display === 'none') { viewDiv.style.display = 'block'; editDiv.style.display = 'none'; } 
+                else { viewDiv.style.display = 'none'; editDiv.style.display = 'flex'; }
+            }
+        }
+
+        window.sauvegarderCommentaire = async function(id) {
+            let comm = document.getElementById('comm-input-'+id).value;
+            let index = tousLesConcerts.findIndex(c => String(c.id) === String(id));
+            if(index !== -1) {
+                tousLesConcerts[index].Commentaire = comm;
+                const { error } = await clientSupabase.from('Concerts').update({ Commentaire: comm }).eq('id', id);
+                if (error) showToast("Erreur DB : " + error.message, "error");
+                else { showToast("Souvenir sauvegardé ! 📝", "success"); afficherConcerts(); setTimeout(()=>document.getElementById('details-'+id).classList.add('open'), 50); }
+            }
+        }
+
+        window.modifierBiere = async function(id, currentCount, delta) {
+            if(viewingUserId !== currentUser.id) { showToast("Tu ne peux pas boire des bières sur le compte de la Team !", "warning"); return; }
+            let newCount = currentCount + delta; if(newCount < 0) newCount = 0; if(newCount === currentCount) return;
+            let index = tousLesConcerts.findIndex(c => String(c.id) === String(id));
+            if(index !== -1) {
+                tousLesConcerts[index].Bieres = newCount; afficherConcerts(); 
+                const { error } = await clientSupabase.from('Concerts').update({ Bieres: newCount }).eq('id', id);
+                if (error) { showToast("Erreur DB : " + error.message, "error"); tousLesConcerts[index].Bieres = currentCount; afficherConcerts(); } else if (delta > 0) { showToast("Santé ! 🍻", "success"); }
+            }
+        }
+
+        window.voirBillet = async function(path) {
+            if(!path) return;
+            if(path.startsWith('http')) { window.open(path, '_blank'); } else {
+                const { data, error } = await clientSupabase.storage.from('coffre_fort').createSignedUrl(path, 60);
+                if (error) { showToast("Accès refusé au billet.", "error"); } else { window.open(data.signedUrl, '_blank'); }
+            }
+        }
+
+        document.getElementById('concertForm').addEventListener('input', function() { document.getElementById('zone-agenda').innerHTML = ''; });
+
+        document.getElementById('date').addEventListener('change', function(e) {
+            const val = e.target.value; const alertDiv = document.getElementById('alerte-conflit'); if(!val) { alertDiv.style.display = 'none'; return; }
+            const idEd = document.getElementById('concert_id').value; const conflit = tousLesConcerts.find(c => String(c.Date||"") === val && String(c.id) !== String(idEd));
+            if(conflit) { alertDiv.innerHTML = `⚠️ Tu as déjà prévu d'aller voir <b>${String(conflit.Artiste_principal || "un artiste").replace(/</g, '<').replace(/>/g, '>')}</b> ce jour-là !`; alertDiv.style.display = 'block'; } else { alertDiv.style.display = 'none'; }
+        });
+
+        window.toggleToutesAnnees = function() { document.querySelectorAll('.chk-annee').forEach(cb => cb.checked = false); afficherConcerts(); }
+        window.toggleToutesSalles = function() { document.querySelectorAll('.chk-salle').forEach(cb => cb.checked = false); afficherConcerts(); }
+
+        function mettreAJourMenusFiltres() {
+            let setAn = new Set(), setSa = new Set(), setArt = new Set();
+            tousLesConcerts.forEach(c => {
+                if(c.Date && typeof c.Date === 'string') setAn.add(c.Date.substring(0, 4));
+                let lieuPropre = c.Lieu ? String(c.Lieu).replace(/🎪/g, '').trim() : ""; if(lieuPropre) setSa.add(lieuPropre);
+                if(c.Artiste_principal) String(c.Artiste_principal).split(',').forEach(a => { if(a.trim()!=="") setArt.add(a.trim()); });
+            });
+
+            listeArtistesGlobale = Array.from(setArt).sort((a,b) => a.localeCompare(b));
+            const selAn = Array.from(document.querySelectorAll('.chk-annee:checked')).map(cb => cb.value); const selSa = Array.from(document.querySelectorAll('.chk-salle:checked')).map(cb => cb.value);
+
+            let htmlAn = `<label class="chk-label" style="font-weight: 700;"><input type="checkbox" id="chk-toutes-annees" onchange="toggleToutesAnnees()"> TOUTES</label>`; let statsOptions = `<option value="tous">Toutes les années</option>`;
+            Array.from(setAn).sort().reverse().forEach(a => { htmlAn += `<label class="chk-label"><input type="checkbox" class="chk-annee" value="${a}" onchange="afficherConcerts()" ${selAn.includes(a)?"checked":""}> ${a}</label>`; statsOptions += `<option value="${a}">${a}</option>`; });
+            document.getElementById('container-chk-annees').innerHTML = htmlAn; document.getElementById('filtre-stats-annee').innerHTML = statsOptions;
+
+            let htmlSa = `<label class="chk-label" style="font-weight: 700;"><input type="checkbox" id="chk-toutes-salles" onchange="toggleToutesSalles()"> TOUTES</label>`; let dataSa = ''; 
+            Array.from(setSa).sort().forEach(s => { let safeS = s.replace(/"/g, '&quot;'); htmlSa += `<label class="chk-label"><input type="checkbox" class="chk-salle" value="${safeS}" onchange="afficherConcerts()" ${selSa.includes(s)?"checked":""}> ${s}</label>`; dataSa += `<option value="${safeS}"></option>`; });
+            document.getElementById('container-chk-salles').innerHTML = htmlSa; document.getElementById('salles-list').innerHTML = dataSa;
+        }
+
+        window.reinitialiserFiltres = function() {
+            document.getElementById('filtre-statut').value = "tous"; document.getElementById('filtre-billet').value = "tous"; if(document.getElementById('filtre-role')) document.getElementById('filtre-role').value = "tous"; 
+            document.getElementById('filtre-recherche').value = ""; document.querySelectorAll('.chk-annee, .chk-salle').forEach(cb => cb.checked = false); triActuel = 'date'; ordreDescendant = true; afficherConcerts();
+        }
+
+        window.changerTri = function(colonne) {
+            if(triActuel === colonne) { ordreDescendant = !ordreDescendant; } else { triActuel = colonne; ordreDescendant = (colonne === 'date' || colonne === 'prix'); } afficherConcerts();
+        }
+
+        async function fetchMeteoProchainConcert(cProchain, diffJours) {
+            if (diffJours > 7 || diffJours < 0) return;
+            if (lastFetchedMeteoConcertId === cProchain.id) { if (lastFetchedMeteoHTML) document.getElementById('meteo-container').innerHTML = lastFetchedMeteoHTML; return; }
+            try {
+                let lieuPropre = String(cProchain.Lieu||"").replace(/🎪/g, '').split(',')[0].trim();
+                let geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(lieuPropre)}&count=1&language=fr`);
+                let geoData = await geoRes.json();
+                if(!geoData.results || geoData.results.length === 0) return;
+                
+                let lat = geoData.results[0].latitude; let lon = geoData.results[0].longitude;
+                let meteoRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,weathercode&timezone=auto`);
+                let meteoData = await meteoRes.json();
+                
+                let dateIndex = meteoData.daily.time.indexOf(cProchain.Date);
+                if(dateIndex !== -1) {
+                    let tMax = meteoData.daily.temperature_2m_max[dateIndex]; let code = meteoData.daily.weathercode[dateIndex]; let icon = "🌤️"; let desc = "Clément";
+                    if(code <= 1) { icon = "☀️"; desc = "Ensoleillé"; } else if(code <= 3) { icon = "⛅"; desc = "Nuageux"; } else if(code <= 49) { icon = "🌫️"; desc = "Brouillard"; } else if(code <= 69) { icon = "🌧️"; desc = "Pluie"; } else if(code <= 79) { icon = "❄️"; desc = "Neige"; } else { icon = "⛈️"; desc = "Averses"; }
+                    lastFetchedMeteoConcertId = cProchain.id;
+                    lastFetchedMeteoHTML = `<div class="banniere banniere-meteo">${icon} Point Météo pour ${lieuPropre} (J-${diffJours}) : Temps ${desc} avec ${tMax}°C attendus !</div>`;
+                    document.getElementById('meteo-container').innerHTML = lastFetchedMeteoHTML;
+                }
+            } catch(e) {}
+        }
+
+        async function fetchTeamForProchainConcert(cProchain, isFest, lieuPropre) {
+            if (lastFetchedTeamConcertId === cProchain.id) {
+                const infoDiv = document.getElementById('hype-team-info');
+                if(infoDiv && lastFetchedTeamHTML) { infoDiv.innerHTML = lastFetchedTeamHTML; infoDiv.style.display = 'block'; }
+                return;
+            }
+            try {
+                let keyArtProchain = uniformiserArtistes(cProchain.Artiste_principal); let keyLieuProchain = uniformiserSalle(lieuPropre);
+                const { data: teamConcerts, error } = await clientSupabase.from('Concerts').select('user_id, Artiste_principal, Lieu, Statut_billet, Role').eq('Date', cProchain.Date);
+                if (error || !teamConcerts) return;
+
+                let participants = []; let interesses = [];
+                teamConcerts.forEach(tc => {
+                    let tcIsFest = (tc.Lieu || "").includes('🎪'); let tcLieuBrut = (tc.Lieu || "").replace(/🎪/g, '').trim(); 
+                    let tcArtStr = tc.Artiste_principal || "Inconnu"; let keyArtTc = uniformiserArtistes(tcArtStr); let keyLieuTc = uniformiserSalle(tcLieuBrut);
+                    let isMatch = false;
+                    if (isFest && tcIsFest && keyLieuTc === keyLieuProchain) isMatch = true;
+                    if (!isFest && !tcIsFest && keyArtTc === keyArtProchain && keyLieuTc === keyLieuProchain) isMatch = true;
+
+                    if (isMatch) {
+                        let pseudo = "";
+                        if (String(tc.user_id) === String(currentUser.id)) { pseudo = "Toi"; } 
+                        else { let profile = profilsData.find(p => String(p.id) === String(tc.user_id)); pseudo = profile ? profile.pseudo : "Un ami"; }
+                        let roleStr = tc.Role === 'benevole' ? " <span style='opacity:0.8; font-size:11px;'>(Bénévole)</span>" : "";
+                        let nomAffichage = pseudo + roleStr;
+                        if (tc.Statut_billet === 'a_acheter') { if (!interesses.includes(nomAffichage)) interesses.push(nomAffichage); } 
+                        else { if (!participants.includes(nomAffichage)) participants.push(nomAffichage); }
+                    }
+                });
+
+                lastFetchedTeamConcertId = cProchain.id; lastFetchedTeamHTML = "";
+                if (participants.length > 0 || interesses.length > 0) {
+                    let teamInfo = `<div style="font-size:13px; font-weight:normal; background:rgba(0,0,0,0.15); padding:6px 12px; border-radius:8px; display:inline-block; margin-top:5px;">`;
+                    if (participants.length > 0) teamInfo += `✅ <b>Présents :</b> ${participants.join(', ')} `;
+                    if (interesses.length > 0) { if (participants.length > 0) teamInfo += `  |  `; teamInfo += `⏳ <b>Intéressés :</b> ${interesses.join(', ')}`; }
+                    teamInfo += `</div>`;
+                    lastFetchedTeamHTML = teamInfo;
+                    const infoDiv = document.getElementById('hype-team-info');
+                    if(infoDiv) { infoDiv.innerHTML = teamInfo; infoDiv.style.display = 'block'; }
+                }
+            } catch (e) {}
+        }
+
+        function afficherConcerts() {
+            try {
+                let isOwner = viewingUserId === currentUser.id;
+                const fStatut = document.getElementById('filtre-statut').value; const fBillet = document.getElementById('filtre-billet').value; const fRole = document.getElementById('filtre-role') ? document.getElementById('filtre-role').value : "tous"; const fRech = normaliserTexte(document.getElementById('filtre-recherche').value);
+                const todayObj = new Date(); const today = todayObj.toISOString().split('T')[0]; const anneeEnCours = todayObj.getFullYear().toString();
+                const chkAn = Array.from(document.querySelectorAll('.chk-annee:checked')).map(cb => cb.value); const chkSa = Array.from(document.querySelectorAll('.chk-salle:checked')).map(cb => cb.value);
+
+                if(document.getElementById('chk-toutes-annees')) document.getElementById('chk-toutes-annees').checked = (chkAn.length === 0);
+                if(document.getElementById('chk-toutes-salles')) document.getElementById('chk-toutes-salles').checked = (chkSa.length === 0);
+
+                document.querySelectorAll('.indicateur-tri').forEach(el => el.innerHTML = ''); document.getElementById(`ind-tri-${triActuel}`).innerHTML = ordreDescendant ? '🔽' : '🔼';
+
+                let minAvenir = "9999-12-31", idProchain = null; let souvenirs = []; let strMoisJour = today.substring(5);
+
+                let filtres = tousLesConcerts.filter(c => {
+                    let safeDate = c.Date ? String(c.Date) : ""; let lieuPropre = c.Lieu ? String(c.Lieu).replace(/🎪/g, '').trim() : "";
+                    if (safeDate && safeDate >= today && safeDate < minAvenir) { minAvenir = safeDate; idProchain = c.id; }
+                    if (safeDate && safeDate < today && safeDate.endsWith(strMoisJour)) souvenirs.push(c);
+                    let mAn = (chkAn.length === 0) || chkAn.includes(safeDate.substring(0,4)) || (!safeDate && chkAn.includes(anneeEnCours));
+                    let mSa = (chkSa.length === 0) || chkSa.includes(lieuPropre);
+                    let estPasse = safeDate && safeDate <= today, estAvenir = safeDate && safeDate > today, dateInco = !safeDate;
+                    let mStat = (fStatut === "tous") || (fStatut === "passe" && estPasse) || (fStatut === "avenir" && estAvenir) || (fStatut === "inconnu" && dateInco);
+                    let mBillet = (fBillet === "tous") || (fBillet === "achetee" && c.Statut_billet !== "a_acheter" && c.Statut_billet !== "cadeau") || (fBillet === "a_acheter" && c.Statut_billet === "a_acheter") || (fBillet === "cadeau" && c.Statut_billet === "cadeau");
+                    let roleStr = c.Role || "spectateur"; let mRole = (fRole === "tous") || (fRole === roleStr);
+                    let mRech = (fRech === "") || normaliserTexte(String(c.Artiste_principal||"")+" "+String(c.Lieu||"")).includes(fRech);
+                    return mAn && mSa && mStat && mBillet && mRole && mRech;
+                });
+
+                filtres.sort((a, b) => {
+                    try {
+                        let valA, valB;
+                        if(triActuel === 'date') { 
+                            valA = a.Date ? String(a.Date) : ""; valB = b.Date ? String(b.Date) : ""; 
+                            if (!valA && valB) return -1; if (valA && !valB) return 1; if (!valA && !valB) return 0;
+                            if (valA < valB) return ordreDescendant ? 1 : -1; if (valA > valB) return ordreDescendant ? -1 : 1; return 0;
+                        } else if(triActuel === 'artiste') { valA = String(a.Artiste_principal || "").toLowerCase(); valB = String(b.Artiste_principal || "").toLowerCase(); } 
+                        else if(triActuel === 'salle') { valA = String(a.Lieu || "").toLowerCase(); valB = String(b.Lieu || "").toLowerCase(); } 
+                        else if(triActuel === 'prix') {
+                            valA = parseFloat(String(a.Prix || "0").replace(',','.')); valB = parseFloat(String(b.Prix || "0").replace(',','.'));
+                            if(isNaN(valA)) valA = 0; if(isNaN(valB)) valB = 0;
+                        } else if(triActuel === 'note') { valA = parseInt(a.Note) || 0; valB = parseInt(b.Note) || 0; }
+                        if (valA === valB) return 0; if (valA < valB) return ordreDescendant ? 1 : -1; return ordreDescendant ? -1 : 1;
+                    } catch(e) { return 0; }
+                });
+
+                document.getElementById('meteo-container').innerHTML = "";
+                let banHTML = ""; let callMeteo = null; let callTeam = null;
+
+                if(minAvenir !== "9999-12-31" && idProchain) {
+                    let cProchain = tousLesConcerts.find(x => x.id === idProchain);
+                    if(cProchain) {
+                        let diffJours = Math.ceil((new Date(minAvenir) - todayObj) / (1000 * 60 * 60 * 24));
+                        let txtHype = diffJours === 0 ? "C'est CE SOIR" : `J-${diffJours}`;
+                        let isFest = String(cProchain.Lieu||"").includes('🎪'); let lieuPropre = String(cProchain.Lieu||"").replace(/🎪/g, '').trim();
+                        let texteEvent = isFest ? lieuPropre : `${cProchain.Artiste_principal || "un artiste"} à ${lieuPropre}`;
+                        
+                        banHTML += `<div class="banniere banniere-hype" title="Aller à ce concert" onclick="const row = document.getElementById('row-container-${idProchain}'); if(row){row.scrollIntoView({behavior: 'smooth', block: 'center'}); row.style.boxShadow='0 0 20px rgba(52, 211, 153, 0.6)'; setTimeout(()=>row.style.boxShadow='', 2000);}"><div style="width:100%;">Le compte à rebours de la Hype : <span class="jour">${txtHype}</span> avant ${texteEvent.replace(/</g, '<')} !</div><div id="hype-team-info" style="display:none; width:100%; margin-top:5px;"></div></div>`;
+                        
+                        callMeteo = () => { if (diffJours <= 7 && diffJours >= 0) fetchMeteoProchainConcert(cProchain, diffJours); };
+                        callTeam = () => { fetchTeamForProchainConcert(cProchain, isFest, lieuPropre); };
+                    }
+                }
+                if(souvenirs.length > 0) {
+                    souvenirs.forEach(s => {
+                        let diffAnnee = todayObj.getFullYear() - parseInt(String(s.Date).substring(0,4));
+                        if(diffAnnee > 0) { let nomArtisteCourt = String(s.Artiste_principal||"").split(',')[0] || "un artiste"; let lieuPropre = String(s.Lieu||"").replace(/🎪/g, '').trim(); banHTML += `<div class="banniere banniere-souvenir">⏳ Souvenir : Il y a exactement ${diffAnnee} an(s), tu étais à ${lieuPropre} pour voir ${nomArtisteCourt.replace(/</g, '<')} !</div>`; }
+                    });
+                }
+                document.getElementById('bannieres-container').innerHTML = banHTML;
+                if(callMeteo) callMeteo(); if(callTeam) callTeam();
+
+                let bgTotal = 0, nbVus = 0, totalBieres = 0, setArt = new Set(), html = "";
+
+                if (filtres.length === 0) { html = "<p style='grid-column: 1 / -1; text-align:center; padding:30px; color:var(--text-faded);'>Aucun concert trouvé.</p>"; } 
+                else {
+                    filtres.forEach(c => {
+                        try {
+                            let valPrix = parseFloat(String(c.Prix||"0").replace(',', '.')); if(!isNaN(valPrix) && c.Statut_billet !== 'cadeau' && c.Role !== 'benevole') bgTotal += valPrix;
+                            let nbBieresConcert = parseInt(c.Bieres) || 0; totalBieres += nbBieresConcert;
+                            let safeDateC = c.Date ? String(c.Date) : "";
+                            if(safeDateC && safeDateC <= today) { nbVus++; let allArt = String(c.Artiste_principal || ""); allArt.split(',').forEach(a => { if(a.trim()!=="") setArt.add(a.trim().toLowerCase()); }); }
+                            
+                            let artTextePur = c.Artiste_principal ? String(c.Artiste_principal) : "-"; let safeTitle = artTextePur.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            let artAffichage = safeTitle; if (c.Coup_de_coeur) artAffichage += ` <span style="color:#ec4899; font-size:14px;" title="Coup de cœur !">💖</span>`;
+                            let lieuAffichage = String(c.Lieu||"").replace(/</g, '&lt;').replace(/>/g, '&gt;'); let isFest = lieuAffichage.includes('🎪'); let lieuPropre = lieuAffichage.replace(/🎪/g, '').trim(); 
+                            
+                            let estPasseVisuel = safeDateC && safeDateC <= today; 
+                            let dFR = `<span class="donnee-manquante">À compléter</span>`; 
+                            if(safeDateC) { try { let dateStr = new Date(safeDateC).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'}); let bgDateClass = estPasseVisuel ? "date-passe" : "date-avenir"; dFR = `<span class="date-badge ${bgDateClass}">${dateStr}</span>`; } catch(e){} }
+                            
+                            let bgBillet = c.Statut_billet === 'a_acheter' ? `<span class="badge-statut badge-billet-attente">⏳ À acheter</span>` : (c.Statut_billet === 'cadeau' ? `<span class="badge-statut badge-billet-cadeau">🎁 Cadeau</span>` : `<span class="badge-statut badge-billet-ok">✅ Acheté</span>`);
+                            let isBenevole = c.Role === 'benevole'; let bgRole = isBenevole ? `<span class="badge-statut badge-role-benevole">🤝 Bénévole</span>` : `<span class="badge-statut badge-role-spectateur">👤 Spectateur</span>`;
+
+                            let affPrix = "";
+                            if (c.Statut_billet === 'cadeau' || isBenevole) { affPrix = "Gratuit"; } else if (valPrix > 0) { affPrix = `${valPrix.toFixed(2).replace('.',',')} €`; } else if (valPrix === 0 && (c.Prix === "0" || c.Prix === 0)) { affPrix = isFest ? `<span style="color:var(--text-faded); font-size:12px;">(inclus)</span>` : "Gratuit"; } else { affPrix = `<span class="donnee-manquante">À compléter</span>`; }
+                            
+                            let mp = (c.id === idProchain) ? `<div style="font-size:10px; color:#34d399; font-weight:bold; text-transform:uppercase; margin-bottom:4px; text-align:left;">Le prochain !</div>` : "";
+                            let anneeRech = safeDateC ? safeDateC.substring(0,4) : ""; let artisteRecherche = c.Artiste_principal ? String(c.Artiste_principal).split(',')[0].trim() : "";
+                            
+                            let btnSpotify = ""; let btnSetlist = ""; let btnCalendar = ""; let btnTicketPDF = ""; let btnClone = ""; let chkHTML = ""; let btnPropose = "";
+                            
+                            if (!isOwner) {
+                                if (isCloneMode) { chkHTML = `<input type="checkbox" class="chk-clone" onclick="updateCloneCount()" value="${c.id}" style="margin-right:8px; width:16px; height:16px; cursor:pointer; accent-color: #10b981;" title="Sélectionner pour l'ajout">`; } else { btnClone = `<button class="btn-icon btn-clone" onclick="clonerConcert('${c.id}')" title="Ajouter à mon agenda">➕</button>`; }
+                            } else { btnPropose = `<button class="btn-icon btn-propose" onclick="ouvrirModalProposition('${c.id}')" title="Proposer ce concert à la Team 📣">📣</button>`; }
+
+                            if(c.Ticket_PDF && isOwner) { btnTicketPDF = `<button type="button" onclick="voirBillet('${c.Ticket_PDF}')" class="btn-icon btn-ticket" title="Voir mon billet 🎟️">🎟️</button>`; }
+                            if(artisteRecherche && artisteRecherche !== "-") {
+                                let urlSpotify = `https://open.spotify.com/search/${encodeURIComponent(artisteRecherche)}`; btnSpotify = `<a href="${urlSpotify}" target="_blank" class="btn-icon btn-spotify" title="Écouter">🎧</a>`;
+                                let urlSetlist = `https://www.setlist.fm/search?query=${encodeURIComponent(artisteRecherche + " " + lieuPropre + " " + anneeRech)}`; btnSetlist = estPasseVisuel ? `<a href="${urlSetlist}" target="_blank" class="btn-icon btn-setlist" title="Chercher la Setlist">🎵</a>` : ``;
+                            }
+                            if(safeDateC) {
+                                let dCal = safeDateC.replace(/-/g, ''); let titreCal = encodeURIComponent("Concert : " + (c.Artiste_principal || "Artiste inconnu")); let lieuCal = encodeURIComponent(lieuPropre); let urlCal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titreCal}&dates=${dCal}T200000/${dCal}T233000&location=${lieuCal}`; btnCalendar = `<a href="${urlCal}" target="_blank" class="btn-icon btn-calendar" title="Ajouter à l'agenda Google">📅</a>`;
+                            }
+                            
+                            let htmlLiens = [btnTicketPDF, btnSpotify, btnSetlist, btnCalendar, btnClone].filter(Boolean).join('');
+                            let btnBiereHTML = '';
+                            if (isOwner) { btnBiereHTML = `<div class="biere-control"><button type="button" class="btn-biere-mod" onclick="modifierBiere('${c.id}', ${nbBieresConcert}, -1)" title="Retirer">-</button><span class="biere-count">🍺 ${nbBieresConcert}</span><button type="button" class="btn-biere-mod" onclick="modifierBiere('${c.id}', ${nbBieresConcert}, 1)" title="Ajouter">+</button></div>`; } else { btnBiereHTML = `<span style="font-weight:bold; color:var(--text-faded);">🍺 ${nbBieresConcert}</span>`; }
+                            let actionHTML = '';
+                            if (isOwner) { actionHTML = `${btnPropose}<button class="btn-icon btn-edit" onclick="preparerEdition('${c.id}')" title="Modifier">✏️</button><button class="btn-icon btn-del" onclick="supprimerConcert('${c.id}')" title="Supprimer">❌</button>`; }
+
+                            let note = c.Note || 0; let comm = c.Commentaire || ""; let starsHtml = '';
+                            let noteAffichage = note > 0 ? `${note}★` : `<span style="color:var(--text-faded);">-</span>`;
+                            for (let i=1; i<=5; i++) { let starClass = i <= note ? "star-active" : "star-inactive"; let clickVal = (i === note) ? 0 : i; let clickAttr = isOwner ? `onclick="event.stopPropagation(); sauvegarderNote('${c.id}', ${clickVal})"` : ""; starsHtml += `<span class="star ${starClass}" ${clickAttr}>★</span>`; }
+                            
+                            let commHtml = "";
+                            if (isOwner) { 
+                                if (comm) {
+                                    commHtml = `<div id="comm-view-${c.id}" style="width:100%;"><p style="font-style:italic; color:var(--text-muted); font-size:13px; margin:0; padding:10px; background:var(--bg-input); border-radius:8px; border:1px solid var(--border-input); position:relative;">"${comm.replace(/"/g, '&quot;').replace(/</g, '&lt;')}"<button class="btn-icon" style="position:absolute; top:5px; right:5px; font-size:12px; padding:4px;" onclick="event.stopPropagation(); toggleEditComm('${c.id}')" title="Modifier">✏️</button></p></div><div id="comm-edit-${c.id}" style="display:none; width:100%; flex-direction:column; gap:5px;"><textarea id="comm-input-${c.id}" placeholder="Ajouter un souvenir..." class="comm-textarea" onclick="event.stopPropagation();">${comm.replace(/</g, '&lt;')}</textarea><div style="display:flex; gap:10px;"><button class="btn-mini btn-vue" onclick="event.stopPropagation(); sauvegarderCommentaire('${c.id}')">💾 Sauvegarder</button><button class="btn-mini btn-reset" onclick="event.stopPropagation(); toggleEditComm('${c.id}')">❌ Annuler</button></div></div>`;
+                                } else {
+                                    commHtml = `<div style="width:100%; display:flex; flex-direction:column; gap:5px;"><textarea id="comm-input-${c.id}" placeholder="Ajouter un souvenir, une anecdote ou votre avis sur ce concert..." class="comm-textarea" onclick="event.stopPropagation();"></textarea><button class="btn-mini btn-vue" style="align-self:flex-start;" onclick="event.stopPropagation(); sauvegarderCommentaire('${c.id}')">💾 Sauvegarder</button></div>`;
+                                }
+                            } 
+                            else { commHtml = `<p style="font-style:italic; color:var(--text-muted); font-size:13px; margin:0; padding:10px; background:var(--bg-input); border-radius:8px; width:100%; border:1px solid var(--border-input);">${comm ? '"'+comm.replace(/</g, '&lt;')+'"' : 'Aucun commentaire sur ce concert.'}</p>`; }
+
+                            let expandRow = `<div id="details-${c.id}" class="concert-details"><div class="details-section"><div class="details-label">Évaluation</div><div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;"><div style="display:flex; gap:5px; font-size:22px; cursor:${isOwner ? 'pointer' : 'default'};">${starsHtml}</div><div style="width:1px; height:25px; background:var(--border-input);"></div><button class="btn-mini" onclick="event.stopPropagation(); ${isOwner ? `toggleCoupDeCoeur('${c.id}')` : ''}" style="cursor:${isOwner?'pointer':'default'}; background:${c.Coup_de_coeur ? 'rgba(236, 72, 153, 0.1)' : 'var(--bg-input)'}; color:${c.Coup_de_coeur ? '#ec4899' : 'var(--text-faded)'}; border:1px solid ${c.Coup_de_coeur ? 'rgba(236, 72, 153, 0.3)' : 'var(--border-input)'}; font-size:13px;">${c.Coup_de_coeur ? '💖 Coup de cœur' : '🤍 Marquer coup de cœur'}</button></div></div><div class="details-section" style="flex:1;"><div class="details-label">Souvenirs & Avis</div><div style="display:flex; gap:10px; align-items:flex-start; width:100%;">${commHtml}</div></div></div>`;
+                                
+                            let classCoupDeCoeur = c.Coup_de_coeur ? "row-coup-de-coeur" : ""; let classProchain = (c.id === idProchain) ? "prochain-concert" : "";
+                            let finalRowClass = `row-container ${classCoupDeCoeur} ${classProchain}`.trim();
+
+                            html += `<div class="${finalRowClass}" id="row-container-${c.id}"><div class="concert-item" onclick="toggleRow(event, '${c.id}')"><div class="col-date">${mp}${dFR}</div><div class="col-artiste" title="${safeTitle}">${chkHTML}${artAffichage}</div><div class="col-lieu" title="${lieuAffichage}">${lieuAffichage}</div><div class="col-prix">${affPrix}</div><div class="col-billet">${bgBillet}</div><div class="col-role">${bgRole}</div><div class="col-bieres">${btnBiereHTML}</div><div class="col-note">${noteAffichage}</div><div class="col-liens">${htmlLiens}</div><div class="boutons-actions admin-only">${actionHTML}</div></div>${expandRow}</div>`;
+                        } catch(errRender) { console.error(errRender); }
+                    });
+                }
+                document.getElementById('stat-jours').textContent = nbVus; document.getElementById('stat-artistes').textContent = setArt.size; document.getElementById('stat-bieres').textContent = totalBieres; document.getElementById('stat-prix').textContent = bgTotal.toFixed(2).replace('.', ',') + " €"; document.getElementById('liste-concerts').innerHTML = html;
+            } catch(errGlobale) { console.error(errGlobale); }
+        }
+
+        window.afficherConcertsCrewAvenir = async function() {
+            const container = document.getElementById('liste-crew-avenir');
+            container.innerHTML = '<div style="text-align:center; color:var(--text-faded);">Chargement...</div>';
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const { data: allConcerts, error } = await clientSupabase.from('Concerts').select('*');
+                if (error) throw error;
+                
+                let concertsAvenir = allConcerts.filter(c => c.Date && c.Date >= today).sort((a, b) => a.Date.localeCompare(b.Date));
+
+                if (!concertsAvenir || concertsAvenir.length === 0) {
+                    container.innerHTML = "<p style='text-align:center; color:var(--text-faded); padding:30px;'>Aucun concert à venir prévu par la Team.</p>";
+                    return;
+                }
+
+                let groupes = {};
+                concertsAvenir.forEach(c => {
+                    let isFest = (c.Lieu || "").includes('🎪'); let lieuBrut = (c.Lieu || "").replace(/🎪/g, '').trim(); let artStr = c.Artiste_principal || "Inconnu";
+                    let keyArt = uniformiserArtistes(artStr); let keyLieu = uniformiserSalle(lieuBrut); let key = c.Date + "||" + (isFest ? "FESTIVAL" : keyArt) + "||" + keyLieu;
+
+                    if (!groupes[key]) { groupes[key] = { date: c.Date, artiste: isFest ? "🎪 " + lieuBrut : artStr, lieu: lieuBrut, isFest: isFest, participants: [], interesses: [] }; } 
+                    else { if(artStr.length > groupes[key].artiste.length && !isFest) groupes[key].artiste = artStr; if(lieuBrut.length > groupes[key].lieu.length) groupes[key].lieu = lieuBrut; }
+
+                    let profile = profilsData.find(p => String(p.id) === String(c.user_id)); let pseudo = profile ? profile.pseudo : "Un ami";
+                    let roleStr = "";
+                    if (profile && profile.est_benevole) { roleStr = (c.Role === 'benevole') ? " <span style='opacity:0.7; font-weight:normal; font-size:11px;'>(Bénévole)</span>" : " <span style='opacity:0.7; font-weight:normal; font-size:11px;'>(Spectateur)</span>"; } 
+                    else if (c.Role === 'benevole') { roleStr = " <span style='opacity:0.7; font-weight:normal; font-size:11px;'>(Bénévole)</span>"; }
+
+                    let nomAffichage = pseudo + roleStr;
+                    if (c.Statut_billet === 'a_acheter') { if (!groupes[key].interesses.includes(nomAffichage)) groupes[key].interesses.push(nomAffichage); } 
+                    else { if (!groupes[key].participants.includes(nomAffichage)) groupes[key].participants.push(nomAffichage); }
+                });
+
+                let html = ''; let sortedKeys = Object.keys(groupes).sort((a,b) => groupes[a].date.localeCompare(groupes[b].date));
+                let rechInput = document.getElementById('recherche-crew-avenir'); let rechVal = rechInput ? normaliserTexte(rechInput.value) : "";
+
+                let filteredKeys = sortedKeys.filter(k => {
+                    let g = groupes[k]; let dateObj = new Date(g.date); let dFR = dateObj.toLocaleDateString('fr-FR', {weekday: 'long', day:'2-digit', month:'long', year:'numeric'});
+                    let searchString = normaliserTexte(g.artiste + " " + g.lieu + " " + dFR + " " + g.participants.join(" ") + " " + g.interesses.join(" "));
+                    return rechVal === "" || searchString.includes(rechVal);
+                });
+
+                if (filteredKeys.length === 0) { html = "<p style='text-align:center; padding:30px; color:var(--text-faded);'>Aucun résultat trouvé.</p>"; } 
+                else {
+                    filteredKeys.forEach(k => {
+                        let g = groupes[k]; let dateObj = new Date(g.date); let dFR = dateObj.toLocaleDateString('fr-FR', {weekday: 'long', day:'2-digit', month:'long', year:'numeric'}); dFR = dFR.charAt(0).toUpperCase() + dFR.slice(1);
+                        let htmlPart = g.participants.length > 0 ? g.participants.map(p => `<span class="badge-statut badge-billet-ok" style="width:auto; padding:4px 10px; font-size:12px;">✅ ${p}</span>`).join(' ') : '<span style="color:var(--text-faded); font-size:13px; font-weight:500;">Aucun</span>';
+                        let htmlInt = g.interesses.length > 0 ? g.interesses.map(p => `<span class="badge-statut badge-billet-attente" style="width:auto; padding:4px 10px; font-size:12px;">⏳ ${p}</span>`).join(' ') : '<span style="color:var(--text-faded); font-size:13px; font-weight:500;">Aucun</span>';
+                        let titreEvent = g.isFest ? `🎪 ${g.lieu}` : `🎸 ${g.artiste} <span style="font-size:14px; font-weight:normal; color:var(--text-faded);">@ ${g.lieu}</span>`;
+
+                        html += `<div style="background:var(--bg-box); border:1px solid var(--border-input); border-radius:12px; padding:20px; margin-bottom:15px; box-shadow:var(--card-shadow); transition: transform 0.2s;"><div style="color:#3b82f6; font-weight:700; font-size:13px; margin-bottom:5px;">📅 ${dFR}</div><div style="font-size:18px; font-weight:800; color:var(--text-main); margin-bottom:15px;">${titreEvent.replace(/</g, '<')}</div><div style="display:flex; gap:20px; flex-wrap:wrap;"><div style="flex:1; min-width:200px;"><div style="font-size:12px; color:var(--text-faded); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Participants</div><div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${htmlPart}</div></div><div style="flex:1; min-width:200px;"><div style="font-size:12px; color:var(--text-faded); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Intéressés</div><div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${htmlInt}</div></div></div></div>`;
+                    });
+                }
+                container.innerHTML = html;
+            } catch(e) { container.innerHTML = `<p style='text-align:center; color:#ef4444; padding:30px;'>Erreur.</p>`; }
+        }
+        
+        function afficherOngletArtistes() {
+            let statsArtistes = {}; let rech = normaliserTexte(document.getElementById('recherche-artiste-tab').value);
+            tousLesConcerts.forEach(c => {
+                if(c.Artiste_principal) {
+                    let allArt = String(c.Artiste_principal); let anneeConcert = c.Date ? String(c.Date).substring(0,4) : "Inconnue";
+                    allArt.split(',').forEach(a => {
+                        let nom = a.trim();
+                        if(nom !== "") {
+                            if(!statsArtistes[nom]) statsArtistes[nom] = { count: 0, depense: 0, annees: new Set() };
+                            statsArtistes[nom].count += 1; if(anneeConcert !== "Inconnue") { statsArtistes[nom].annees.add(anneeConcert); }
+                            let prixVal = parseFloat(String(c.Prix||"0").replace(',','.')); if(!isNaN(prixVal) && c.Statut_billet !== 'cadeau' && c.Role !== 'benevole') { statsArtistes[nom].depense += prixVal; }
+                        }
+                    });
+                }
+            });
+            let sortedArtistes = Object.keys(statsArtistes).filter(art => rech === "" || normaliserTexte(art).includes(rech)).sort((a,b) => a.localeCompare(b));
+            let html = '';
+            if(sortedArtistes.length === 0) { html = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-faded);">Aucun artiste trouvé.</td></tr>'; } 
+            else { 
+                sortedArtistes.forEach((art) => { 
+                    let anneesStr = Array.from(statsArtistes[art].annees).sort().join(', '); if(!anneesStr) anneesStr = "-"; 
+                    html += `<tr><td style="font-weight:700; color:var(--text-main);">${art.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td><td style="color:var(--text-muted);">${statsArtistes[art].count} fois</td><td style="color:var(--text-muted); font-size: 13px;">${anneesStr}</td><td style="color:var(--text-muted); font-weight:600;">${statsArtistes[art].depense > 0 ? statsArtistes[art].depense.toFixed(2).replace('.',',') + ' €' : '-'}</td></tr>`;
+                }); 
+            }
+            document.getElementById('liste-artistes-tab').innerHTML = html;
+        }
+
+        async function genererAffinite() {
+            const affDiv = document.getElementById('affinite-container');
+            affDiv.innerHTML = "<p style='text-align:center; color:var(--text-faded); font-size:14px;'>Calcul de l'affinité avec la Team en cours...</p>";
+            try {
+                const { data: allConcerts, error } = await clientSupabase.from('Concerts').select('user_id, Date, Lieu');
+                if (error) throw error;
+                if (!allConcerts || allConcerts.length === 0) { affDiv.innerHTML = "<p style='text-align:center; color:var(--text-faded); padding:20px;'>Aucun concert trouvé.</p>"; return; }
+                
+                let myKeys = tousLesConcerts.filter(c => c.Date).map(c => c.Date + "||" + uniformiserSalle(c.Lieu));
+                if(myKeys.length === 0) { affDiv.innerHTML = "<p style='text-align:center; color:var(--text-faded); padding:20px;'>Ajoutez des concerts pour voir vos affinités.</p>"; return; }
+
+                let scores = {};
+                profilsData.forEach(p => { if(p.id !== currentUser.id) scores[p.id] = { pseudo: p.pseudo, count: 0, total: 0 }; });
+                
+                allConcerts.forEach(c => {
+                    if(c.user_id !== currentUser.id && c.Date && scores[c.user_id]) {
+                        scores[c.user_id].total++;
+                        let key = c.Date + "||" + uniformiserSalle(c.Lieu);
+                        if(myKeys.includes(key)) { scores[c.user_id].count++; }
+                    }
+                });
+                
+                let html = ""; let sorted = Object.values(scores).sort((a,b) => b.count - a.count);
+                sorted.forEach(s => {
+                    if (s.total > 0 || s.count > 0) {
+                        let pct = Math.round((s.count / myKeys.length) * 100) || 0; if (pct > 100) pct = 100;
+                        html += `<div style="background:var(--bg-carte); border:1px solid var(--border-input); padding:15px; border-radius:12px; margin-bottom:5px; box-shadow:var(--card-shadow);"><div style="display:flex; justify-content:space-between; margin-bottom:8px; font-weight:600; font-size:14px;"><span>🤝 ${s.pseudo}</span><span style="color:#3b82f6;">${s.count} concert(s) partagé(s)</span></div><div style="background:var(--border-input); height:8px; border-radius:4px; overflow:hidden; width:100%;"><div style="background:linear-gradient(90deg, #3b82f6 0%, #10b981 100%); width:${pct}%; height:100%; border-radius:4px; transition: width 1s ease;"></div></div></div>`;
+                    }
+                });
+                if(html === "") html = "<p style='text-align:center; color:var(--text-faded); padding:20px;'>Aucun concert en commun.</p>";
+                affDiv.innerHTML = html;
+            } catch(e) { affDiv.innerHTML = `<p style='text-align:center; color:#ef4444; padding:20px;'>Erreur d'envoi.</p>`; }
+        }
+
+        function afficherTimeline() {
+            const today = new Date().toISOString().split('T')[0];
+            let passes = tousLesConcerts.filter(c => c.Date && typeof c.Date==='string' && c.Date <= today).sort((a,b) => (b.Date > a.Date ? 1 : -1));
+            let html = "", lastAnnee = ""; let side = "gauche";
+            passes.forEach(c => {
+                try {
+                    let annee = String(c.Date).substring(0,4);
+                    if(annee !== lastAnnee) { html += `<div class="timeline-annee"><span>${annee}</span></div>`; lastAnnee = annee; side = "gauche"; }
+                    let dFR = new Date(c.Date).toLocaleDateString('fr-FR', {day:'numeric',month:'short'});
+                    let lieuBrut = String(c.Lieu||'').replace(/</g, '&lt;');
+                    let artStr = c.Artiste_principal ? String(c.Artiste_principal).replace(/</g, '&lt;').replace(/>/g, '&gt;') : "-";
+                    if (c.Coup_de_coeur) artStr += ` <span style="font-size:14px;" title="Coup de cœur">💖</span>`;
+                    html += `<div class="timeline-item ${side}"><div class="timeline-content"><div class="timeline-date">${dFR}</div><div class="timeline-art">${artStr}</div><div class="timeline-lieu">${lieuBrut}</div></div></div>`;
+                    side = (side === "gauche") ? "droite" : "gauche";
+                } catch(e){}
+            });
+            document.getElementById('liste-timeline').innerHTML = html || "<p style='text-align:center; color:var(--text-faded); padding:30px;'>Aucun concert passé.</p>";
+        }
+
+        window.preparerEdition = function(id) {
+            const c = tousLesConcerts.find(x => String(x.id) === String(id));
+            if(c) {
+                document.getElementById('concert_id').value = c.id; document.getElementById('artiste_principal').value = c.Artiste_principal || "";
+                let lieuBrut = c.Lieu ? String(c.Lieu) : ""; document.getElementById('is_festival').checked = lieuBrut.includes('🎪'); document.getElementById('lieu').value = lieuBrut.replace(/🎪/g, '').trim();
+                document.getElementById('date').value = c.Date || ""; document.getElementById('prix').value = c.Prix || ""; document.getElementById('statut_billet').value = c.Statut_billet || "achetee";
+                if (document.getElementById('role')) document.getElementById('role').value = c.Role || "spectateur";
+                
+                document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = c.Ticket_PDF || "";
+                if(c.Ticket_PDF) { document.getElementById('ticket_nom_existant_container').style.display = "flex"; document.getElementById('ticket_nom_existant').innerHTML = "✅ Billet enregistré"; } 
+                else { document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('ticket_nom_existant').innerHTML = ""; }
+                document.getElementById('titre-formulaire').innerHTML = `✏️ Modifier le concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Enregistrer les modifications`; document.getElementById('btn-annuler').style.display = "block"; document.getElementById('alerte-conflit').style.display = 'none'; window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        document.getElementById('btn_supprimer_ticket').addEventListener('click', function() { document.getElementById('ticket_url_existant').value = "SUPPRIMER"; document.getElementById('ticket_nom_existant_container').style.display = "none"; showToast("Billet retiré. N'oublie pas d'enregistrer les modifications.", "info"); });
+
+        window.annulerEdition = function() {
+            document.getElementById('concertForm').reset(); document.getElementById('concert_id').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('alerte-conflit').style.display = 'none';
+            document.getElementById('titre-formulaire').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Enregistrer le concert`; document.getElementById('btn-annuler').style.display = "none"; document.getElementById('zone-agenda').innerHTML = ""; 
+        }
+
+        window.supprimerConcert = async function(id) { if(confirm("Supprimer ce concert ?")) { await clientSupabase.from('Concerts').delete().eq('id', id); showToast("Concert supprimé.", "warning"); chargerConcerts(); } }
+
+        document.getElementById('concertForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); const btnSubmit = document.getElementById('btn-submit'); const btnText = document.getElementById('btn-text'); const btnLoader = document.getElementById('btn-loader'); btnText.style.display = 'none'; btnLoader.style.display = 'inline'; btnSubmit.disabled = true;
+            const idEd = document.getElementById('concert_id').value; const vPx = document.getElementById('prix').value; const vDt = document.getElementById('date').value;
+            let lieuValue = document.getElementById('lieu').value.trim(); if(document.getElementById('is_festival').checked && !lieuValue.includes('🎪')) { lieuValue += ' 🎪'; }
+            
+            const fileInput = document.getElementById('ticket_file'); let ticketFinalPath = document.getElementById('ticket_url_existant').value;
+            if (ticketFinalPath === "SUPPRIMER") { ticketFinalPath = null; }
+            
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0]; const fileExt = file.name.split('.').pop(); const randomKey = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15); 
+                const filePath = `${currentUser.id}/billet_${Date.now()}_${randomKey}.${fileExt}`;
+                const { error: uploadError } = await clientSupabase.storage.from('coffre_fort').upload(filePath, file);
+                if (uploadError) { showToast("Erreur lors de l'envoi du billet PDF/Image.", "error"); btnText.style.display = 'inline'; btnLoader.style.display = 'none'; btnSubmit.disabled = false; return; }
+                ticketFinalPath = filePath;
+            }
+            
+            let valPrixStr = vPx !== "" ? String(vPx).replace(',', '.') : null;
+            const payload = { user_id: currentUser.id, Artiste_principal: document.getElementById('artiste_principal').value || null, Lieu: lieuValue, Date: vDt !== "" ? vDt : null, Prix: valPrixStr, Statut_billet: document.getElementById('statut_billet').value, Role: document.getElementById('role') ? document.getElementById('role').value : "spectateur", Ticket_PDF: ticketFinalPath };
+            
+            let err; 
+            if (idEd) { const { error } = await clientSupabase.from('Concerts').update(payload).eq('id', idEd); err = error; } 
+            else { payload.Bieres = 0; const { error } = await clientSupabase.from('Concerts').insert([payload]); err = error; }
+            
+            btnText.style.display = 'inline'; btnLoader.style.display = 'none'; btnSubmit.disabled = false;
+            if (err) { showToast(`Erreur DB : ${err.message}`, "error"); } else {
+                showToast(idEd ? "Modifié avec succès ! 🎉" : "Ajouté avec succès ! 🎉"); let agendaBtnHTML = "";
+                if (vDt !== "") { let d = vDt.replace(/-/g, ''); let artStr = document.getElementById('artiste_principal').value || "Concert"; let titre = encodeURIComponent("Concert : " + artStr); let lieuCal = encodeURIComponent(document.getElementById('lieu').value); let urlCal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titre}&dates=${d}T200000/${d}T233000&location=${lieuCal}`; agendaBtnHTML = `<a href="${urlCal}" target="_blank" class="btn-google" style="margin-top: 15px;">📅 Ajouter à Google Agenda</a>`; }
+                annulerEdition(); chargerConcerts(); document.getElementById('zone-agenda').innerHTML = agendaBtnHTML;
+            }
+        });
+
+        let alertAbosFait = false;
+        async function chargerAbos() {
+            try {
+                const { data, error } = await clientSupabase.from('Abonnements').select('*').eq('user_id', viewingUserId).order('Date_fin', { ascending: false });
+                if (!error) { 
+                    tousLesAbos = data || []; afficherAbos(); 
+                    if(!alertAbosFait && viewingUserId === currentUser.id) { 
+                        let todayObj = new Date();
+                        let alerte = tousLesAbos.some(a => { if(a.Date_fin && typeof a.Date_fin === 'string' && a.Date_fin >= todayObj.toISOString().split('T')[0]) { let diff = (new Date(a.Date_fin) - todayObj) / (1000 * 60 * 60 * 24); return diff <= 30 && diff >= 0; } return false; });
+                        if(alerte) showToast("Attention, un de vos abonnements expire dans moins de 30 jours !", "warning"); alertAbosFait = true;
+                    }
+                }
+            } catch(e) {}
+        }
+
+        function afficherAbos() {
+            try {
+                const today = new Date().toISOString().split('T')[0]; let html = "", totalPrix = 0, actifs = 0;
+                if (!tousLesAbos || tousLesAbos.length === 0) { html = "<p style='text-align:center; padding:20px; color:var(--text-faded);'>Aucun abonnement.</p>"; }
+                else {
+                    tousLesAbos.forEach(a => {
+                        let estActif = a.Date_fin && a.Date_fin >= today; if(estActif) actifs++; if(a.Prix) totalPrix += parseFloat(String(a.Prix).replace(',','.'));
+                        let dDebut = a.Date_achat ? new Date(a.Date_achat).toLocaleDateString('fr-FR') : "-"; let dFin = a.Date_fin ? new Date(a.Date_fin).toLocaleDateString('fr-FR') : "-";
+                        let px = a.Prix ? parseFloat(String(a.Prix).replace(',','.')).toFixed(2).replace('.',',') + ' €' : '-'; let num = a.Numero_abonne ? String(a.Numero_abonne) : '<span class="donnee-manquante">-</span>';
+                        let classe = estActif ? "abo-item" : "abo-item abo-expire"; let iconeEtat = estActif ? "🟢" : "🔴";
+                        html += `<div class="${classe}"><div class="col-salle">${iconeEtat} ${String(a.Salle||'')}</div><div class="col-texte" data-label="N°">${num}</div><div class="col-date" data-label="Achat">${dDebut}</div><div class="col-date" data-label="Fin" style="${!estActif?'color:#ef4444;':''}">${dFin}</div><div class="col-prix" data-label="Prix">${px}</div><div class="boutons-actions admin-only"><button class="btn-icon btn-edit" onclick="preparerEditionAbo('${a.id}')">✏️</button><button class="btn-icon btn-del" onclick="supprimerAbo('${a.id}')">❌</button></div></div>`;
+                    });
+                }
+                document.getElementById('stat-abos-actifs').textContent = actifs; document.getElementById('stat-abos-prix').textContent = totalPrix.toFixed(2).replace('.', ',') + " €"; document.getElementById('liste-abos').innerHTML = html;
+            } catch(e) {}
+        }
+        
+        window.toggleFormAbo = function() { const formBox = document.getElementById('form-abo-container'); if (formBox.style.display === 'none' || formBox.style.display === '') { formBox.style.display = 'block'; document.getElementById('abo_salle').focus(); } else { formBox.style.display = 'none'; annulerEditionAbo(); } }
+        document.getElementById('aboForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); const id = document.getElementById('abo_id').value;
+            const p = { user_id: currentUser.id, Salle: document.getElementById('abo_salle').value, Numero_abonne: document.getElementById('abo_numero').value || null, Date_achat: document.getElementById('abo_debut').value, Date_fin: document.getElementById('abo_fin').value, Prix: document.getElementById('abo_prix').value };
+            let err; if(id){ const{error}=await clientSupabase.from('Abonnements').update(p).eq('id',id); err=error;} else{ const{error}=await clientSupabase.from('Abonnements').insert([p]); err=error;}
+            if(!err) { annulerEditionAbo(); chargerAbos(); showToast("Abonnement sauvegardé !"); document.getElementById('form-abo-container').style.display = 'none';} else showToast("Erreur DB", "error");
+        });
+
+        window.preparerEditionAbo = function(id) { const a = tousLesAbos.find(x => String(x.id) === String(id)); if(a) { document.getElementById('abo_id').value = a.id; document.getElementById('abo_salle').value = a.Salle || ""; document.getElementById('abo_prix').value = a.Prix || ""; document.getElementById('abo_numero').value = a.Numero_abonne || ""; document.getElementById('abo_debut').value = a.Date_achat || ""; document.getElementById('abo_fin').value = a.Date_fin || ""; document.getElementById('btn-annuler-abo').style.display = "block"; document.getElementById('form-abo-container').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' }); } }
+        window.annulerEditionAbo = function() { document.getElementById('aboForm').reset(); document.getElementById('abo_id').value = ""; document.getElementById('btn-annuler-abo').style.display = "none"; document.getElementById('form-abo-container').style.display = "none";}
+        window.supprimerAbo = async function(id) { if(confirm("Supprimer l'abonnement ?")) { await clientSupabase.from('Abonnements').delete().eq('id', id); chargerAbos(); showToast("Supprimé", "warning");} }
+
+        function genererGraphiques() {
+            try {
+                const isDark = document.body.classList.contains('dark-mode'); const colorText = isDark ? '#cbd5e1' : '#334155'; const colorGrid = isDark ? '#334155' : '#e2e8f0';
+                const anneeCible = document.getElementById('filtre-stats-annee').value; const typeAffiche = document.getElementById('filtre-stats-type').value; const today = new Date().toISOString().split('T')[0];
+                let dictAnnees = {}; let dictSalles = {}; let dictConcerts = {}; let dictArtistes = {};
+
+                let concertsFiltres = tousLesConcerts.filter(c => c.Date && typeof c.Date==='string');
+                if (anneeCible !== 'tous') { concertsFiltres = concertsFiltres.filter(c => c.Date.substring(0,4) === anneeCible); }
+
+                concertsFiltres.forEach(c => {
+                    let isConcertPasse = (c.Date <= today);
+                    if(isConcertPasse) {
+                        let key = (anneeCible === 'tous') ? c.Date.substring(0,4) : c.Date.substring(5,7); dictConcerts[key] = (dictConcerts[key] || 0) + 1;
+                        if(!dictArtistes[key]) dictArtistes[key] = new Set();
+                        if(c.Artiste_principal) { c.Artiste_principal.split(',').forEach(a => { if(a.trim() !== "") dictArtistes[key].add(a.trim().toLowerCase()); }); }
+                    }
+                    if(c.Prix && c.Statut_billet !== 'cadeau' && c.Role !== 'benevole') {
+                        let prixVal = parseFloat(String(c.Prix).replace(',','.')); if (!isNaN(prixVal)) { let key = (anneeCible === 'tous') ? c.Date.substring(0,4) : c.Date.substring(5,7); dictAnnees[key] = (dictAnnees[key] || 0) + prixVal; }
+                    }
+                    if(isConcertPasse && c.Lieu) { 
+                        let rawSalle = String(c.Lieu).replace(/🎪/g, '').trim(); let salleLower = rawSalle.toLowerCase(); let mainSalle = rawSalle; let subSalle = "";
+                        if (salleLower.includes("aéronef") || salleLower.includes("aeronef")) { mainSalle = "Aéronef"; subSalle = salleLower.includes("club") ? "Club" : "Grande Salle"; } 
+                        else if (salleLower.includes("grand mix")) { mainSalle = "Le Grand Mix"; subSalle = salleLower.includes("club") ? "Club" : "Grande Salle"; } 
+                        else { mainSalle = rawSalle; }
+                        if (!dictSalles[mainSalle]) dictSalles[mainSalle] = { total: 0, subs: {} };
+                        dictSalles[mainSalle].total++;
+                        if (subSalle) dictSalles[mainSalle].subs[subSalle] = (dictSalles[mainSalle].subs[subSalle] || 0) + 1;
+                    }
+                });
+
+                let labelsKeys = []; let labelsAnnees = []; 
+                if(anneeCible === 'tous') { let allYears = new Set([...Object.keys(dictAnnees), ...Object.keys(dictConcerts), ...Object.keys(dictArtistes)]); labelsKeys = Array.from(allYears).sort(); labelsAnnees = labelsKeys; } 
+                else { const nomsMois = {'01':'Janv', '02':'Fév', '03':'Mars', '04':'Avr', '05':'Mai', '06':'Juin', '07':'Juil', '08':'Août', '09':'Sept', '10':'Oct', '11':'Nov', '12':'Déc'}; labelsKeys = ['01','02','03','04','05','06','07','08','09','10','11','12']; labelsAnnees = labelsKeys.map(m => nomsMois[m]); }
+
+                let dataToShow = []; let bgColor = ''; let labelGraph = ''; let titreGraph = '';
+                if (typeAffiche === 'concerts') { dataToShow = labelsKeys.map(k => dictConcerts[k] || 0); bgColor = '#10b981'; labelGraph = 'Concerts vus'; titreGraph = anneeCible === 'tous' ? 'Nombre de Concerts par Année' : `Nombre de Concerts par Mois en ${anneeCible}`; } 
+                else if (typeAffiche === 'artistes') { dataToShow = labelsKeys.map(k => dictArtistes[k] ? dictArtistes[k].size : 0); bgColor = '#8b5cf6'; labelGraph = 'Artistes uniques'; titreGraph = anneeCible === 'tous' ? "Nombre d'Artistes Vus par Année" : `Nombre d'Artistes Vus par Mois en ${anneeCible}`; } 
+                else if (typeAffiche === 'depenses') { dataToShow = labelsKeys.map(k => dictAnnees[k] || 0); bgColor = '#3b82f6'; labelGraph = 'Budget (€)'; titreGraph = anneeCible === 'tous' ? 'Dépenses Annuelles (€)' : `Dépenses par Mois en ${anneeCible} (€)`; }
+
+                document.getElementById('titre-chart-principal').innerText = titreGraph;
+                let sortSalles = Object.entries(dictSalles).sort((a,b)=>b[1].total - a[1].total); let labelsSalles = sortSalles.map(x=>x[0]); let dataSalles = sortSalles.map(x=>x[1].total);
+                let baseColors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#84cc16', '#a855f7', '#d946ef', '#0ea5e9']; let colors = sortSalles.map((_, i) => baseColors[i % baseColors.length]);
+
+                let detailsHtml = "";
+                sortSalles.forEach((x, i) => {
+                    let name = x[0]; let total = x[1].total; let subs = x[1].subs; let subText = ""; let subKeys = Object.keys(subs).filter(k => k !== "");
+                    if(subKeys.length > 0) { let parts = []; for(let k of subKeys) { parts.push(`<b>${subs[k]}</b> ${k}`); } subText = ` <span style="font-size:11.5px; opacity:0.8;">(dont ${parts.join(', ')})</span>`; }
+                    let sTexte = total > 1 ? "concerts" : "concert"; detailsHtml += `<div style="margin-bottom:6px; display:flex; align-items:center; gap:8px;"><span style="display:inline-block; width:12px; height:12px; background:${colors[i]}; border-radius:3px; flex-shrink:0;"></span><div style="flex:1;"><b>${name}</b> : ${total} ${sTexte}${subText}</div></div>`;
+                });
+                document.getElementById('details-salles').innerHTML = detailsHtml;
+
+                if(chartInstance1) chartInstance1.destroy(); if(chartInstance2) chartInstance2.destroy(); Chart.defaults.color = colorText; Chart.defaults.font.family = 'Outfit';
+
+                chartInstance1 = new Chart(document.getElementById('chartPrincipal'), { type: 'bar', data: { labels: labelsAnnees, datasets: [{ label: labelGraph, data: dataToShow, backgroundColor: bgColor, borderRadius: 5 }] }, options: { scales: { y: { grid: { color: colorGrid }, ticks: { stepSize: typeAffiche==='depenses'?undefined:1 } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } } });
+                chartInstance2 = new Chart(document.getElementById('chartSalles'), { type: 'doughnut', data: { labels: labelsSalles, datasets: [{ data: dataSalles, backgroundColor: colors, borderWidth: 0 }] }, options: { cutout: '70%', plugins: { legend: { display: false } } } });
+            } catch(e) { console.error(e); }
+        }
+
+        window.exporterExcel = function() {
+            let csv = "Artistes;Lieu;Date;Prix;Billet;Role;Bieres;Note;Coup_de_coeur;Commentaire;Ticket_URL;Statut\n"; const today = new Date().toISOString().split('T')[0];
+            tousLesConcerts.forEach(c => {
+                let statut = (!c.Date || typeof c.Date !== 'string') ? "A completer" : (c.Date > today ? "A venir" : "Passe"); let art = String(c.Artiste_principal || "").replace(/;/g, ","); let lieu = String(c.Lieu || "").replace(/🎪/g, '').replace(/;/g, ",");
+                let prix = (c.Prix !== null && c.Prix !== undefined && c.Prix !== "") ? String(c.Prix).replace('.', ',') : "A completer"; let dateExp = (c.Date && typeof c.Date === 'string') ? c.Date : "A completer"; 
+                let billet = c.Statut_billet === 'a_acheter' ? "A acheter" : (c.Statut_billet === 'cadeau' ? "Cadeau" : "Achete"); let role = c.Role === 'benevole' ? "Benevole" : "Spectateur";
+                let bieres = c.Bieres || 0; let note = c.Note || ""; let cdc = c.Coup_de_coeur ? "Oui" : "Non"; let comm = String(c.Commentaire || "").replace(/;/g, ",").replace(/\n/g, " "); let urlTicket = c.Ticket_PDF || "";
+                csv += `${art};${lieu};${dateExp};${prix};${billet};${role};${bieres};${note};${cdc};${comm};${urlTicket};${statut}\n`;
+            });
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' }); const lien = document.createElement("a"); lien.href = URL.createObjectURL(blob); lien.download = "mes_concerts.csv";
+            document.body.appendChild(lien); lien.click(); document.body.removeChild(lien);
+        }
+
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').then(reg => console.log('PWA prête !')).catch(err => console.error('Erreur PWA :', err)); }); }
+
+    </script>
+</body>
+</html>
