@@ -638,127 +638,63 @@
         function uniformiserSalle(salleStr) { if (!salleStr) return "inconnu"; let s = normaliserTexte(String(salleStr)); s = s.replace(/🎪/g, '').trim(); s = s.replace(/^(le |la |les |l'|l’)/, ''); s = s.replace(/\(.*?\)/g, '').trim(); s = s.split(/[,-]/)[0].trim(); return s || "inconnu"; }
 
         function setAuthMode(mode) {
-            authMode = mode; const title = document.getElementById('auth-title'); const btnSubmit = document.getElementById('auth-btn-submit');
-            document.getElementById('group-pseudo').style.display = 'none'; document.getElementById('group-benevole').style.display = 'none';
-            document.getElementById('group-email').style.display = 'block'; document.getElementById('group-password').style.display = 'block';
-            document.getElementById('group-forgot-link').style.display = 'none'; document.getElementById('auth-toggle-link').style.display = 'none'; document.getElementById('auth-back-login').style.display = 'none';
-            document.getElementById('auth-pseudo').removeAttribute('required'); document.getElementById('auth-password').setAttribute('required', 'true'); document.getElementById('label-password').innerText = "Mot de passe";
+            authMode = mode; const title = document.getElementById('auth-title'); const btnSubmit = document.getElementById('auth-btn-submit');
+            document.getElementById('group-pseudo').style.display = 'none'; document.getElementById('group-benevole').style.display = 'none';
+            document.getElementById('group-email').style.display = 'block'; document.getElementById('group-password').style.display = 'block';
+            document.getElementById('group-forgot-link').style.display = 'none'; document.getElementById('auth-toggle-link').style.display = 'none'; document.getElementById('auth-back-login').style.display = 'none';
+            document.getElementById('auth-pseudo').removeAttribute('required'); document.getElementById('auth-password').setAttribute('required', 'true'); document.getElementById('label-password').innerText = "Mot de passe";
 
-            if (mode === 'login') {
-                title.innerText = "Connexion à Live!"; btnSubmit.innerText = "Se connecter"; document.getElementById('group-forgot-link').style.display = 'block';
-                // 🛑 Lien d'inscription masqué pour garder le mode "Club Privé"
-                document.getElementById('auth-toggle-link').style.display = 'none'; 
-            } else if (mode === 'forgot') {
-                title.innerText = "Mot de passe oublié"; btnSubmit.innerText = "M'envoyer le lien"; document.getElementById('group-password').style.display = 'none';
-                document.getElementById('auth-password').removeAttribute('required'); document.getElementById('auth-back-login').style.display = 'block';
-            } else if (mode === 'update_password') {
-                title.innerText = "Bienvenue ! Finalise ton compte"; btnSubmit.innerText = "Enregistrer et entrer"; 
-                document.getElementById('group-email').style.display = 'none'; document.getElementById('auth-email').removeAttribute('required'); 
-                document.getElementById('label-password').innerText = "Choisis ton mot de passe";
-                document.getElementById('group-pseudo').style.display = 'block'; document.getElementById('auth-pseudo').setAttribute('required', 'true'); document.getElementById('group-benevole').style.display = 'flex';
-            }
-        }
+            if (mode === 'login') {
+                title.innerText = "Connexion à Live!"; btnSubmit.innerText = "Se connecter"; document.getElementById('group-forgot-link').style.display = 'block';
+                document.getElementById('auth-toggle-link').style.display = 'block'; document.getElementById('auth-toggle-link').innerText = "Pas de compte ? Créer mon agenda"; document.getElementById('auth-toggle-link').onclick = () => setAuthMode('signup');
+            } else if (mode === 'signup') {
+                title.innerText = "Créer Mon Agenda"; btnSubmit.innerText = "S'inscrire"; document.getElementById('group-pseudo').style.display = 'block';
+                document.getElementById('group-benevole').style.display = 'flex'; document.getElementById('auth-pseudo').setAttribute('required', 'true');
+                document.getElementById('auth-toggle-link').style.display = 'block'; document.getElementById('auth-toggle-link').innerText = "Déjà un compte ? Se connecter"; document.getElementById('auth-toggle-link').onclick = () => setAuthMode('login');
+            } else if (mode === 'forgot') {
+                title.innerText = "Mot de passe oublié"; btnSubmit.innerText = "M'envoyer le lien"; document.getElementById('group-password').style.display = 'none';
+                document.getElementById('auth-password').removeAttribute('required'); document.getElementById('auth-back-login').style.display = 'block';
+            } else if (mode === 'update_password') {
+                title.innerText = "Bienvenue ! Finalise ton compte"; btnSubmit.innerText = "Enregistrer et entrer"; 
+                document.getElementById('group-email').style.display = 'none'; document.getElementById('auth-email').removeAttribute('required'); 
+                document.getElementById('label-password').innerText = "Choisis ton mot de passe";
+                document.getElementById('group-pseudo').style.display = 'block'; document.getElementById('auth-pseudo').setAttribute('required', 'true'); document.getElementById('group-benevole').style.display = 'flex';
+            }
+        }
 
-        function setAuthMode(mode) {
-            authMode = mode; 
-            const title = document.getElementById('auth-title'); 
-            const btnSubmit = document.getElementById('auth-btn-submit');
-            document.getElementById('group-pseudo').style.display = 'none'; 
-            document.getElementById('group-benevole').style.display = 'none';
-            document.getElementById('group-email').style.display = 'block'; 
-            document.getElementById('group-password').style.display = 'block';
-            document.getElementById('group-forgot-link').style.display = 'none'; 
-            document.getElementById('auth-toggle-link').style.display = 'none'; 
-            document.getElementById('auth-back-login').style.display = 'none';
-            document.getElementById('auth-pseudo').removeAttribute('required'); 
-            document.getElementById('auth-password').setAttribute('required', 'true'); 
-            document.getElementById('label-password').innerText = "Mot de passe";
-
-            if (mode === 'login') {
-                title.innerText = "Connexion à Live!"; 
-                btnSubmit.innerText = "Se connecter"; 
-                document.getElementById('group-forgot-link').style.display = 'block';
-            } else if (mode === 'forgot') {
-                title.innerText = "Mot de passe oublié"; 
-                btnSubmit.innerText = "M'envoyer le lien"; 
-                document.getElementById('group-password').style.display = 'none';
-                document.getElementById('auth-password').removeAttribute('required'); 
-                document.getElementById('auth-back-login').style.display = 'block';
-            } else if (mode === 'update_password') {
-                title.innerText = "Bienvenue ! Finalise ton compte"; 
-                btnSubmit.innerText = "Enregistrer et entrer"; 
-                document.getElementById('group-email').style.display = 'none'; 
-                document.getElementById('auth-email').removeAttribute('required'); 
-                document.getElementById('label-password').innerText = "Choisis ton mot de passe";
-                document.getElementById('group-pseudo').style.display = 'block'; 
-                document.getElementById('auth-pseudo').setAttribute('required', 'true'); 
-                document.getElementById('group-benevole').style.display = 'flex';
-            }
-        }
-
-        clientSupabase.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'PASSWORD_RECOVERY') {
-                document.getElementById('auth-section').style.display = 'flex';
-                document.getElementById('app-section').style.display = 'none';
-                setAuthMode('update_password');
-                return;
-            }
-
-            if (session) {
-                currentUser = session.user;
-                const { data: profil } = await clientSupabase.from('Profils').select('pseudo').eq('id', currentUser.id).single();
-
-                if (!profil || !profil.pseudo) {
-                    document.getElementById('auth-section').style.display = 'flex';
-                    document.getElementById('app-section').style.display = 'none';
-                    setAuthMode('update_password'); // On bloque sur la finalisation
-                } else {
-                    viewingUserId = currentUser.id;
-                    if(authMode !== 'update_password') { afficherApplication(); }
-                }
-            } else {
-                document.getElementById('auth-section').style.display = 'flex';
-                document.getElementById('app-section').style.display = 'none';
-                setAuthMode('login');
-            }
+        clientSupabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'PASSWORD_RECOVERY') { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('app-section').style.display = 'none'; setAuthMode('update_password'); } 
+            else if (session && event !== 'PASSWORD_RECOVERY') { currentUser = session.user; viewingUserId = currentUser.id; if(authMode !== 'update_password') { afficherApplication(); } } 
+            else if (!session) { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('app-section').style.display = 'none'; }
         });
 
-        document.getElementById('auth-form').addEventListener('submit', async (e) => {
-            e.preventDefault(); e.stopPropagation();
-            const email = document.getElementById('auth-email').value; 
-            const password = document.getElementById('auth-password').value; 
-            const btnSubmit = document.getElementById('auth-btn-submit'); 
-            btnSubmit.disabled = true;
-
-            try {
-                if (authMode === 'login') {
-                    const { error } = await clientSupabase.auth.signInWithPassword({ email, password });
-                    if (error) showToast("Erreur : Email ou mot de passe incorrect.", "error"); 
-                    else showToast("Connexion réussie !", "success");
-                } else if (authMode === 'forgot') {
-                    const { error } = await clientSupabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
-                    if (error) showToast("Erreur : " + error.message, "error"); 
-                    else showToast("Vérifiez votre boîte mail (et vos spams) !", "success");
-                } else if (authMode === 'update_password') {
-                    const pseudo = document.getElementById('auth-pseudo').value; 
-                    const isBenevole = document.getElementById('auth-is-benevole').checked;
-                    
-                    // L'utilisateur est DÉJÀ invité et connecté en coulisses, on met juste à jour son mot de passe
-                    const { error: errAuth } = await clientSupabase.auth.updateUser({ password: password });
-                    
-                    if (errAuth) { 
-                        showToast("Erreur : Le mot de passe doit faire 6 caractères minimum.", "error"); 
-                    } else { 
-                        await clientSupabase.from('Profils').upsert({ id: currentUser.id, pseudo: pseudo, est_benevole: isBenevole });
-                        showToast("Compte finalisé avec succès ! Bienvenue 🤘", "success"); 
-                        setAuthMode('login'); 
-                        window.location.hash = ''; 
-                        afficherApplication(); 
-                    }
-                }
-            } catch(e) { console.error(e); }
-            btnSubmit.disabled = false;
-        });
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const email = document.getElementById('auth-email').value; const password = document.getElementById('auth-password').value; const btnSubmit = document.getElementById('auth-btn-submit'); btnSubmit.disabled = true;
+            try {
+                if (authMode === 'login') {
+                    const { data, error } = await clientSupabase.auth.signInWithPassword({ email, password });
+                    if (error) showToast("Erreur : Email ou mot de passe incorrect.", "error"); else showToast("Connexion réussie !", "success");
+                } else if (authMode === 'signup') {
+                    const pseudo = document.getElementById('auth-pseudo').value; const isBenevole = document.getElementById('auth-is-benevole').checked;
+                    const { data, error } = await clientSupabase.auth.signUp({ email, password });
+                    if (error) { let msg = error.message; if(msg.includes("already registered")) msg = "Cette adresse email est déjà utilisée."; if(msg.includes("Password should be")) msg = "Le mot de passe doit faire au moins 6 caractères."; showToast("Erreur : " + msg, "error"); } 
+                    else if (data.user) { await clientSupabase.from('Profils').upsert({ id: data.user.id, pseudo: pseudo, est_benevole: isBenevole }); showToast("Compte créé avec succès ! Bienvenue 🤘", "success"); currentUser = data.user; viewingUserId = currentUser.id; afficherApplication(); }
+                } else if (authMode === 'forgot') {
+                    const { error } = await clientSupabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+                    if (error) showToast("Erreur : " + error.message, "error"); else showToast("Vérifiez votre boîte mail (et vos spams) !", "success");
+                } else if (authMode === 'update_password') {
+                    const pseudo = document.getElementById('auth-pseudo').value; const isBenevole = document.getElementById('auth-is-benevole').checked;
+                    const { error } = await clientSupabase.auth.updateUser({ password: password });
+                    if (error) { showToast("Erreur : " + error.message, "error"); } else { 
+                        const userActuel = (await clientSupabase.auth.getUser()).data.user;
+                        if (userActuel) { await clientSupabase.from('Profils').upsert({ id: userActuel.id, pseudo: pseudo, est_benevole: isBenevole }); }
+                        showToast("Compte finalisé avec succès ! Bienvenue 🤘", "success"); setAuthMode('login'); window.location.hash = ''; afficherApplication(); 
+                    }
+                }
+            } catch(e) { console.error(e); }
+            btnSubmit.disabled = false;
+        });
 
         async function deconnexion() { await clientSupabase.auth.signOut(); location.reload(); }
 
