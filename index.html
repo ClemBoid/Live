@@ -663,25 +663,10 @@
         }
 
         clientSupabase.auth.onAuthStateChange(async (event, session) => {
-            // On vérifie si l'utilisateur arrive depuis un lien d'invitation
-            const isInvite = window.location.hash.includes('type=invite');
-
-            if (event === 'PASSWORD_RECOVERY' || (session && isInvite)) { 
-                document.getElementById('auth-section').style.display = 'flex'; 
-                document.getElementById('app-section').style.display = 'none'; 
-                setAuthMode('update_password'); 
-            } 
-            else if (session && event !== 'PASSWORD_RECOVERY' && !isInvite) { 
-                currentUser = session.user; 
-                viewingUserId = currentUser.id; 
-                if(authMode !== 'update_password') { afficherApplication(); } 
-            } 
-            else if (!session) { 
-                document.getElementById('auth-section').style.display = 'flex'; 
-                document.getElementById('app-section').style.display = 'none'; 
-            }
+            if (event === 'PASSWORD_RECOVERY') { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('app-section').style.display = 'none'; setAuthMode('update_password'); } 
+            else if (session && event !== 'PASSWORD_RECOVERY') { currentUser = session.user; viewingUserId = currentUser.id; if(authMode !== 'update_password') { afficherApplication(); } } 
+            else if (!session) { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('app-section').style.display = 'none'; }
         });
-        setAuthMode('login');
 
         document.getElementById('auth-form').addEventListener('submit', async (e) => {
             e.preventDefault(); e.stopPropagation();
