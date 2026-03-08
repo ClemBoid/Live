@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Live!</title>
     
     <link rel="manifest" href="manifest.json">
@@ -27,7 +27,7 @@
             --bg-box: rgba(15, 23, 42, 0.4); --border-ligne: rgba(51, 65, 85, 0.5); --hover-ligne: rgba(59, 130, 246, 0.05); --zebra-bg: rgba(255, 255, 255, 0.015);
             --card-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-        body { font-family: 'Outfit', sans-serif; background: var(--bg-body); background-attachment: fixed; color: var(--text-main); max-width: 1200px; margin: 0 auto; padding: 20px; line-height: 1.6; transition: background 0.3s, color 0.3s; scroll-behavior: smooth;}
+        body { font-family: 'Outfit', sans-serif; background: var(--bg-body); background-attachment: fixed; color: var(--text-main); max-width: 1200px; margin: 0 auto; padding: 20px; line-height: 1.6; transition: background 0.3s, color 0.3s; scroll-behavior: smooth; /* Empêche les rebonds sur Safari */ overflow-x: hidden; width: 100vw; box-sizing: border-box; }
         
         #auth-section { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
         .auth-box { background: var(--bg-carte); padding: 40px; border-radius: 20px; box-shadow: var(--card-shadow); border: 1px solid var(--border-carte); width: 100%; max-width: 400px; text-align: center; backdrop-filter: blur(12px);}
@@ -37,11 +37,16 @@
         .auth-link-forgot { font-size: 12px; color: var(--text-faded); text-decoration: none; transition: color 0.2s; }
         .auth-link-forgot:hover { color: #3b82f6; text-decoration: underline; }
 
-        #app-section { display: none; position: relative; }
+        /* Correction CSS pour que le swipe fonctionne bien sur toute la section */
+        #app-section { display: none; position: relative; width: 100%; min-height: 100vh; overflow-x: hidden; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; padding-right: 60px;}
         .view-dropdown { font-size: 16px; font-weight: 700; padding: 10px 20px; border-radius: 12px; background: var(--bg-carte); color: var(--text-main); border: 1px solid #3b82f6; cursor: pointer; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2); outline: none;}
-        .nav-onglets { display: flex; gap: 8px; background: var(--bg-carte); padding: 8px; border-radius: 15px; border: 1px solid var(--border-carte); backdrop-filter: blur(10px); flex-wrap: wrap;}
-        .onglet { padding: 10px 18px; border-radius: 10px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all 0.3s; font-size: 14px;}
+        
+        /* Modification pour que la barre d'onglets défile horizontalement si trop longue */
+        .nav-onglets-wrapper { width: 100%; overflow-x: auto; padding-bottom: 5px; margin-bottom: 30px; }
+        .nav-onglets { display: flex; gap: 8px; background: var(--bg-carte); padding: 8px; border-radius: 15px; border: 1px solid var(--border-carte); backdrop-filter: blur(10px); width: max-content; margin: 0 auto; }
+        
+        .onglet { padding: 10px 18px; border-radius: 10px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all 0.3s; font-size: 14px; white-space: nowrap; }
         .onglet:hover { color: var(--text-main); background: rgba(100,116,139,0.1); }
         .onglet.actif { background: #3b82f6; color: white; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
         
@@ -76,7 +81,7 @@
         .banniere-souvenir { background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%); color: white; }
         .banniere-proposition { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); color: white; justify-content:space-between;}
 
-        .vue-onglet { display: none; animation: fadeIn 0.4s ease; }
+        .vue-onglet { display: none; animation: fadeIn 0.4s ease; /* Ajout pour que le swipe ne soit pas bloqué par les enfants */ pointer-events: auto; }
         .vue-onglet.actif { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -299,7 +304,7 @@
 
     <div id="auth-section">
         <div class="auth-box">
-            <h2 id="auth-title">Connexion à LiveBase</h2>
+            <h2 id="auth-title">Connexion à Live!</h2>
             <form id="auth-form">
                 <div class="form-group" id="group-pseudo" style="display: none;">
                     <label>Votre Pseudo (Visible par la Team)</label>
@@ -358,13 +363,15 @@
                     <optgroup label="👀 Agendas de la Team" id="crew-list"></optgroup>
                 </select>
 
-                <div class="nav-onglets">
-                    <div class="onglet actif" onclick="changerOnglet('tab-concerts')" id="onglet-concerts">🎸 Concerts</div>
-                    <div class="onglet" onclick="changerOnglet('tab-crew-avenir')" id="onglet-crew-avenir">📅 À venir (Team)</div>
-                    <div class="onglet" onclick="changerOnglet('tab-artistes')" id="onglet-artistes">🎤 Artistes</div>
-                    <div class="onglet" onclick="changerOnglet('tab-timeline')" id="onglet-timeline">🛤️ Timeline</div>
-                    <div class="onglet" onclick="changerOnglet('tab-stats')" id="onglet-stats">📊 Statistiques</div>
-                    <div class="onglet" onclick="changerOnglet('tab-abos')" id="onglet-abos">🎟️ Abonnements</div>
+                <div class="nav-onglets-wrapper">
+                    <div class="nav-onglets" id="nav-onglets-container">
+                        <div class="onglet actif" onclick="changerOnglet('tab-concerts')" id="onglet-concerts">🎸 Concerts</div>
+                        <div class="onglet" onclick="changerOnglet('tab-crew-avenir')" id="onglet-crew-avenir">📅 À venir (Team)</div>
+                        <div class="onglet" onclick="changerOnglet('tab-artistes')" id="onglet-artistes">🎤 Artistes</div>
+                        <div class="onglet" onclick="changerOnglet('tab-timeline')" id="onglet-timeline">🛤️ Timeline</div>
+                        <div class="onglet" onclick="changerOnglet('tab-stats')" id="onglet-stats">📊 Statistiques</div>
+                        <div class="onglet" onclick="changerOnglet('tab-abos')" id="onglet-abos">🎟️ Abonnements</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -648,11 +655,13 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://vrjmvhmcizgrozjwkcoy.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZyam12aG1jaXpncm96andrY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzM3NDYsImV4cCI6MjA4ODA0OTc0Nn0.eoMEiJjkUMfMw5NB8E-A1qQAdqIdbndK8-jCCGZ9vOc';
+        // TODO: REMPLACEZ ICI PAR VOS INFOS SUPABASE (Dashboard -> Settings -> API)
+        const SUPABASE_URL = "https://vrjmvhmcizgrozjwkcoy.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZyam12aG1jaXpncm96andrY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzM3NDYsImV4cCI6MjA4ODA0OTc0Nn0.eoMEiJjkUMfMw5NB8E-A1qQAdqIdbndK8-jCCGZ9vOc";
         const clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentUser = null; let viewingUserId = null; let profilsData = []; let pendingProposals = []; let currentProposeConcertId = null; let authMode = 'login'; 
+        let mesConcertsPersos = []; // Stocke uniquement les concerts de l'utilisateur connecté
 
         function normaliserTexte(t) { return t ? String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : ""; }
         
@@ -676,7 +685,7 @@
             document.getElementById('auth-pseudo').removeAttribute('required'); document.getElementById('auth-password').setAttribute('required', 'true'); document.getElementById('label-password').innerText = "Mot de passe";
 
             if (mode === 'login') {
-                title.innerText = "Connexion à LiveBase"; btnSubmit.innerText = "Se connecter"; document.getElementById('group-forgot-link').style.display = 'block';
+                title.innerText = "Connexion à Live!"; btnSubmit.innerText = "Se connecter"; document.getElementById('group-forgot-link').style.display = 'block';
                 document.getElementById('auth-toggle-link').style.display = 'block'; document.getElementById('auth-toggle-link').innerText = "Pas de compte ? Créer mon agenda"; document.getElementById('auth-toggle-link').onclick = () => setAuthMode('signup');
             } else if (mode === 'signup') {
                 title.innerText = "Créer Mon Agenda"; btnSubmit.innerText = "S'inscrire"; document.getElementById('group-pseudo').style.display = 'block';
@@ -698,31 +707,54 @@
         });
         setAuthMode('login');
 
+        // GESTIONNAIRE DE CONNEXION CORRIGÉ (Empêche le reload)
         document.getElementById('auth-form').addEventListener('submit', async (e) => {
-            e.preventDefault(); const email = document.getElementById('auth-email').value; const password = document.getElementById('auth-password').value; const btnSubmit = document.getElementById('auth-btn-submit'); btnSubmit.disabled = true;
-            if (authMode === 'login') {
-                const { data, error } = await clientSupabase.auth.signInWithPassword({ email, password });
-                if (error) showToast("Erreur : Email ou mot de passe incorrect.", "error"); else showToast("Connexion réussie !", "success");
-            } else if (authMode === 'signup') {
-                const pseudo = document.getElementById('auth-pseudo').value; const isBenevole = document.getElementById('auth-is-benevole').checked;
-                const { data, error } = await clientSupabase.auth.signUp({ email, password });
-                if (error) { let msg = error.message; if(msg.includes("already registered")) msg = "Cette adresse email est déjà utilisée."; if(msg.includes("Password should be")) msg = "Le mot de passe doit faire au moins 6 caractères."; showToast("Erreur : " + msg, "error"); } 
-                else if (data.user) { await clientSupabase.from('Profils').upsert({ id: data.user.id, pseudo: pseudo, est_benevole: isBenevole }); showToast("Compte créé avec succès ! Bienvenue 🤘", "success"); currentUser = data.user; viewingUserId = currentUser.id; afficherApplication(); }
-            } else if (authMode === 'forgot') {
-                const { error } = await clientSupabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
-                if (error) showToast("Erreur : " + error.message, "error"); else showToast("Vérifiez votre boîte mail (et vos spams) !", "success");
-            } else if (authMode === 'update_password') {
-                const { error } = await clientSupabase.auth.updateUser({ password: password });
-                if (error) { showToast("Erreur : " + error.message, "error"); } else { showToast("Mot de passe mis à jour avec succès !", "success"); setAuthMode('login'); window.location.hash = ''; afficherApplication(); }
+            e.preventDefault(); // Impératif !
+            e.stopPropagation();
+
+            const email = document.getElementById('auth-email').value; 
+            const password = document.getElementById('auth-password').value; 
+            const btnSubmit = document.getElementById('auth-btn-submit'); 
+            btnSubmit.disabled = true;
+
+            if (SUPABASE_URL === "https://vrjmvhmcizgrozjwkcoy.supabase.co") {
+                alert("⚠️ Erreur technique : Vous devez d'abord configurer vos identifiants Supabase dans le code (tout en bas du fichier index.html).");
+                btnSubmit.disabled = false;
+                return;
             }
-            btnSubmit.disabled = false;
+
+            try {
+                if (authMode === 'login') {
+                    const { data, error } = await clientSupabase.auth.signInWithPassword({ email, password });
+                    if (error) showToast("Erreur : Email ou mot de passe incorrect.", "error"); else showToast("Connexion réussie !", "success");
+                } else if (authMode === 'signup') {
+                    const pseudo = document.getElementById('auth-pseudo').value; const isBenevole = document.getElementById('auth-is-benevole').checked;
+                    const { data, error } = await clientSupabase.auth.signUp({ email, password });
+                    if (error) { let msg = error.message; if(msg.includes("already registered")) msg = "Cette adresse email est déjà utilisée."; if(msg.includes("Password should be")) msg = "Le mot de passe doit faire au moins 6 caractères."; showToast("Erreur : " + msg, "error"); } 
+                    else if (data.user) { await clientSupabase.from('Profils').upsert({ id: data.user.id, pseudo: pseudo, est_benevole: isBenevole }); showToast("Compte créé avec succès ! Bienvenue 🤘", "success"); currentUser = data.user; viewingUserId = currentUser.id; afficherApplication(); }
+                } else if (authMode === 'forgot') {
+                    const { error } = await clientSupabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+                    if (error) showToast("Erreur : " + error.message, "error"); else showToast("Vérifiez votre boîte mail (et vos spams) !", "success");
+                } else if (authMode === 'update_password') {
+                    const { error } = await clientSupabase.auth.updateUser({ password: password });
+                    if (error) { showToast("Erreur : " + error.message, "error"); } else { showToast("Mot de passe mis à jour avec succès !", "success"); setAuthMode('login'); window.location.hash = ''; afficherApplication(); }
+                }
+            } catch(fatalError) {
+                console.error("Erreur fatale Supabase:", fatalError);
+                showToast("Erreur technique de connexion à la base de données.", "error");
+            } finally {
+                btnSubmit.disabled = false;
+            }
         });
 
         async function deconnexion() { await clientSupabase.auth.signOut(); location.reload(); }
 
         async function afficherApplication() {
             document.getElementById('auth-section').style.display = 'none'; document.getElementById('app-section').style.display = 'block';
-            await chargerProfils(); await verifierPropositions(); changerVueUtilisateur("ME");
+            await chargerProfils(); 
+            await chargerMesConcerts(); // Charger tes concerts persos immédiatement pour la gestion des doublons
+            await verifierPropositions(); 
+            changerVueUtilisateur("ME");
         }
 
         async function chargerProfils() {
@@ -814,8 +846,21 @@
 
         window.updateCloneCount = function() { const checkboxes = document.querySelectorAll('.chk-clone:checked'); document.getElementById('clone-count').innerText = `${checkboxes.length} concert(s) sélectionné(s)`; }
 
+        // --- GESTION DOUBLONS : CLONAGE UNIQUE ---
         window.clonerConcert = function(id) {
             const c = tousLesConcerts.find(x => String(x.id) === String(id)); if(!c) return;
+
+            // Vérification anti-doublon par date
+            if (c.Date) {
+                const doublon = mesConcertsPersos.find(myC => myC.Date === c.Date);
+                if (doublon) {
+                    let artDoublon = doublon.Artiste_principal || "un artiste";
+                    if (!confirm(`⚠️ Attention : Tu as déjà prévu d'aller voir "${artDoublon}" le ${new Date(c.Date).toLocaleDateString('fr-FR')} (même date).\n\nVeux-tu tout de même pré-remplir le formulaire pour ajouter ce concert à ton agenda ?`)) {
+                        return; // Annulation
+                    }
+                }
+            }
+
             document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME");
             document.getElementById('artiste_principal').value = c.Artiste_principal || "";
             let lieuBrut = c.Lieu ? String(c.Lieu) : ""; document.getElementById('is_festival').checked = lieuBrut.includes('🎪'); document.getElementById('lieu').value = lieuBrut.replace(/🎪/g, '').trim();
@@ -824,7 +869,7 @@
             
             document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = ""; 
             document.getElementById('titre-formulaire').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
-            changerOnglet('tab-concerts'); setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert prêt à être ajouté ! Vérifie ton prix et valide.", "info"); }, 100);
+            changerOnglet('tab-concerts'); setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert prêt ! Vérifie ton prix et valide.", "info"); }, 100);
         }
 
         window.toggleSelectAll = function() {
@@ -832,15 +877,61 @@
             const btn = document.getElementById('btn-select-all'); btn.innerHTML = !allChecked ? "☑️ Tout décocher" : "✅ Tout cocher"; updateCloneCount();
         }
 
+        // --- GESTION DOUBLONS : CLONAGE MASSIF ---
         window.clonerSelection = async function() {
-            const checkboxes = document.querySelectorAll('.chk-clone:checked'); if(checkboxes.length === 0) { showToast("Sélectionne au moins un concert à ajouter !", "warning"); return; }
-            if(!confirm(`Tu vas copier ${checkboxes.length} concert(s) directement dans ton agenda.\n\nLeur statut sera "À acheter" par défaut. Continuer ?`)) return;
-            const btn = document.getElementById('clone-sticky-banner').querySelector('.btn-mini'); btn.innerHTML = "⏳ Ajout en cours..."; btn.disabled = true;
+            const checkboxes = document.querySelectorAll('.chk-clone:checked'); if(checkboxes.length === 0) { showToast("Sélectionne au moins un concert !", "warning"); return; }
+            const btn = document.getElementById('clone-sticky-banner').querySelector('.btn-mini'); btn.disabled = true;
+
             const idsToClone = Array.from(checkboxes).map(cb => cb.value); const concertsToClone = tousLesConcerts.filter(c => idsToClone.includes(String(c.id)));
-            const payloads = concertsToClone.map(c => ({ user_id: currentUser.id, Artiste_principal: c.Artiste_principal, Lieu: c.Lieu, Date: c.Date ? c.Date : null, Prix: c.Prix, Statut_billet: 'a_acheter', Role: 'spectateur', Ticket_PDF: null, Bieres: 0, Coup_de_coeur: false }));
+            
+            // Séparation Nouveaux vs Doublons
+            let distinctConcerts = [];
+            let nbDoublons = 0;
+            let premierDoublonDate = null;
+
+            concertsToClone.forEach(c => {
+                if (c.Date) {
+                    const estDoublon = mesConcertsPersos.some(myC => myC.Date === c.Date);
+                    if (estDoublon) {
+                        nbDoublons++;
+                        if(!premierDoublonDate) premierDoublonDate = new Date(c.Date).toLocaleDateString('fr-FR');
+                    } else {
+                        distinctConcerts.push(c);
+                    }
+                } else {
+                    distinctConcerts.push(c); // Date vide = pas de doublon possible par date
+                }
+            });
+
+            // Gestion des alertes anti-doublons
+            if (nbDoublons > 0) {
+                if (distinctConcerts.length === 0) {
+                    alert(`❌ Annulation : Tous les concerts sélectionnés (${nbDoublons}) sont déjà prévus dans ton agenda (par exemple à la date du ${premierDoublonDate}).`);
+                    btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false;
+                    return;
+                }
+                
+                if (!confirm(`⚠️ Attention : ${nbDoublons} concert(s) sur ${concertsToClone.length} sélectionnés sont déjà prévus dans ton agenda (par exemple à la date du ${premierDoublonDate}).\n\nVeux-tu tout de même ajouter les ${distinctConcerts.length} NOUVEAUX concerts restants ?`)) {
+                    btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false;
+                    return; // Annulation totale
+                }
+            } else {
+                // Confirmation standard s'il n'y a aucun doublon
+                if(!confirm(`Tu vas copier ${distinctConcerts.length} concert(s) dans ton agenda.\nLeur statut sera "À acheter". Continuer ?`)) {
+                     btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false; return;
+                }
+            }
+
+            btn.innerHTML = "⏳ Ajout en cours...";
+            const payloads = distinctConcerts.map(c => ({ user_id: currentUser.id, Artiste_principal: c.Artiste_principal, Lieu: c.Lieu, Date: c.Date ? c.Date : null, Prix: c.Prix, Statut_billet: 'a_acheter', Role: 'spectateur', Ticket_PDF: null, Bieres: 0, Coup_de_coeur: false }));
             const { error } = await clientSupabase.from('Concerts').insert(payloads);
+            
             btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false;
-            if(error) { showToast("Erreur lors de l'ajout.", "error"); console.error(error); } else { showToast(`${checkboxes.length} concert(s) ajouté(s) à ton agenda ! 🎉`, "success"); document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME"); }
+            if(error) { showToast("Erreur lors de l'ajout.", "error"); console.error(error); } else { 
+                showToast(`${distinctConcerts.length} concert(s) ajouté(s) ! 🎉`, "success"); 
+                await chargerMesConcerts(); // Recharger tes concerts pour la prochaine vérification
+                document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME"); 
+            }
         }
 
         window.addEventListener('scroll', () => { const btnTop = document.getElementById('btn-top'); if (window.scrollY > 300) { btnTop.style.display = 'flex'; setTimeout(()=>btnTop.style.opacity = '1', 10); } else { btnTop.style.opacity = '0'; setTimeout(()=>btnTop.style.display = 'none', 300); } });
@@ -867,6 +958,9 @@
             if (idTab === 'tab-timeline') afficherTimeline();
             if (idTab === 'tab-artistes') afficherOngletArtistes();
             if (idTab === 'tab-crew-avenir') afficherConcertsCrewAvenir(); 
+            
+            // Auto-scroll de la barre d'onglets pour garder l'onglet actif visible
+            if(btnElement) { btnElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }
         }
 
         let tousLesConcerts = []; let tousLesAbos = []; let isFirstLoad = true; let chartInstance1 = null; let chartInstance2 = null; let listeArtistesGlobale = []; let triActuel = 'date'; let ordreDescendant = true; 
@@ -893,6 +987,12 @@
             document.addEventListener('click', function(e) { if (e.target !== input && e.target !== list) { list.style.display = 'none'; } });
         }
         setupAutocomplete('artiste_principal', 'autocomplete-artistes', true);
+
+        // Charge les concerts de l'utilisateur connecté (pour détection doublons)
+        async function chargerMesConcerts() {
+             const { data, error } = await clientSupabase.from('Concerts').select('*').eq('user_id', currentUser.id);
+             if (!error) mesConcertsPersos = data || [];
+        }
 
         async function chargerConcerts() {
             try {
@@ -1164,7 +1264,7 @@
 
                             if(c.Ticket_PDF && isOwner) { btnTicketPDF = `<button type="button" onclick="voirBillet('${c.Ticket_PDF}')" class="btn-icon btn-ticket" title="Voir mon billet 🎟️">🎟️</button>`; }
                             if(artisteRecherche && artisteRecherche !== "-") {
-                                let urlSpotify = `https://open.spotify.com/search/${encodeURIComponent(artisteRecherche)}`; btnSpotify = `<a href="${urlSpotify}" target="_blank" class="btn-icon btn-spotify" title="Écouter">🎧</a>`;
+                                let urlSpotify = `http://googleusercontent.com/http://googleusercontent.com/spotify.com/0{encodeURIComponent(artisteRecherche)}`; btnSpotify = `<a href="${urlSpotify}" target="_blank" class="btn-icon btn-spotify" title="Écouter">🎧</a>`;
                                 let urlSetlist = `https://www.setlist.fm/search?query=${encodeURIComponent(artisteRecherche + " " + lieuPropre + " " + anneeRech)}`; btnSetlist = estPasseVisuel ? `<a href="${urlSetlist}" target="_blank" class="btn-icon btn-setlist" title="Chercher la Setlist">🎵</a>` : ``;
                             }
                             if(safeDateC) {
@@ -1261,7 +1361,7 @@
 
         window.afficherConcertsCrewAvenir = async function() {
             const container = document.getElementById('liste-crew-avenir');
-            container.innerHTML = '<div style="text-align:center; color:var(--text-faded); Chargement...</div>';
+            container.innerHTML = '<div style="text-align:center; color:var(--text-faded);">Chargement...</div>';
             try {
                 const today = new Date().toISOString().split('T')[0];
                 
@@ -1316,7 +1416,7 @@
                 }
                 container.innerHTML = html;
             } catch(e) {
-                container.innerHTML = `<p style='text-align:center; color:#ef4444; padding:30px;'>Erreur de chargement DB: ${e.message || "Erreur de connexion"}</p>`;
+                container.innerHTML = `<p style='text-align:center; color:#ef4444; padding:30px;'>Erreur d'envoi.</p>`;
             }
         }
         
@@ -1397,7 +1497,7 @@
                 if(html === "") html = "<p style='text-align:center; color:var(--text-faded); padding:20px;'>Aucun concert en commun trouvé avec le reste de la Team.</p>";
                 affDiv.innerHTML = html;
             } catch(e) {
-                affDiv.innerHTML = `<p style='text-align:center; color:#ef4444; padding:20px;'>Erreur de calcul: ${e.message}</p>`;
+                affDiv.innerHTML = `<p style='text-align:center; color:#ef4444; padding:20px;'>Erreur d'envoi.</p>`;
             }
         }
 
@@ -1682,6 +1782,60 @@
                 .catch(err => console.error('Erreur PWA :', err));
             });
         }
+
+        // --- GESTION DU SWIPE MOBILE (Nouveau) ---
+        let touchstartX = 0;
+        let touchendX = 0;
+        const swipeSection = document.getElementById('app-section');
+
+        function checkSwipe() {
+            // Seuil de détection (en pixels)
+            const threshold = 100;
+            const distance = touchendX - touchstartX;
+            
+            if (Math.abs(distance) < threshold) return;
+
+            // Ordre exact des onglets dans le HTML
+            const tabsOrder = [
+                'tab-concerts',
+                'tab-crew-avenir',
+                'tab-artistes',
+                'tab-timeline',
+                'tab-stats',
+                'tab-abos'
+            ];
+
+            // Trouve l'index de l'onglet actif actuel
+            const currentTab = document.querySelector('.vue-onglet.actif');
+            if (!currentTab) return;
+            const currentTabIndex = tabsOrder.indexOf(currentTab.id);
+
+            if (currentTabIndex === -1) return;
+
+            // Swipe à DROITE -> Onglet Précédent
+            if (distance > threshold) {
+                if (currentTabIndex > 0) {
+                    changerOnglet(tabsOrder[currentTabIndex - 1]);
+                }
+            }
+            // Swipe à GAUCHE -> Onglet Suivant
+            else if (distance < -threshold) {
+                if (currentTabIndex < tabsOrder.length - 1) {
+                    changerOnglet(tabsOrder[currentTabIndex + 1]);
+                }
+            }
+        }
+
+        // Écouteurs d'événements pour le swipe
+        swipeSection.addEventListener('touchstart', (e) => {
+            touchstartX = e.changedTouches[0].screenX;
+        }, { passive: true }); // passive pour de meilleures performances
+
+        swipeSection.addEventListener('touchend', (e) => {
+            touchendX = e.changedTouches[0].screenX;
+            checkSwipe();
+        }, { passive: true });
+        
     </script>
 </body>
 </html>
