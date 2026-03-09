@@ -17,8 +17,7 @@
         :root { --bg-body: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%); --bg-carte: rgba(255, 255, 255, 0.9); --border-carte: rgba(0, 0, 0, 0.05); --text-main: #0f172a; --text-muted: #334155; --text-faded: #64748b; --bg-input: #ffffff; --border-input: #cbd5e1; --bg-box: #f1f5f9; --border-ligne: #e2e8f0; --hover-ligne: rgba(59, 130, 246, 0.08); --zebra-bg: rgba(0, 0, 0, 0.02); --card-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         body.dark-mode { --bg-body: radial-gradient(circle at 50% 0%, #1e293b 0%, #080f1e 100%); --bg-carte: rgba(30, 41, 59, 0.6); --border-carte: rgba(255, 255, 255, 0.08); --text-main: #f8fafc; --text-muted: #cbd5e1; --text-faded: #94a3b8; --bg-input: rgba(15, 23, 42, 0.8); --border-input: #334155; --bg-box: rgba(15, 23, 42, 0.4); --border-ligne: rgba(51, 65, 85, 0.5); --hover-ligne: rgba(59, 130, 246, 0.05); --zebra-bg: rgba(255, 255, 255, 0.015); --card-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         *, *::before, *::after { box-sizing: border-box; }
-        html, body { overflow-x: hidden; width: 100%; max-width: 100%; margin: 0; padding: 0; }
-        body { font-family: 'Outfit', sans-serif; background: var(--bg-body); background-attachment: fixed; color: var(--text-main); padding: 20px; line-height: 1.6; transition: background 0.3s, color 0.3s; scroll-behavior: smooth; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg-body); background-attachment: fixed; color: var(--text-main); max-width: 1200px; margin: 0 auto; padding: 20px; line-height: 1.6; transition: background 0.3s, color 0.3s; scroll-behavior: smooth; }
         
         #auth-section { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
         .auth-box { background: var(--bg-carte); padding: 40px; border-radius: 20px; box-shadow: var(--card-shadow); border: 1px solid var(--border-carte); width: 100%; max-width: 400px; text-align: center; backdrop-filter: blur(12px);}
@@ -28,7 +27,7 @@
         .auth-link-forgot { font-size: 12px; color: var(--text-faded); text-decoration: none; transition: color 0.2s; }
         .auth-link-forgot:hover { color: #3b82f6; text-decoration: underline; }
 
-        #app-section { display: none; position: relative; width: 100%; max-width: 1200px; margin: 0 auto; }
+        #app-section { display: none; position: relative; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; padding-right: 60px;}
         .view-dropdown { font-size: 16px; font-weight: 700; padding: 10px 20px; border-radius: 12px; background: var(--bg-carte); color: var(--text-main); border: 1px solid #3b82f6; cursor: pointer; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2); outline: none;}
         
@@ -881,7 +880,6 @@
             if (idTab === 'tab-timeline') afficherTimeline();
             if (idTab === 'tab-artistes') afficherOngletArtistes();
             if (idTab === 'tab-crew-avenir') afficherConcertsCrewAvenir(); 
-            if(btnElement) { btnElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }
         }
 
         function setupAutocomplete(inputId, listId, isMulti) {
