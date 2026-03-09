@@ -621,7 +621,7 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZyam12aG1jaXpncm96andrY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzM3NDYsImV4cCI6MjA4ODA0OTc0Nn0.eoMEiJjkUMfMw5NB8E-A1qQAdqIdbndK8-jCCGZ9vOc";
         const clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let currentUser = null; let viewingUserId = null; let profilsData = []; let pendingProposals = []; let currentProposeConcertId = null; let authMode = 'login'; 
+        let currentUser = null; let viewingUserId = null; let profilsData = []; let pendingProposals = []; let currentProposeConcertId = null; let authMode = 'signup'; 
         let mesConcertsPersos = []; let lastFetchedMeteoConcertId = null; let lastFetchedMeteoHTML = ""; let lastFetchedTeamConcertId = null; let lastFetchedTeamHTML = "";
         let isFirstLoad = true;
         let tousLesConcerts = [];
@@ -646,7 +646,7 @@
 
             if (mode === 'login') {
                 title.innerText = "Connexion à Live!"; btnSubmit.innerText = "Se connecter"; document.getElementById('group-forgot-link').style.display = 'block';
-                document.getElementById('auth-toggle-link').style.display = 'block'; document.getElementById('auth-toggle-link').innerText = "Pas de compte ? Créer mon agenda"; document.getElementById('auth-toggle-link').onclick = () => setAuthMode('signup');
+                document.getElementById('auth-toggle-link').style.display = 'block'; document.getElementById('auth-toggle-link').innerText = "Pas de compte ? Créer mon agenda"; document.getElementById('auth-toggle-link').onclick = () => setAuthMode('signup'); document.getElementById('auth-toggle-link').onclick = () => setAuthMode('signup');
             } else if (mode === 'signup') {
                 title.innerText = "Créer Mon Agenda"; btnSubmit.innerText = "S'inscrire"; document.getElementById('group-pseudo').style.display = 'block';
                 document.getElementById('group-benevole').style.display = 'flex'; document.getElementById('auth-pseudo').setAttribute('required', 'true');
@@ -665,8 +665,8 @@
         clientSupabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'PASSWORD_RECOVERY') { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('app-section').style.display = 'none'; setAuthMode('update_password'); } 
             else if (session && event !== 'PASSWORD_RECOVERY') { currentUser = session.user; viewingUserId = currentUser.id; if(authMode !== 'update_password') { afficherApplication(); } } 
-            else if (!session) { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('app-section').style.display = 'none'; }
-        });
+            else if (!session) { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('app-section').style.display = 'none'; setAuthMode('signup'); }
+        });
 
         document.getElementById('auth-form').addEventListener('submit', async (e) => {
             e.preventDefault(); e.stopPropagation();
