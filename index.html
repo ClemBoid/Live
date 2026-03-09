@@ -305,6 +305,12 @@
         <button class="btn-mini btn-reset" onclick="toggleCloneMode()" style="font-size:14px; padding:10px 20px;">❌ Annuler</button>
     </div>
 
+    <div id="clone-sticky-banner-avenir" style="display:none; position:fixed; bottom:0; left:0; right:0; background:var(--bg-carte); backdrop-filter:blur(15px); border-top:1px solid var(--border-carte); padding:15px 20px; z-index:10001; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); flex-wrap:wrap; justify-content:center; align-items:center; gap:20px; animation: slideUp 0.3s ease forwards;">
+        <span id="clone-count-avenir" style="font-weight:bold; color:var(--text-main); font-size:15px;">0 concert(s) sélectionné(s)</span>
+        <button class="btn-mini" style="background:#10b981; color:white; font-size:14px; padding:10px 20px; border:none;" onclick="clonerSelectionAvenir()">💾 Valider l'ajout</button>
+        <button class="btn-mini btn-reset" onclick="toggleCloneModeAvenir()" style="font-size:14px; padding:10px 20px;">❌ Annuler</button>
+    </div>
+
     <div id="modal-propose">
         <div class="carte modal-content">
             <h3 style="margin-top:0; color:var(--text-main);">📣 Proposer à la Team</h3>
@@ -351,15 +357,15 @@
                         <div class="form-group flex-1">
                             <label>Artiste(s) / Line-up :</label>
                             <div class="autocomplete-wrapper">
-                                <input type="text" id="artiste_principal" autocomplete="off" placeholder="Optionnel (ex: Muse, Royal Blood)">
+                                <input type="text" id="artiste_principal" autocomplete="off" placeholder="Frankie and the Witch Fingers, Tramhaus">
                                 <div id="autocomplete-artistes" class="autocomplete-list"></div>
                             </div>
                         </div>
                         <div class="form-group flex-1">
                             <label>Lieu / Salle :</label>
                             <div class="autocomplete-wrapper">
-                                <input type="text" id="lieu" list="salles-list" autocomplete="off" placeholder="Ex: Zenith, Lille">
-                                <datalist id="salles-list"></datalist>
+                                <input type="text" id="lieu" autocomplete="off" placeholder="L'Aéronef (Lille)">
+                                <div id="autocomplete-salles" class="autocomplete-list"></div>
                             </div>
                             <label style="font-size: 13px; font-weight: normal; margin-top: 8px; display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-main);">
                                 <input type="checkbox" id="is_festival" style="width: auto;"> 🎪 Mode Festival (Pass multi-artistes)
@@ -492,8 +498,14 @@
 
         <div id="tab-crew-avenir" class="vue-onglet">
             <div class="carte">
-                <h2>📅 Concerts à venir de la Team</h2>
-                <p style="text-align: center; color: var(--text-faded); margin-bottom: 20px;">Qui va voir quoi prochainement ?</p>
+                <div class="titre-section">
+                    <h2>📅 Concerts à venir de la Team</h2>
+                    <div class="actions-titre">
+                        <button id="btn-activer-clone-avenir" class="btn-mini btn-clone" onclick="toggleCloneModeAvenir()">➕ Ajouts multiples</button>
+                        <button id="btn-select-all-avenir" class="btn-mini btn-vue" style="display:none;" onclick="toggleSelectAllAvenir()">✅ Tout cocher</button>
+                    </div>
+                </div>
+                <p style="text-align: center; color: var(--text-faded); margin-bottom: 20px; margin-top: -15px;">Qui va voir quoi prochainement ?</p>
                 <div style="margin-bottom: 30px; text-align: center;">
                     <input type="text" id="recherche-crew-avenir" placeholder="Rechercher un artiste, une salle, un pote..." oninput="afficherConcertsCrewAvenir()" style="max-width: 500px; text-align: center; margin: 0 auto; display: block;">
                 </div>
@@ -624,8 +636,11 @@
         let currentUser = null; let viewingUserId = null; let profilsData = []; let pendingProposals = []; let currentProposeConcertId = null; let authMode = 'signup'; 
         let mesConcertsPersos = []; let lastFetchedMeteoConcertId = null; let lastFetchedMeteoHTML = ""; let lastFetchedTeamConcertId = null; let lastFetchedTeamHTML = "";
         let isFirstLoad = true;
+        let groupesAvenir = {};
+        let isCloneModeAvenir = false;
         let tousLesConcerts = [];
         let listeArtistesGlobale = [];
+        let listeSallesGlobale = [];
         let triActuel = 'date';
         let ordreDescendant = true;
         let tousLesAbos = [];
@@ -857,6 +872,8 @@
         });
 
         function changerOnglet(idTab) {
+            if (isCloneMode) toggleCloneMode();
+            if (isCloneModeAvenir) toggleCloneModeAvenir();
             document.querySelectorAll('.vue-onglet').forEach(tab => tab.classList.remove('actif')); document.querySelectorAll('.onglet').forEach(btn => btn.classList.remove('actif'));
             let elementTab = document.getElementById(idTab); if(elementTab) elementTab.classList.add('actif');
             let btnID = idTab.replace('tab-', 'onglet-'); let btnElement = document.getElementById(btnID); if(btnElement) btnElement.classList.add('actif');
@@ -873,7 +890,8 @@
                 let val = this.value; list.innerHTML = ''; if (!val) { list.style.display = 'none'; return; }
                 let searchVal = val; if (isMulti) { let parts = val.split(','); searchVal = parts[parts.length - 1].trim(); }
                 if(!searchVal) { list.style.display = 'none'; return; }
-                let matches = listeArtistesGlobale.filter(item => normaliserTexte(item).includes(normaliserTexte(searchVal)));
+                let dataArray = inputId === 'lieu' ? listeSallesGlobale : listeArtistesGlobale;
+                let matches = dataArray.filter(item => normaliserTexte(item).includes(normaliserTexte(searchVal)));
                 if(matches.length > 0) {
                     list.style.display = 'block';
                     matches.forEach(match => {
@@ -889,6 +907,7 @@
             document.addEventListener('click', function(e) { if (e.target !== input && e.target !== list) { list.style.display = 'none'; } });
         }
         setupAutocomplete('artiste_principal', 'autocomplete-artistes', true);
+        setupAutocomplete('lieu', 'autocomplete-salles', false);
 
         async function chargerMesConcerts() {
              const { data, error } = await clientSupabase.from('Concerts').select('*').eq('user_id', currentUser.id);
@@ -995,15 +1014,17 @@
             });
 
             listeArtistesGlobale = Array.from(setArt).sort((a,b) => a.localeCompare(b));
+            listeSallesGlobale = Array.from(setSa).sort((a,b) => a.localeCompare(b));
             const selAn = Array.from(document.querySelectorAll('.chk-annee:checked')).map(cb => cb.value); const selSa = Array.from(document.querySelectorAll('.chk-salle:checked')).map(cb => cb.value);
 
             let htmlAn = `<label class="chk-label" style="font-weight: 700;"><input type="checkbox" id="chk-toutes-annees" onchange="toggleToutesAnnees()"> TOUTES</label>`; let statsOptions = `<option value="tous">Toutes les années</option>`;
             Array.from(setAn).sort().reverse().forEach(a => { htmlAn += `<label class="chk-label"><input type="checkbox" class="chk-annee" value="${a}" onchange="afficherConcerts()" ${selAn.includes(a)?"checked":""}> ${a}</label>`; statsOptions += `<option value="${a}">${a}</option>`; });
             document.getElementById('container-chk-annees').innerHTML = htmlAn; document.getElementById('filtre-stats-annee').innerHTML = statsOptions;
 
-            let htmlSa = `<label class="chk-label" style="font-weight: 700;"><input type="checkbox" id="chk-toutes-salles" onchange="toggleToutesSalles()"> TOUTES</label>`; let dataSa = ''; 
-            Array.from(setSa).sort().forEach(s => { let safeS = s.replace(/"/g, '&quot;'); htmlSa += `<label class="chk-label"><input type="checkbox" class="chk-salle" value="${safeS}" onchange="afficherConcerts()" ${selSa.includes(s)?"checked":""}> ${s}</label>`; dataSa += `<option value="${safeS}"></option>`; });
-            document.getElementById('container-chk-salles').innerHTML = htmlSa; document.getElementById('salles-list').innerHTML = dataSa;
+            let htmlSa = `<label class="chk-label" style="font-weight: 700;"><input type="checkbox" id="chk-toutes-salles" onchange="toggleToutesSalles()"> TOUTES</label>`;
+            Array.from(setSa).sort().forEach(s => { let safeS = s.replace(/"/g, '"'); htmlSa += `<label class="chk-label"><input type="checkbox" class="chk-salle" value="${safeS}" onchange="afficherConcerts()" ${selSa.includes(s)?"checked":""}> ${s}</label>`; });
+            document.getElementById('container-chk-salles').innerHTML = htmlSa; 
+            if(document.getElementById('salles-list')) document.getElementById('salles-list').innerHTML = '';
         }
 
         window.reinitialiserFiltres = function() {
@@ -1193,7 +1214,7 @@
                                 let urlSetlist = `https://www.setlist.fm/search?query=${encodeURIComponent(artisteRecherche + " " + lieuPropre + " " + anneeRech)}`; btnSetlist = estPasseVisuel ? `<a href="${urlSetlist}" target="_blank" class="btn-icon btn-setlist" title="Chercher la Setlist">🎵</a>` : ``;
                             }
                             if(safeDateC) {
-                                let dCal = safeDateC.replace(/-/g, ''); let titreCal = encodeURIComponent("Concert : " + (c.Artiste_principal || "Artiste inconnu")); let lieuCal = encodeURIComponent(lieuPropre); let urlCal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titreCal}&dates=${dCal}T200000/${dCal}T233000&location=${lieuCal}`; btnCalendar = `<a href="${urlCal}" target="_blank" class="btn-icon btn-calendar" title="Ajouter à l'agenda Google">📅</a>`;
+                                let dCal = safeDateC.replace(/-/g, ''); let titreCal = encodeURIComponent("Concert : " + (c.Artiste_principal || "Artiste inconnu")); let lieuCal = encodeURIComponent(lieuPropre); let detailsCal = c.Prix ? encodeURIComponent(`Prix : ${String(c.Prix).replace('.', ',')} €`) : ""; let urlCal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titreCal}&dates=${dCal}T200000/${dCal}T233000&location=${lieuCal}&details=${detailsCal}`; btnCalendar = `<a href="${urlCal}" target="_blank" class="btn-icon btn-calendar" title="Ajouter à l'agenda Google">📅</a>`;
                             }
                             
                             let htmlLiens = [btnTicketPDF, btnSpotify, btnSetlist, btnCalendar, btnClone].filter(Boolean).join('');
@@ -1244,13 +1265,17 @@
                     return;
                 }
 
-                let groupes = {};
+                groupesAvenir = {};
                 concertsAvenir.forEach(c => {
                     let isFest = (c.Lieu || "").includes('🎪'); let lieuBrut = (c.Lieu || "").replace(/🎪/g, '').trim(); let artStr = c.Artiste_principal || "Inconnu";
                     let keyArt = uniformiserArtistes(artStr); let keyLieu = uniformiserSalle(lieuBrut); let key = c.Date + "||" + (isFest ? "FESTIVAL" : keyArt) + "||" + keyLieu;
 
-                    if (!groupes[key]) { groupes[key] = { date: c.Date, artiste: isFest ? "🎪 " + lieuBrut : artStr, lieu: lieuBrut, isFest: isFest, participants: [], interesses: [] }; } 
-                    else { if(artStr.length > groupes[key].artiste.length && !isFest) groupes[key].artiste = artStr; if(lieuBrut.length > groupes[key].lieu.length) groupes[key].lieu = lieuBrut; }
+                    if (!groupesAvenir[key]) { groupesAvenir[key] = { date: c.Date, artiste: isFest ? "🎪 " + lieuBrut : artStr, lieu: lieuBrut, isFest: isFest, participants: [], interesses: [], prix: c.Prix }; } 
+                    else { 
+                        if(artStr.length > groupesAvenir[key].artiste.length && !isFest) groupesAvenir[key].artiste = artStr; 
+                        if(lieuBrut.length > groupesAvenir[key].lieu.length) groupesAvenir[key].lieu = lieuBrut; 
+                        if(c.Prix && (!groupesAvenir[key].prix || parseFloat(c.Prix) > parseFloat(groupesAvenir[key].prix))) groupesAvenir[key].prix = c.Prix;
+                    }
 
                     let profile = profilsData.find(p => String(p.id) === String(c.user_id)); let pseudo = profile ? profile.pseudo : "Un ami";
                     let roleStr = "";
@@ -1258,15 +1283,15 @@
                     else if (c.Role === 'benevole') { roleStr = " <span style='opacity:0.7; font-weight:normal; font-size:11px;'>(Bénévole)</span>"; }
 
                     let nomAffichage = pseudo + roleStr;
-                    if (c.Statut_billet === 'a_acheter') { if (!groupes[key].interesses.includes(nomAffichage)) groupes[key].interesses.push(nomAffichage); } 
-                    else { if (!groupes[key].participants.includes(nomAffichage)) groupes[key].participants.push(nomAffichage); }
+                    if (c.Statut_billet === 'a_acheter') { if (!groupesAvenir[key].interesses.includes(nomAffichage)) groupesAvenir[key].interesses.push(nomAffichage); } 
+                    else { if (!groupesAvenir[key].participants.includes(nomAffichage)) groupesAvenir[key].participants.push(nomAffichage); }
                 });
 
-                let html = ''; let sortedKeys = Object.keys(groupes).sort((a,b) => groupes[a].date.localeCompare(groupes[b].date));
+                let html = ''; let sortedKeys = Object.keys(groupesAvenir).sort((a,b) => groupesAvenir[a].date.localeCompare(groupesAvenir[b].date));
                 let rechInput = document.getElementById('recherche-crew-avenir'); let rechVal = rechInput ? normaliserTexte(rechInput.value) : "";
 
                 let filteredKeys = sortedKeys.filter(k => {
-                    let g = groupes[k]; let dateObj = new Date(g.date); let dFR = dateObj.toLocaleDateString('fr-FR', {weekday: 'long', day:'2-digit', month:'long', year:'numeric'});
+                    let g = groupesAvenir[k]; let dateObj = new Date(g.date); let dFR = dateObj.toLocaleDateString('fr-FR', {weekday: 'long', day:'2-digit', month:'long', year:'numeric'});
                     let searchString = normaliserTexte(g.artiste + " " + g.lieu + " " + dFR + " " + g.participants.join(" ") + " " + g.interesses.join(" "));
                     return rechVal === "" || searchString.includes(rechVal);
                 });
@@ -1274,16 +1299,130 @@
                 if (filteredKeys.length === 0) { html = "<p style='text-align:center; padding:30px; color:var(--text-faded);'>Aucun résultat trouvé.</p>"; } 
                 else {
                     filteredKeys.forEach(k => {
-                        let g = groupes[k]; let dateObj = new Date(g.date); let dFR = dateObj.toLocaleDateString('fr-FR', {weekday: 'long', day:'2-digit', month:'long', year:'numeric'}); dFR = dFR.charAt(0).toUpperCase() + dFR.slice(1);
+                        let g = groupesAvenir[k]; let dateObj = new Date(g.date); let dFR = dateObj.toLocaleDateString('fr-FR', {weekday: 'long', day:'2-digit', month:'long', year:'numeric'}); dFR = dFR.charAt(0).toUpperCase() + dFR.slice(1);
                         let htmlPart = g.participants.length > 0 ? g.participants.map(p => `<span class="badge-statut badge-billet-ok" style="width:auto; padding:4px 10px; font-size:12px;">✅ ${p}</span>`).join(' ') : '<span style="color:var(--text-faded); font-size:13px; font-weight:500;">Aucun</span>';
                         let htmlInt = g.interesses.length > 0 ? g.interesses.map(p => `<span class="badge-statut badge-billet-attente" style="width:auto; padding:4px 10px; font-size:12px;">⏳ ${p}</span>`).join(' ') : '<span style="color:var(--text-faded); font-size:13px; font-weight:500;">Aucun</span>';
                         let titreEvent = g.isFest ? `🎪 ${g.lieu}` : `🎸 ${g.artiste} <span style="font-size:14px; font-weight:normal; color:var(--text-faded);">@ ${g.lieu}</span>`;
 
-                        html += `<div style="background:var(--bg-box); border:1px solid var(--border-input); border-radius:12px; padding:20px; margin-bottom:15px; box-shadow:var(--card-shadow); transition: transform 0.2s;"><div style="color:#3b82f6; font-weight:700; font-size:13px; margin-bottom:5px;">📅 ${dFR}</div><div style="font-size:18px; font-weight:800; color:var(--text-main); margin-bottom:15px;">${titreEvent.replace(/</g, '<')}</div><div style="display:flex; gap:20px; flex-wrap:wrap;"><div style="flex:1; min-width:200px;"><div style="font-size:12px; color:var(--text-faded); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Participants</div><div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${htmlPart}</div></div><div style="flex:1; min-width:200px;"><div style="font-size:12px; color:var(--text-faded); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Intéressés</div><div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${htmlInt}</div></div></div></div>`;
+                        let prixAffiche = "";
+                        if (g.prix !== null && g.prix !== undefined && g.prix !== "") {
+                            let valPrix = parseFloat(String(g.prix).replace(',', '.'));
+                            prixAffiche = valPrix > 0 ? `<span style="color:var(--text-faded); font-weight:normal; margin-left:8px;">💶 ${valPrix.toFixed(2).replace('.', ',')} €</span>` : `<span style="color:var(--text-faded); font-weight:normal; margin-left:8px;">💶 Gratuit</span>`;
+                        }
+
+                        let btnSpotify = ""; let btnCalendar = "";
+                        let artisteRecherche = g.isFest ? "" : String(g.artiste).split(',')[0].trim();
+                        if(artisteRecherche && artisteRecherche !== "Inconnu") {
+                            let urlSpotify = `https://open.spotify.com/search/${encodeURIComponent(artisteRecherche)}`; btnSpotify = `<a href="${urlSpotify}" target="_blank" class="btn-icon btn-spotify" title="Écouter">🎧</a>`;
+                        }
+                        if(g.date) {
+                            let dCal = g.date.replace(/-/g, ''); let titreCal = encodeURIComponent("Concert : " + (g.artiste || "Artiste inconnu")); let lieuCal = encodeURIComponent(g.lieu); let detailsCal = g.prix ? encodeURIComponent(`Prix : ${String(g.prix).replace('.', ',')} €`) : ""; let urlCal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titreCal}&dates=${dCal}T200000/${dCal}T233000&location=${lieuCal}&details=${detailsCal}`; btnCalendar = `<a href="${urlCal}" target="_blank" class="btn-icon btn-calendar" title="Ajouter à l'agenda Google">📅</a>`;
+                        }
+                        let actionHTML = isCloneModeAvenir 
+                            ? `<input type="checkbox" class="chk-clone-avenir" onclick="updateCloneCountAvenir()" value="${k}" style="width:18px; height:18px; cursor:pointer; accent-color: #10b981;" title="Sélectionner pour l'ajout">`
+                            : `${btnSpotify}${btnCalendar}<button class="btn-icon btn-clone" onclick="clonerGroupeAvenir('${k}')" title="Ajouter à mon agenda">➕</button>`;
+
+                        html += `<div style="background:var(--bg-box); border:1px solid var(--border-input); border-radius:12px; padding:20px; margin-bottom:15px; box-shadow:var(--card-shadow); transition: transform 0.2s;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:15px;">
+                                <div style="display:flex; flex-direction:column; gap:5px;">
+                                    <div style="color:#3b82f6; font-weight:700; font-size:13px; display:flex; flex-wrap:wrap; align-items:center;">📅 ${dFR}${prixAffiche}</div>
+                                    <div style="font-size:18px; font-weight:800; color:var(--text-main); line-height:1.3;">${titreEvent.replace(/</g, '<')}</div>
+                                </div>
+                                <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">${actionHTML}</div>
+                            </div>
+                            <div style="display:flex; gap:20px; flex-wrap:wrap;"><div style="flex:1; min-width:200px;"><div style="font-size:12px; color:var(--text-faded); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Participants</div><div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${htmlPart}</div></div><div style="flex:1; min-width:200px;"><div style="font-size:12px; color:var(--text-faded); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Intéressés</div><div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${htmlInt}</div></div></div></div>`;
                     });
                 }
                 container.innerHTML = html;
             } catch(e) { container.innerHTML = `<p style='text-align:center; color:#ef4444; padding:30px;'>Erreur.</p>`; }
+        }
+
+        window.toggleCloneModeAvenir = function() {
+            isCloneModeAvenir = !isCloneModeAvenir;
+            if (isCloneModeAvenir) { 
+                document.getElementById('btn-activer-clone-avenir').style.display = 'none'; 
+                document.getElementById('btn-select-all-avenir').style.display = 'flex'; 
+                document.getElementById('clone-sticky-banner-avenir').style.display = 'flex'; 
+                updateCloneCountAvenir(); 
+            } else { 
+                document.getElementById('btn-activer-clone-avenir').style.display = 'flex'; 
+                document.getElementById('btn-select-all-avenir').style.display = 'none'; 
+                document.getElementById('clone-sticky-banner-avenir').style.display = 'none'; 
+            }
+            afficherConcertsCrewAvenir(); 
+        }
+
+        window.updateCloneCountAvenir = function() { 
+            const checkboxes = document.querySelectorAll('.chk-clone-avenir:checked'); 
+            document.getElementById('clone-count-avenir').innerText = `${checkboxes.length} concert(s) sélectionné(s)`; 
+        }
+
+        window.toggleSelectAllAvenir = function() {
+            const checkboxes = document.querySelectorAll('.chk-clone-avenir'); 
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked); 
+            checkboxes.forEach(cb => cb.checked = !allChecked);
+            const btn = document.getElementById('btn-select-all-avenir'); 
+            btn.innerHTML = !allChecked ? "☑️ Tout décocher" : "✅ Tout cocher"; 
+            updateCloneCountAvenir();
+        }
+
+        window.clonerGroupeAvenir = function(key) {
+            const g = groupesAvenir[key]; if(!g) return;
+            if (g.date) {
+                const doublon = mesConcertsPersos.find(myC => myC.Date === g.date);
+                if (doublon) {
+                    let artDoublon = doublon.Artiste_principal || "un artiste";
+                    if (!confirm(`⚠️ Attention : Tu as déjà prévu d'aller voir "${artDoublon}" le ${new Date(g.date).toLocaleDateString('fr-FR')} (même date).\n\nVeux-tu tout de même pré-remplir le formulaire pour ajouter ce concert à ton agenda ?`)) { return; }
+                }
+            }
+            document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME");
+            document.getElementById('artiste_principal').value = g.isFest ? "" : g.artiste.replace('🎪 ', '');
+            document.getElementById('is_festival').checked = g.isFest; 
+            document.getElementById('lieu').value = g.lieu.replace('🎪', '').trim();
+            document.getElementById('date').value = g.date || ""; 
+            document.getElementById('prix').value = ""; 
+            document.getElementById('statut_billet').value = "a_acheter";
+            if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
+            
+            document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = ""; 
+            document.getElementById('titre-formulaire').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
+            changerOnglet('tab-concerts'); setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert pré-rempli ! Vérifie les infos et valide.", "info"); }, 100);
+        }
+
+        window.clonerSelectionAvenir = async function() {
+            const checkboxes = document.querySelectorAll('.chk-clone-avenir:checked'); if(checkboxes.length === 0) { showToast("Sélectionne au moins un concert !", "warning"); return; }
+            const btn = document.getElementById('clone-sticky-banner-avenir').querySelector('.btn-mini'); btn.disabled = true;
+
+            const keysToClone = Array.from(checkboxes).map(cb => cb.value); 
+            const groupesToClone = keysToClone.map(k => groupesAvenir[k]);
+            
+            let distinctConcerts = []; let nbDoublons = 0; let premierDoublonDate = null;
+
+            groupesToClone.forEach(g => {
+                if (g.date) {
+                    const estDoublon = mesConcertsPersos.some(myC => myC.Date === g.date);
+                    if (estDoublon) { nbDoublons++; if(!premierDoublonDate) premierDoublonDate = new Date(g.date).toLocaleDateString('fr-FR'); } 
+                    else { distinctConcerts.push(g); }
+                } else { distinctConcerts.push(g); }
+            });
+
+            if (nbDoublons > 0) {
+                if (distinctConcerts.length === 0) { alert(`❌ Annulation : Tous les concerts sélectionnés (${nbDoublons}) sont déjà prévus dans ton agenda (ex: le ${premierDoublonDate}).`); btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false; return; }
+                if (!confirm(`⚠️ Attention : ${nbDoublons} concert(s) sélectionnés sont déjà prévus dans ton agenda (ex: le ${premierDoublonDate}).\n\nAjouter les ${distinctConcerts.length} NOUVEAUX concerts restants ?`)) { btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false; return; }
+            } else {
+                if(!confirm(`Tu vas ajouter ${distinctConcerts.length} concert(s) à ton agenda.\nLeur statut sera "À acheter". Continuer ?`)) { btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false; return; }
+            }
+
+            btn.innerHTML = "⏳ Ajout en cours...";
+            const payloads = distinctConcerts.map(g => ({ user_id: currentUser.id, Artiste_principal: g.isFest ? null : g.artiste.replace('🎪 ', ''), Lieu: g.isFest ? g.lieu + " 🎪" : g.lieu, Date: g.date ? g.date : null, Prix: null, Statut_billet: 'a_acheter', Role: 'spectateur', Ticket_PDF: null, Bieres: 0, Coup_de_coeur: false }));
+            const { error } = await clientSupabase.from('Concerts').insert(payloads);
+            
+            btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false;
+            if(error) { showToast("Erreur lors de l'ajout.", "error"); console.error(error); } else { 
+                showToast(`${distinctConcerts.length} concert(s) ajouté(s) ! 🎉`, "success"); 
+                toggleCloneModeAvenir();
+                await chargerMesConcerts(); document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME"); 
+            }
         }
         
         function afficherOngletArtistes() {
