@@ -122,18 +122,18 @@
         .stat-box span { display: block; font-size: 30px; font-weight: 800; color: var(--text-main); margin-top: 4px; text-transform: none;}
         .stat-box span.highlight { color: #3b82f6; }
 
-        .entete-grille { display: grid; grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 110px 70px; gap: 10px; padding: 12px 20px; border-bottom: 1px solid var(--border-input); color: var(--text-faded); font-weight: 600; font-size: 11px; text-transform: uppercase; }
-        .concert-item { display: grid; grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 110px 70px; gap: 10px; align-items: center; padding: 14px 20px; font-size: 14px; cursor: pointer; }
+        .entete-grille { display: grid; grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 140px 95px; gap: 10px; padding: 12px 20px; border-bottom: 1px solid var(--border-input); color: var(--text-faded); font-weight: 600; font-size: 11px; text-transform: uppercase; }
+        .concert-item { display: grid; grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 140px 95px; gap: 10px; align-items: center; padding: 14px 20px; font-size: 14px; cursor: pointer; }
         
-        body.hide-role .entete-grille { grid-template-columns: 85px 2fr 1.5fr 60px 80px 45px 55px 110px 70px; }
-        body.hide-role .concert-item { grid-template-columns: 85px 2fr 1.5fr 60px 80px 45px 55px 110px 70px; }
+        body.hide-role .entete-grille { grid-template-columns: 85px 2fr 1.5fr 60px 80px 45px 55px 140px 95px; }
+        body.hide-role .concert-item { grid-template-columns: 85px 2fr 1.5fr 60px 80px 45px 55px 140px 95px; }
         body.hide-role .col-role, body.hide-role .form-role, body.hide-role .filtre-role { display: none !important; }
 
-        body.mode-vitrine .entete-grille { grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 120px; }
-        body.mode-vitrine .concert-item { grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 120px; }
+        body.mode-vitrine .entete-grille { grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 140px; }
+        body.mode-vitrine .concert-item { grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 140px; }
         
-        body.mode-vitrine.hide-role .entete-grille { grid-template-columns: 85px 2fr 1.5fr 60px 80px 45px 55px 120px; }
-        body.mode-vitrine.hide-role .concert-item { grid-template-columns: 85px 2fr 1.5fr 60px 80px 45px 55px 120px; }
+        body.mode-vitrine.hide-role .entete-grille { grid-template-columns: 85px 2fr 1.5fr 60px 80px 45px 55px 140px; }
+        body.mode-vitrine.hide-role .concert-item { grid-template-columns: 85px 2fr 1.5fr 60px 80px 45px 55px 140px; }
 
         .col-triable { cursor: pointer; user-select: none; transition: color 0.2s; display: flex; align-items: center; gap: 4px;}
         .col-triable:hover { color: var(--text-main); }
@@ -172,7 +172,7 @@
         .col-lieu { color: var(--text-muted); white-space: normal; overflow-wrap: break-word; font-size: 13px; line-height: 1.4;}
         .col-prix { font-weight: 600; color: var(--text-muted);}
         .col-billet, .col-statut, .col-role, .col-bieres { text-align: center; }
-        .col-liens { display: flex; justify-content: flex-start; gap: 6px; flex-wrap: wrap; align-items: center;}
+        .col-liens { display: flex; justify-content: flex-start; gap: 6px; flex-wrap: nowrap; align-items: center;}
 
         .date-badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 12px; text-align: center; width: 100%; box-sizing: border-box;}
         .date-avenir { background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); }
@@ -1288,7 +1288,10 @@
         
         function afficherOngletArtistes() {
             let statsArtistes = {}; let rech = normaliserTexte(document.getElementById('recherche-artiste-tab').value);
+            const today = new Date().toISOString().split('T')[0];
             tousLesConcerts.forEach(c => {
+                if (c.Date && c.Date > today) return; // Ignore les concerts à venir
+                
                 if(c.Artiste_principal) {
                     let allArt = String(c.Artiste_principal); let anneeConcert = c.Date ? String(c.Date).substring(0,4) : "Inconnue";
                     allArt.split(',').forEach(a => {
