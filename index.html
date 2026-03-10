@@ -738,14 +738,23 @@
 
         window.accepterProposition = async function(propId) {
             const p = pendingProposals.find(x => x.id === propId); if(!p) return;
-            document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME");
+            
+            if (document.getElementById('view-selector').value !== "ME") {
+                document.getElementById('view-selector').value = "ME"; 
+                await changerVueUtilisateur("ME");
+            }
+            
+            changerOnglet('tab-concerts');
+            
             document.getElementById('artiste_principal').value = p.artiste || ""; document.getElementById('lieu').value = p.lieu ? p.lieu.replace(/🎪/g, '').trim() : ""; document.getElementById('is_festival').checked = (p.lieu || "").includes('🎪');
             document.getElementById('date').value = p.date || ""; document.getElementById('prix').value = p.prix || ""; document.getElementById('statut_billet').value = "a_acheter";
             if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
             document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = "";
             document.getElementById('titre-formulaire').innerHTML = `🎸 Ajouter ce concert proposé`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
+            
             await clientSupabase.from('Propositions').delete().eq('id', propId); const banner = document.getElementById('prop-banner-'+propId); if(banner) banner.remove();
-            changerOnglet('tab-concerts'); setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert pré-rempli ! Vérifie les infos et valide.", "success"); }, 100);
+            
+            setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert pré-rempli ! Vérifie les infos et valide.", "success"); }, 100);
         }
 
         window.refuserProposition = async function(propId) { await clientSupabase.from('Propositions').delete().eq('id', propId); const banner = document.getElementById('prop-banner-'+propId); if(banner) banner.remove(); }
@@ -797,7 +806,7 @@
 
         window.updateCloneCount = function() { const checkboxes = document.querySelectorAll('.chk-clone:checked'); document.getElementById('clone-count').innerText = `${checkboxes.length} concert(s) sélectionné(s)`; }
 
-        window.clonerConcert = function(id) {
+        window.clonerConcert = async function(id) {
             const c = tousLesConcerts.find(x => String(x.id) === String(id)); if(!c) return;
             if (c.Date) {
                 const doublon = mesConcertsPersos.find(myC => myC.Date === c.Date);
@@ -806,7 +815,14 @@
                     if (!confirm(`⚠️ Attention : Tu as déjà prévu d'aller voir "${artDoublon}" le ${new Date(c.Date).toLocaleDateString('fr-FR')} (même date).\n\nVeux-tu tout de même pré-remplir le formulaire pour ajouter ce concert à ton agenda ?`)) { return; }
                 }
             }
-            document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME");
+            
+            if (document.getElementById('view-selector').value !== "ME") {
+                document.getElementById('view-selector').value = "ME"; 
+                await changerVueUtilisateur("ME");
+            }
+            
+            changerOnglet('tab-concerts');
+            
             document.getElementById('artiste_principal').value = c.Artiste_principal || "";
             let lieuBrut = c.Lieu ? String(c.Lieu) : ""; document.getElementById('is_festival').checked = lieuBrut.includes('🎪'); document.getElementById('lieu').value = lieuBrut.replace(/🎪/g, '').trim();
             document.getElementById('date').value = c.Date || ""; document.getElementById('prix').value = c.Prix || ""; document.getElementById('statut_billet').value = "a_acheter";
@@ -814,7 +830,7 @@
             
             document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = ""; 
             document.getElementById('titre-formulaire').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
-            changerOnglet('tab-concerts'); setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert prêt ! Vérifie ton prix et valide.", "info"); }, 100);
+            setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert prêt à être ajouté ! Vérifie ton prix et valide.", "info"); }, 100);
         }
 
         window.toggleSelectAll = function() {
@@ -1266,11 +1282,22 @@
                 groupesAvenir = {};
                 concertsAvenir.forEach(c => {
                     let isFest = (c.Lieu || "").includes('🎪'); let lieuBrut = (c.Lieu || "").replace(/🎪/g, '').trim(); let artStr = c.Artiste_principal || "Inconnu";
-                    let keyArt = uniformiserArtistes(artStr); let keyLieu = uniformiserSalle(lieuBrut); let key = c.Date + "||" + (isFest ? "FESTIVAL" : keyArt) + "||" + keyLieu;
+                    let keyLieu = uniformiserSalle(lieuBrut); 
+                    
+                    // Clé modifiée : on regroupe UNIQUEMENT par Date et Salle (peu importe les fautes sur les artistes)
+                    let key = c.Date + "||" + keyLieu;
 
-                    if (!groupesAvenir[key]) { groupesAvenir[key] = { date: c.Date, artiste: isFest ? "🎪 " + lieuBrut : artStr, lieu: lieuBrut, isFest: isFest, participants: [], interesses: [], prix: c.Prix }; } 
-                    else { 
-                        if(artStr.length > groupesAvenir[key].artiste.length && !isFest) groupesAvenir[key].artiste = artStr; 
+                    if (!groupesAvenir[key]) { 
+                        groupesAvenir[key] = { date: c.Date, artiste: isFest ? "🎪 " + lieuBrut : artStr, lieu: lieuBrut, isFest: isFest, participants: [], interesses: [], prix: c.Prix }; 
+                    } else { 
+                        if (isFest) groupesAvenir[key].isFest = true;
+                        
+                        // Fusion intelligente des noms d'artistes sans doublons
+                        let artsExistants = groupesAvenir[key].artiste.replace(/🎪/g, '').split(',').map(a => a.trim());
+                        let artsNouveaux = artStr.split(',').map(a => a.trim());
+                        let artsCombines = Array.from(new Set([...artsExistants, ...artsNouveaux])).filter(a => a !== "" && a !== "Inconnu").join(', ');
+                        
+                        groupesAvenir[key].artiste = groupesAvenir[key].isFest ? "🎪 " + lieuBrut : (artsCombines || "Inconnu");
                         if(lieuBrut.length > groupesAvenir[key].lieu.length) groupesAvenir[key].lieu = lieuBrut; 
                         if(c.Prix && (!groupesAvenir[key].prix || parseFloat(c.Prix) > parseFloat(groupesAvenir[key].prix))) groupesAvenir[key].prix = c.Prix;
                     }
@@ -1364,7 +1391,7 @@
             updateCloneCountAvenir();
         }
 
-        window.clonerGroupeAvenir = function(key) {
+        window.clonerGroupeAvenir = async function(key) {
             const g = groupesAvenir[key]; if(!g) return;
             if (g.date) {
                 const doublon = mesConcertsPersos.find(myC => myC.Date === g.date);
@@ -1373,18 +1400,25 @@
                     if (!confirm(`⚠️ Attention : Tu as déjà prévu d'aller voir "${artDoublon}" le ${new Date(g.date).toLocaleDateString('fr-FR')} (même date).\n\nVeux-tu tout de même pré-remplir le formulaire pour ajouter ce concert à ton agenda ?`)) { return; }
                 }
             }
-            document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME");
+            
+            if (document.getElementById('view-selector').value !== "ME") {
+                document.getElementById('view-selector').value = "ME"; 
+                await changerVueUtilisateur("ME");
+            }
+            
+            changerOnglet('tab-concerts');
+            
             document.getElementById('artiste_principal').value = g.isFest ? "" : g.artiste.replace('🎪 ', '');
             document.getElementById('is_festival').checked = g.isFest; 
             document.getElementById('lieu').value = g.lieu.replace('🎪', '').trim();
             document.getElementById('date').value = g.date || ""; 
-            document.getElementById('prix').value = ""; 
+            document.getElementById('prix').value = g.prix ? String(g.prix).replace(',', '.') : ""; 
             document.getElementById('statut_billet').value = "a_acheter";
             if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
             
             document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = ""; 
             document.getElementById('titre-formulaire').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
-            changerOnglet('tab-concerts'); setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert pré-rempli ! Vérifie les infos et valide.", "info"); }, 100);
+            setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert pré-rempli ! Vérifie les infos et valide.", "info"); }, 100);
         }
 
         window.clonerSelectionAvenir = async function() {
@@ -1412,7 +1446,7 @@
             }
 
             btn.innerHTML = "⏳ Ajout en cours...";
-            const payloads = distinctConcerts.map(g => ({ user_id: currentUser.id, Artiste_principal: g.isFest ? null : g.artiste.replace('🎪 ', ''), Lieu: g.isFest ? g.lieu + " 🎪" : g.lieu, Date: g.date ? g.date : null, Prix: null, Statut_billet: 'a_acheter', Role: 'spectateur', Ticket_PDF: null, Bieres: 0, Coup_de_coeur: false }));
+            const payloads = distinctConcerts.map(g => ({ user_id: currentUser.id, Artiste_principal: g.isFest ? null : g.artiste.replace('🎪 ', ''), Lieu: g.isFest ? g.lieu + " 🎪" : g.lieu, Date: g.date ? g.date : null, Prix: g.prix ? String(g.prix).replace(',', '.') : null, Statut_billet: 'a_acheter', Role: 'spectateur', Ticket_PDF: null, Bieres: 0, Coup_de_coeur: false }));
             const { error } = await clientSupabase.from('Concerts').insert(payloads);
             
             btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false;
