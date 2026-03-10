@@ -1170,11 +1170,15 @@
                     let cProchain = tousLesConcerts.find(x => x.id === idProchain);
                     if(cProchain) {
                         let diffJours = Math.ceil((new Date(minAvenir) - todayObj) / (1000 * 60 * 60 * 24));
-                        let txtHype = diffJours === 0 ? "C'est CE SOIR" : `J-${diffJours}`;
                         let isFest = String(cProchain.Lieu||"").includes('🎪'); let lieuPropre = String(cProchain.Lieu||"").replace(/🎪/g, '').trim();
                         let texteEvent = isFest ? lieuPropre : `${cProchain.Artiste_principal || "un artiste"} à ${lieuPropre}`;
                         
-                        banHTML += `<div class="banniere banniere-hype" title="Aller à ce concert" onclick="const row = document.getElementById('row-container-${idProchain}'); if(row){row.scrollIntoView({behavior: 'smooth', block: 'center'}); row.style.boxShadow='0 0 20px rgba(52, 211, 153, 0.6)'; setTimeout(()=>row.style.boxShadow='', 2000);}"><div style="width:100%;">Le compte à rebours de la Hype : <span class="jour">${txtHype}</span> avant ${texteEvent.replace(/</g, '<')} !</div><div id="hype-team-info" style="display:none; width:100%; margin-top:5px;"></div></div>`;
+                        // Phrase dynamique qui s'adapte parfaitement au jour J
+                        let phraseHype = diffJours === 0 
+                            ? `<span class="jour">C'est CE SOIR</span> : ${texteEvent.replace(/</g, '<')} !` 
+                            : `Le compte à rebours de la Hype : <span class="jour">J-${diffJours}</span> avant ${texteEvent.replace(/</g, '<')} !`;
+                        
+                        banHTML += `<div class="banniere banniere-hype" title="Aller à ce concert" onclick="const row = document.getElementById('row-container-${idProchain}'); if(row){row.scrollIntoView({behavior: 'smooth', block: 'center'}); row.style.boxShadow='0 0 20px rgba(52, 211, 153, 0.6)'; setTimeout(()=>row.style.boxShadow='', 2000);}"><div style="width:100%;">${phraseHype}</div><div id="hype-team-info" style="display:none; width:100%; margin-top:5px;"></div></div>`;
                         
                         callMeteo = () => { if (diffJours <= 7 && diffJours >= 0) fetchMeteoProchainConcert(cProchain, diffJours); };
                         callTeam = () => { fetchTeamForProchainConcert(cProchain, isFest, lieuPropre); };
