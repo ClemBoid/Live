@@ -1081,17 +1081,18 @@
                 return;
             }
             try {
-                let keyArtProchain = uniformiserArtistes(cProchain.Artiste_principal); let keyLieuProchain = uniformiserSalle(lieuPropre);
+                let keyLieuProchain = uniformiserSalle(lieuPropre);
+                // La requête Supabase filtre déjà par la Date exacte
                 const { data: teamConcerts, error } = await clientSupabase.from('Concerts').select('user_id, Artiste_principal, Lieu, Statut_billet, Role').eq('Date', cProchain.Date);
                 if (error || !teamConcerts) return;
 
                 let participants = []; let interesses = [];
                 teamConcerts.forEach(tc => {
-                    let tcIsFest = (tc.Lieu || "").includes('🎪'); let tcLieuBrut = (tc.Lieu || "").replace(/🎪/g, '').trim(); 
-                    let tcArtStr = tc.Artiste_principal || "Inconnu"; let keyArtTc = uniformiserArtistes(tcArtStr); let keyLieuTc = uniformiserSalle(tcLieuBrut);
-                    let isMatch = false;
-                    if (isFest && tcIsFest && keyLieuTc === keyLieuProchain) isMatch = true;
-                    if (!isFest && !tcIsFest && keyArtTc === keyArtProchain && keyLieuTc === keyLieuProchain) isMatch = true;
+                    let tcLieuBrut = (tc.Lieu || "").replace(/🎪/g, '').trim(); 
+                    let keyLieuTc = uniformiserSalle(tcLieuBrut);
+                    
+                    // Nouvelle logique intelligente : on compare UNIQUEMENT la salle (et la date via Supabase)
+                    let isMatch = (keyLieuTc === keyLieuProchain);
 
                     if (isMatch) {
                         let pseudo = "";
