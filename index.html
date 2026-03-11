@@ -712,9 +712,23 @@
 
         async function deconnexion() { await clientSupabase.auth.signOut(); location.reload(); }
 
+        let listeSallesCommunaute = [];
+        
+        async function chargerSallesCommunaute() {
+            const { data, error } = await clientSupabase.from('Concerts').select('Lieu');
+            if (!error && data) {
+                let setSa = new Set();
+                data.forEach(c => {
+                    let lieuPropre = c.Lieu ? String(c.Lieu).replace(/🎪/g, '').trim() : "";
+                    if(lieuPropre) setSa.add(lieuPropre);
+                });
+                listeSallesCommunaute = Array.from(setSa).sort((a,b) => a.localeCompare(b));
+            }
+        }
+
         async function afficherApplication() {
             document.getElementById('auth-section').style.display = 'none'; document.getElementById('app-section').style.display = 'block';
-            await chargerProfils(); await chargerMesConcerts(); await verifierPropositions(); changerVueUtilisateur("ME");
+            await chargerProfils(); await chargerSallesCommunaute(); await verifierPropositions(); changerVueUtilisateur("ME");
         }
 
         async function chargerProfils() {
@@ -904,7 +918,9 @@
                 let val = this.value; list.innerHTML = ''; if (!val) { list.style.display = 'none'; return; }
                 let searchVal = val; if (isMulti) { let parts = val.split(','); searchVal = parts[parts.length - 1].trim(); }
                 if(!searchVal) { list.style.display = 'none'; return; }
-                let dataArray = inputId === 'lieu' ? listeSallesGlobale : listeArtistesGlobale;
+                
+                // Si on cherche une salle, on utilise la base globale. Si on cherche un artiste, on utilise sa base personnelle.
+                let dataArray = inputId === 'lieu' ? listeSallesCommunaute : listeArtistesGlobale;
                 let matches = dataArray.filter(item => normaliserTexte(item).includes(normaliserTexte(searchVal)));
                 if(matches.length > 0) {
                     list.style.display = 'block';
@@ -956,6 +972,32 @@
                 const { error } = await clientSupabase.from('Concerts').update({ Note: note }).eq('id', id);
                 if (error) showToast("Erreur DB : " + error.message, "error");
                 else { showToast(note === 0 ? "Note retirée" : "Note enregistrée ! ⭐", "success"); afficherConcerts(); setTimeout(()=>document.getElementById('details-'+id).classList.add('open'), 50); }
+            }
+        }
+
+        window.sauvegarderNoteArtiste = async function(id, artiste, note) {
+            let index = tousLesConcerts.findIndex(c => String(c.id) === String(id));
+            if(index !== -1) {
+                let notesJson = tousLesConcerts[index].Notes_artistes || {};
+                if (typeof notesJson === 'string') { try { notesJson = JSON.parse(notesJson); } catch(e) { notesJson = {}; } }
+                notesJson[artiste] = parseFloat(note);
+                
+                // Calcul de la moyenne globale arrondie STRICTEMENT de 0,5 en 0,5
+                let sum = 0, count = 0;
+                Object.values(notesJson).forEach(v => { 
+                    let val = parseFloat(v);
+                    if(val > 0) { sum += val; count++; } 
+                });
+                let moyenneExacte = count > 0 ? (sum / count) : 0;
+                // L'astuce mathématique pour arrondir au 0.5 le plus proche :
+                let moyenne = Math.round(moyenneExacte * 2) / 2;
+                
+                tousLesConcerts[index].Notes_artistes = notesJson;
+                tousLesConcerts[index].Note = moyenne;
+                
+                const { error } = await clientSupabase.from('Concerts').update({ Notes_artistes: notesJson, Note: moyenne }).eq('id', id);
+                if (error) showToast("Erreur DB : " + error.message, "error");
+                else { showToast(note === 0 ? `Note retirée pour ${artiste}` : `Note de ${String(note).replace('.',',')} pour ${artiste} enregistrée ! ⭐`, "success"); afficherConcerts(); setTimeout(()=>document.getElementById('details-'+id).classList.add('open'), 50); }
             }
         }
         
@@ -1158,7 +1200,7 @@
                         else if(triActuel === 'prix') {
                             valA = parseFloat(String(a.Prix || "0").replace(',','.')); valB = parseFloat(String(b.Prix || "0").replace(',','.'));
                             if(isNaN(valA)) valA = 0; if(isNaN(valB)) valB = 0;
-                        } else if(triActuel === 'note') { valA = parseInt(a.Note) || 0; valB = parseInt(b.Note) || 0; }
+                        } else if(triActuel === 'note') { valA = parseFloat(a.Note) || 0; valB = parseFloat(b.Note) || 0; }
                         if (valA === valB) return 0; if (valA < valB) return ordreDescendant ? 1 : -1; return ordreDescendant ? -1 : 1;
                     } catch(e) { return 0; }
                 });
@@ -1242,21 +1284,95 @@
                             let actionHTML = '';
                             if (isOwner) { actionHTML = `${btnPropose}<button class="btn-icon btn-edit" onclick="preparerEdition('${c.id}')" title="Modifier">✏️</button><button class="btn-icon btn-del" onclick="supprimerConcert('${c.id}')" title="Supprimer">❌</button>`; }
 
-                            let note = c.Note || 0; let comm = c.Commentaire || ""; let starsHtml = '';
-                            let noteAffichage = note > 0 ? `${note}★` : `<span style="color:var(--text-faded);">-</span>`;
-                            for (let i=1; i<=5; i++) { let starClass = i <= note ? "star-active" : "star-inactive"; let clickVal = (i === note) ? 0 : i; let clickAttr = isOwner ? `onclick="event.stopPropagation(); sauvegarderNote('${c.id}', ${clickVal})"` : ""; starsHtml += `<span class="star ${starClass}" ${clickAttr}>★</span>`; }
+                            let comm = c.Commentaire || ""; 
+                            
+                            // Notes indépendantes par artiste avec demi-étoiles
+                            let artistesArray = c.Artiste_principal ? String(c.Artiste_principal).split(',').map(a=>a.trim()).filter(a=>a!=="") : ["Artiste inconnu"];
+                            let notesJson = c.Notes_artistes || {}; 
+                            if (typeof notesJson === 'string') { try { notesJson = JSON.parse(notesJson); } catch(e) { notesJson = {}; } }
+                            
+                            let evaluationsHtml = '';
+                            artistesArray.forEach(artiste => {
+                                let noteArtiste = parseFloat(notesJson[artiste]) || 0;
+                                let starsHtml = '';
+                                for (let i=1; i<=5; i++) { 
+                                    let isFull = noteArtiste >= i;
+                                    let isHalf = noteArtiste === (i - 0.5);
+                                    
+                                    let clickVal;
+                                    if (noteArtiste === i) clickVal = i - 0.5; // Clic sur étoile pleine -> devient demi
+                                    else if (noteArtiste === i - 0.5) clickVal = 0; // Clic sur demi-étoile -> supprime
+                                    else clickVal = i; // Clic sur étoile vide -> devient pleine
+                                    
+                                    let clickAttr = isOwner ? `onclick="event.stopPropagation(); sauvegarderNoteArtiste('${c.id}', '${artiste.replace(/'/g, "\\'")}', ${clickVal})"` : ""; 
+                                    
+                                    if (isFull) {
+                                        starsHtml += `<span class="star star-active" ${clickAttr}>★</span>`;
+                                    } else if (isHalf) {
+                                        starsHtml += `<span class="star" ${clickAttr} style="position:relative; display:inline-block;">
+                                                        <span class="star-inactive">★</span>
+                                                        <span class="star-active" style="position:absolute; left:0; top:0; width:50%; overflow:hidden;">★</span>
+                                                      </span>`;
+                                    } else {
+                                        starsHtml += `<span class="star star-inactive" ${clickAttr}>★</span>`;
+                                    }
+                                }
+                                evaluationsHtml += `
+                                <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+                                    <span style="min-width:120px; font-size:13px; font-weight:700; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${artiste.replace(/"/g, '&quot;')}">${artiste}</span>
+                                    <div style="display:flex; gap:4px; font-size:20px; cursor:${isOwner ? 'pointer' : 'default'};">${starsHtml}</div>
+                                </div>`;
+                            });
+
+                            let note = c.Note || 0;
+                            // Affichage avec virgule pour la moyenne globale
+                            let noteAffichage = note > 0 ? `${String(note).replace('.', ',')}★` : `<span style="color:var(--text-faded);">-</span>`;
                             
                             let commHtml = "";
                             if (isOwner) { 
                                 if (comm) {
-                                    commHtml = `<div id="comm-view-${c.id}" style="width:100%;"><p style="font-style:italic; color:var(--text-muted); font-size:13px; margin:0; padding:10px; background:var(--bg-input); border-radius:8px; border:1px solid var(--border-input); position:relative;">"${comm.replace(/"/g, '&quot;').replace(/</g, '&lt;')}"<button class="btn-icon" style="position:absolute; top:5px; right:5px; font-size:12px; padding:4px;" onclick="event.stopPropagation(); toggleEditComm('${c.id}')" title="Modifier">✏️</button></p></div><div id="comm-edit-${c.id}" style="display:none; width:100%; flex-direction:column; gap:5px;"><textarea id="comm-input-${c.id}" placeholder="Ajouter un souvenir..." class="comm-textarea" onclick="event.stopPropagation();">${comm.replace(/</g, '&lt;')}</textarea><div style="display:flex; gap:10px;"><button class="btn-mini btn-vue" onclick="event.stopPropagation(); sauvegarderCommentaire('${c.id}')">💾 Sauvegarder</button><button class="btn-mini btn-reset" onclick="event.stopPropagation(); toggleEditComm('${c.id}')">❌ Annuler</button></div></div>`;
+                                    commHtml = `
+                                    <div id="comm-view-${c.id}" style="width:100%;">
+                                        <p style="font-style:italic; color:var(--text-muted); font-size:13px; margin:0; padding:10px; background:var(--bg-input); border-radius:8px; border:1px solid var(--border-input); position:relative;">
+                                            "${comm.replace(/"/g, '&quot;').replace(/</g, '&lt;')}"
+                                            <button class="btn-icon" style="position:absolute; top:5px; right:5px; font-size:12px; padding:4px;" onclick="event.stopPropagation(); toggleEditComm('${c.id}')" title="Modifier">✏️</button>
+                                        </p>
+                                    </div>
+                                    <div id="comm-edit-${c.id}" style="display:none; width:100%; flex-direction:column; gap:5px;">
+                                        <textarea id="comm-input-${c.id}" placeholder="Ajouter un souvenir..." class="comm-textarea" onclick="event.stopPropagation();">${comm.replace(/</g, '&lt;')}</textarea>
+                                        <div style="display:flex; gap:10px;">
+                                            <button class="btn-mini btn-vue" onclick="event.stopPropagation(); sauvegarderCommentaire('${c.id}')">💾 Sauvegarder</button>
+                                            <button class="btn-mini btn-reset" onclick="event.stopPropagation(); toggleEditComm('${c.id}')">❌ Annuler</button>
+                                        </div>
+                                    </div>`;
                                 } else {
-                                    commHtml = `<div style="width:100%; display:flex; flex-direction:column; gap:5px;"><textarea id="comm-input-${c.id}" placeholder="Ajouter un souvenir, une anecdote ou votre avis sur ce concert..." class="comm-textarea" onclick="event.stopPropagation();"></textarea><button class="btn-mini btn-vue" style="align-self:flex-start;" onclick="event.stopPropagation(); sauvegarderCommentaire('${c.id}')">💾 Sauvegarder</button></div>`;
+                                    commHtml = `
+                                    <div style="width:100%; display:flex; flex-direction:column; gap:5px;">
+                                        <textarea id="comm-input-${c.id}" placeholder="Ajouter un souvenir, une anecdote ou votre avis sur ce concert..." class="comm-textarea" onclick="event.stopPropagation();"></textarea>
+                                        <button class="btn-mini btn-vue" style="align-self:flex-start;" onclick="event.stopPropagation(); sauvegarderCommentaire('${c.id}')">💾 Sauvegarder</button>
+                                    </div>`;
                                 }
                             } 
-                            else { commHtml = `<p style="font-style:italic; color:var(--text-muted); font-size:13px; margin:0; padding:10px; background:var(--bg-input); border-radius:8px; width:100%; border:1px solid var(--border-input);">${comm ? '"'+comm.replace(/</g, '&lt;')+'"' : 'Aucun commentaire sur ce concert.'}</p>`; }
+                            else { commHtml = `<p style="font-style:italic; color:var(--text-muted); font-size:13px; margin:0; padding:10px; background:var(--bg-input); border-radius:8px; width:100%; border:1px solid var(--border-input);">${comm ? '&quot;'+comm.replace(/</g, '&lt;')+'&quot;' : 'Aucun commentaire sur ce concert.'}</p>`; }
 
-                            let expandRow = `<div id="details-${c.id}" class="concert-details"><div class="details-section"><div class="details-label">Évaluation</div><div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;"><div style="display:flex; gap:5px; font-size:22px; cursor:${isOwner ? 'pointer' : 'default'};">${starsHtml}</div><div style="width:1px; height:25px; background:var(--border-input);"></div><button class="btn-mini" onclick="event.stopPropagation(); ${isOwner ? `toggleCoupDeCoeur('${c.id}')` : ''}" style="cursor:${isOwner?'pointer':'default'}; background:${c.Coup_de_coeur ? 'rgba(236, 72, 153, 0.1)' : 'var(--bg-input)'}; color:${c.Coup_de_coeur ? '#ec4899' : 'var(--text-faded)'}; border:1px solid ${c.Coup_de_coeur ? 'rgba(236, 72, 153, 0.3)' : 'var(--border-input)'}; font-size:13px;">${c.Coup_de_coeur ? '💖 Coup de cœur' : '🤍 Marquer coup de cœur'}</button></div></div><div class="details-section" style="flex:1;"><div class="details-label">Souvenirs & Avis</div><div style="display:flex; gap:10px; align-items:flex-start; width:100%;">${commHtml}</div></div></div>`;
+                            let expandRow = `
+                                <div id="details-${c.id}" class="concert-details">
+                                    <div class="details-section">
+                                        <div class="details-label">Évaluation par Artiste</div>
+                                        <div style="display:flex; flex-direction:column; margin-top:5px;">
+                                            ${evaluationsHtml}
+                                        </div>
+                                        <div style="margin-top:10px;">
+                                            <button class="btn-mini" onclick="event.stopPropagation(); ${isOwner ? `toggleCoupDeCoeur('${c.id}')` : ''}" style="cursor:${isOwner?'pointer':'default'}; background:${c.Coup_de_coeur ? 'rgba(236, 72, 153, 0.1)' : 'var(--bg-input)'}; color:${c.Coup_de_coeur ? '#ec4899' : 'var(--text-faded)'}; border:1px solid ${c.Coup_de_coeur ? 'rgba(236, 72, 153, 0.3)' : 'var(--border-input)'}; font-size:13px; width:fit-content;">
+                                                ${c.Coup_de_coeur ? '💖 Coup de cœur du concert' : '🤍 Marquer coup de cœur'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="details-section" style="flex:1;">
+                                        <div class="details-label">Souvenirs & Avis</div>
+                                        <div style="display:flex; gap:10px; align-items:flex-start; width:100%;">${commHtml}</div>
+                                    </div>
+                                </div>`;
                                 
                             let classCoupDeCoeur = c.Coup_de_coeur ? "row-coup-de-coeur" : ""; let classProchain = (c.id === idProchain) ? "prochain-concert" : "";
                             let finalRowClass = `row-container ${classCoupDeCoeur} ${classProchain}`.trim();
@@ -1708,7 +1824,7 @@
                 let statut = (!c.Date || typeof c.Date !== 'string') ? "A completer" : (c.Date > today ? "A venir" : "Passe"); let art = String(c.Artiste_principal || "").replace(/;/g, ","); let lieu = String(c.Lieu || "").replace(/🎪/g, '').replace(/;/g, ",");
                 let prix = (c.Prix !== null && c.Prix !== undefined && c.Prix !== "") ? String(c.Prix).replace('.', ',') : "A completer"; let dateExp = (c.Date && typeof c.Date === 'string') ? c.Date : "A completer"; 
                 let billet = c.Statut_billet === 'a_acheter' ? "A acheter" : (c.Statut_billet === 'cadeau' ? "Cadeau" : "Achete"); let role = c.Role === 'benevole' ? "Benevole" : "Spectateur";
-                let bieres = c.Bieres || 0; let note = c.Note || ""; let cdc = c.Coup_de_coeur ? "Oui" : "Non"; let comm = String(c.Commentaire || "").replace(/;/g, ",").replace(/\n/g, " "); let urlTicket = c.Ticket_PDF || "";
+                let bieres = c.Bieres || 0; let note = c.Note ? String(c.Note).replace('.', ',') : ""; let cdc = c.Coup_de_coeur ? "Oui" : "Non"; let comm = String(c.Commentaire || "").replace(/;/g, ",").replace(/\n/g, " "); let urlTicket = c.Ticket_PDF || "";
                 csv += `${art};${lieu};${dateExp};${prix};${billet};${role};${bieres};${note};${cdc};${comm};${urlTicket};${statut}\n`;
             });
             const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' }); const lien = document.createElement("a"); lien.href = URL.createObjectURL(blob); lien.download = "mes_concerts.csv";
