@@ -349,7 +349,10 @@
             <div id="bannieres-container"></div>
 
             <div class="carte admin-only form-carte">
-                <h1 id="titre-formulaire">🎸 Ajouter un Concert</h1>
+                <h1 id="titre-formulaire" onclick="toggleFormConcert()" style="cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:0; transition:color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color=''">
+                    <span id="titre-formulaire-texte">🎸 Ajouter un Concert</span>
+                </h1>
+                <div id="form-container-wrapper" style="display:none; margin-top:30px;">
                 <form id="concertForm">
                     <input type="hidden" id="concert_id">
                     <div class="flex-row">
@@ -415,6 +418,7 @@
                     <button type="button" id="btn-annuler" class="btn-annuler" onclick="annulerEdition()">Annuler la modification</button>
                 </form>
                 <div id="zone-agenda" style="text-align: center;"></div>
+                </div>
             </div>
 
             <div class="carte">
@@ -764,10 +768,11 @@
             document.getElementById('date').value = p.date || ""; document.getElementById('prix').value = p.prix || ""; document.getElementById('statut_billet').value = "a_acheter";
             if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
             document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = "";
-            document.getElementById('titre-formulaire').innerHTML = `🎸 Ajouter ce concert proposé`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
+            document.getElementById('titre-formulaire-texte').innerHTML = `🎸 Ajouter ce concert proposé`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
             
             await clientSupabase.from('Propositions').delete().eq('id', propId); const banner = document.getElementById('prop-banner-'+propId); if(banner) banner.remove();
             
+            toggleFormConcert(true);
             setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert pré-rempli ! Vérifie les infos et valide.", "success"); }, 100);
         }
 
@@ -843,7 +848,9 @@
             if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
             
             document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = ""; 
-            document.getElementById('titre-formulaire').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
+            document.getElementById('titre-formulaire-texte').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
+            
+            toggleFormConcert(true);
             setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert prêt à être ajouté ! Vérifie ton prix et valide.", "info"); }, 100);
         }
 
@@ -1538,7 +1545,9 @@
             if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
             
             document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = ""; 
-            document.getElementById('titre-formulaire').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
+            document.getElementById('titre-formulaire-texte').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
+            
+            toggleFormConcert(true);
             setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert pré-rempli ! Vérifie les infos et valide.", "info"); }, 100);
         }
 
@@ -1672,15 +1681,28 @@
                 document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = c.Ticket_PDF || "";
                 if(c.Ticket_PDF) { document.getElementById('ticket_nom_existant_container').style.display = "flex"; document.getElementById('ticket_nom_existant').innerHTML = "✅ Billet enregistré"; } 
                 else { document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('ticket_nom_existant').innerHTML = ""; }
-                document.getElementById('titre-formulaire').innerHTML = `✏️ Modifier le concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Enregistrer les modifications`; document.getElementById('btn-annuler').style.display = "block"; document.getElementById('alerte-conflit').style.display = 'none'; window.scrollTo({ top: 0, behavior: 'smooth' });
+                document.getElementById('titre-formulaire-texte').innerHTML = `✏️ Modifier le concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Enregistrer les modifications`; document.getElementById('btn-annuler').style.display = "block"; document.getElementById('alerte-conflit').style.display = 'none'; 
+                toggleFormConcert(true);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
         document.getElementById('btn_supprimer_ticket').addEventListener('click', function() { document.getElementById('ticket_url_existant').value = "SUPPRIMER"; document.getElementById('ticket_nom_existant_container').style.display = "none"; showToast("Billet retiré. N'oublie pas d'enregistrer les modifications.", "info"); });
 
+        window.toggleFormConcert = function(forceOpen = false) {
+            const container = document.getElementById('form-container-wrapper');
+            const titre = document.getElementById('titre-formulaire');
+            if (forceOpen || container.style.display === 'none') {
+                container.style.display = 'block'; titre.style.marginBottom = '30px';
+            } else {
+                container.style.display = 'none'; titre.style.marginBottom = '0';
+            }
+        }
+
         window.annulerEdition = function() {
             document.getElementById('concertForm').reset(); document.getElementById('concert_id').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('alerte-conflit').style.display = 'none';
-            document.getElementById('titre-formulaire').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Enregistrer le concert`; document.getElementById('btn-annuler').style.display = "none"; document.getElementById('zone-agenda').innerHTML = ""; 
+            document.getElementById('titre-formulaire-texte').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Enregistrer le concert`; document.getElementById('btn-annuler').style.display = "none"; document.getElementById('zone-agenda').innerHTML = ""; 
+            toggleFormConcert(false);
         }
 
         window.supprimerConcert = async function(id) { if(confirm("Supprimer ce concert ?")) { await clientSupabase.from('Concerts').delete().eq('id', id); showToast("Concert supprimé.", "warning"); chargerConcerts(); } }
