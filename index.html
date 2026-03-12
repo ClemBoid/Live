@@ -333,7 +333,7 @@
                         <option value="ME">👤 Mon Agenda</option>
                         <optgroup label="👀 Agendas de la Team" id="crew-list"></optgroup>
                     </select>
-                    <button id="btn-spotify-connect" class="btn-mini" style="background:#1ed760; color:black; font-weight:bold; border:none;" onclick="connecterSpotify()">🎧 Lier Spotify</button>
+                    <button id="btn-spotify-connect" class="btn-mini admin-only" style="background:#1ed760; color:black; font-weight:bold; border:none;" onclick="connecterSpotify()">🎧 Lier Spotify</button>
                 </div>
                 <div class="nav-onglets-wrapper">
                     <div class="nav-onglets" id="nav-onglets-container">
@@ -1431,8 +1431,8 @@
                                         <div class="details-label">Souvenirs & Avis</div>
                                         <div style="display:flex; gap:10px; align-items:flex-start; width:100%;">${commHtml}</div>
                                     </div>
-                                    <div class="details-section spotify-player-container" data-spotify-artist="${c.Artiste_principal ? String(c.Artiste_principal).split(',')[0].trim().replace(/"/g, '&quot;') : ''}" style="width: 100%; max-width: 400px; display:none;">
-                                        </div>
+                                    <div class="details-section spotify-player-container" data-spotify-artist="${c.Artiste_principal ? String(c.Artiste_principal).split(',')[0].trim().replace(/"/g, '"') : ''}" style="width: 100%; max-width: 400px; display:none;">
+                                    </div>
                                 </div>`;
                                 
                             let classCoupDeCoeur = c.Coup_de_coeur ? "row-coup-de-coeur" : ""; let classProchain = (c.id === idProchain) ? "prochain-concert" : "";
@@ -1670,10 +1670,10 @@
                     let anneesStr = Array.from(statsArtistes[art].annees).sort().join(', '); if(!anneesStr) anneesStr = "-"; 
                     safeHtml += `<tr>
                         <td style="font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:15px;">
-                            <div class="spotify-avatar-container" data-spotify-artist="${art.replace(/"/g, '&quot;')}" style="width:40px; height:40px; border-radius:50%; background:var(--bg-box); overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                            <div class="spotify-avatar-container" data-spotify-artist="${art.replace(/"/g, '"')}" style="width:40px; height:40px; border-radius:50%; background:var(--bg-box); overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                                 <span style="font-size:16px;">🎤</span>
                             </div>
-                            ${art.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+                            ${art.replace(/</g, '<').replace(/>/g, '>')}
                         </td>
                         <td style="color:var(--text-muted);">${statsArtistes[art].count} fois</td>
                         <td style="color:var(--text-muted); font-size: 13px;">${anneesStr}</td>
@@ -2186,7 +2186,7 @@
             isFetchingGeo = false;
         }
 
-        // --- RESTAURATION DE LA FONCTION EXPORT EXCEL ---
+        // --- RESTAURATION DE L'EXPORT EXCEL ---
         window.exporterExcel = function() {
             let csv = "Artistes;Lieu;Date;Prix;Billet;Role;Bieres;Note;Coup_de_coeur;Commentaire;Ticket_URL;Statut\n"; const today = new Date().toISOString().split('T')[0];
             tousLesConcerts.forEach(c => {
@@ -2200,13 +2200,15 @@
             document.body.appendChild(lien); lien.click(); document.body.removeChild(lien);
         }
 
-        /* --- LOGIQUE SPOTIFY (SÉCURITÉ PKCE) --- */
+        /* --- LOGIQUE SPOTIFY (SÉCURITÉ PKCE STRICTE) --- */
         const SPOTIFY_CLIENT_ID = '96dde2a6caee4321b6317cfc8a559307';
+        // Ton URL EXACTE déclarée sur le Dashboard Spotify
+        const REDIRECT_URI = 'https://clemboid.github.io/Live/';
+        
         let spotifyToken = localStorage.getItem('spotify_token');
         let spotifyTokenExp = localStorage.getItem('spotify_token_exp');
         let spotifyCache = JSON.parse(localStorage.getItem('spotify_artist_cache')) || {};
 
-        // Fonctions cryptographiques pour le PKCE
         const generateRandomString = (length) => {
             const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             const values = crypto.getRandomValues(new Uint8Array(length));
@@ -2227,7 +2229,6 @@
             const hashed = await sha256(codeVerifier);
             const codeChallenge = base64encode(hashed);
 
-            const redirectUri = 'https://clemboid.github.io/Live/';
             const scope = 'playlist-modify-private playlist-modify-public';
             const authUrl = new URL("https://accounts.spotify.com/authorize");
 
@@ -2237,7 +2238,7 @@
               scope: scope,
               code_challenge_method: 'S256',
               code_challenge: codeChallenge,
-              redirect_uri: redirectUri,
+              redirect_uri: REDIRECT_URI,
             };
 
             authUrl.search = new URLSearchParams(params).toString();
@@ -2250,8 +2251,6 @@
 
             if (code) {
                 let codeVerifier = localStorage.getItem('code_verifier');
-                const redirectUri = window.location.origin + window.location.pathname;
-
                 try {
                     const response = await fetch('https://accounts.spotify.com/api/token', {
                         method: 'POST',
@@ -2260,7 +2259,7 @@
                             client_id: SPOTIFY_CLIENT_ID,
                             grant_type: 'authorization_code',
                             code: code,
-                            redirect_uri: redirectUri,
+                            redirect_uri: REDIRECT_URI,
                             code_verifier: codeVerifier,
                         })
                     });
@@ -2272,7 +2271,6 @@
                         localStorage.setItem('spotify_token', spotifyToken);
                         localStorage.setItem('spotify_token_exp', spotifyTokenExp);
                         
-                        // Nettoie l'URL proprement après la connexion
                         window.history.replaceState({}, document.title, window.location.pathname);
                         showToast("Spotify connecté ! 🎧", "success");
                     } else {
