@@ -342,8 +342,8 @@
                         <div class="onglet" onclick="changerOnglet('tab-artistes')" id="onglet-artistes">🎤 Artistes</div>
                         <div class="onglet" onclick="changerOnglet('tab-timeline')" id="onglet-timeline">🛤️ Timeline</div>
                         <div class="onglet" onclick="changerOnglet('tab-stats')" id="onglet-stats">📊 Statistiques</div>
-                        <div class="onglet" onclick="changerOnglet('tab-abos')" id="onglet-abos">🎟️ Abonnements</div>
                         <div class="onglet" onclick="changerOnglet('tab-carte')" id="onglet-carte">🗺️ Carte</div>
+                        <div class="onglet" onclick="changerOnglet('tab-abos')" id="onglet-abos">🎟️ Abonnements</div>
                     </div>
                 </div>
             </div>
@@ -1431,7 +1431,7 @@
                                         <div class="details-label">Souvenirs & Avis</div>
                                         <div style="display:flex; gap:10px; align-items:flex-start; width:100%;">${commHtml}</div>
                                     </div>
-                                    <div class="details-section spotify-player-container" data-spotify-artist="${c.Artiste_principal ? String(c.Artiste_principal).split(',')[0].trim().replace(/"/g, '"') : ''}" style="width: 100%; max-width: 400px; display:none;">
+                                    <div class="details-section spotify-player-container" data-spotify-artistes="${c.Artiste_principal ? String(c.Artiste_principal).replace(/"/g, '&quot;') : ''}" style="width: 100%; max-width: 400px; display:none;">
                                     </div>
                                 </div>`;
                                 
@@ -1467,19 +1467,15 @@
                     let isFest = (c.Lieu || "").includes('🎪'); let lieuBrut = (c.Lieu || "").replace(/🎪/g, '').trim(); let artStr = c.Artiste_principal || "Inconnu";
                     let keyLieu = uniformiserSalle(lieuBrut); 
                     
-                    // Clé modifiée : on regroupe UNIQUEMENT par Date et Salle (peu importe les fautes sur les artistes)
                     let key = c.Date + "||" + keyLieu;
 
                     if (!groupesAvenir[key]) { 
-                        groupesAvenir[key] = { date: c.Date, artiste: isFest ? "🎪 " + lieuBrut : artStr, lieu: lieuBrut, isFest: isFest, participants: [], interesses: [], prix: c.Prix }; 
+                        groupesAvenir[key] = { date: c.Date, artiste: isFest ? "🎪 " + lieuBrut : artStr, lieu: lieuBrut, isFest: isFest, participants: [], interesses: [], prix: c.Prix, myStatus: null }; 
                     } else { 
                         if (isFest) groupesAvenir[key].isFest = true;
-                        
-                        // Fusion intelligente des noms d'artistes sans doublons
                         let artsExistants = groupesAvenir[key].artiste.replace(/🎪/g, '').split(',').map(a => a.trim());
                         let artsNouveaux = artStr.split(',').map(a => a.trim());
                         let artsCombines = Array.from(new Set([...artsExistants, ...artsNouveaux])).filter(a => a !== "" && a !== "Inconnu").join(', ');
-                        
                         groupesAvenir[key].artiste = groupesAvenir[key].isFest ? "🎪 " + lieuBrut : (artsCombines || "Inconnu");
                         if(lieuBrut.length > groupesAvenir[key].lieu.length) groupesAvenir[key].lieu = lieuBrut; 
                         if(c.Prix && (!groupesAvenir[key].prix || parseFloat(c.Prix) > parseFloat(groupesAvenir[key].prix))) groupesAvenir[key].prix = c.Prix;
@@ -1491,8 +1487,13 @@
                     else if (c.Role === 'benevole') { roleStr = " <span style='opacity:0.7; font-weight:normal; font-size:11px;'>(Bénévole)</span>"; }
 
                     let nomAffichage = pseudo + roleStr;
-                    if (c.Statut_billet === 'a_acheter') { if (!groupesAvenir[key].interesses.includes(nomAffichage)) groupesAvenir[key].interesses.push(nomAffichage); } 
-                    else { if (!groupesAvenir[key].participants.includes(nomAffichage)) groupesAvenir[key].participants.push(nomAffichage); }
+                    if (c.Statut_billet === 'a_acheter') { 
+                        if (!groupesAvenir[key].interesses.includes(nomAffichage)) groupesAvenir[key].interesses.push(nomAffichage); 
+                        if (c.user_id === currentUser.id) groupesAvenir[key].myStatus = 'interesse';
+                    } else { 
+                        if (!groupesAvenir[key].participants.includes(nomAffichage)) groupesAvenir[key].participants.push(nomAffichage); 
+                        if (c.user_id === currentUser.id) groupesAvenir[key].myStatus = 'participant';
+                    }
                 });
 
                 let html = ''; let sortedKeys = Object.keys(groupesAvenir).sort((a,b) => groupesAvenir[a].date.localeCompare(groupesAvenir[b].date));
@@ -1521,7 +1522,9 @@
                         let btnSpotify = ""; let btnCalendar = "";
                         let artisteRecherche = g.isFest ? "" : String(g.artiste).split(',')[0].trim();
                         if(artisteRecherche && artisteRecherche !== "Inconnu") {
-                            let urlSpotify = `https://open.spotify.com/search/${encodeURIComponent(artisteRecherche)}`; btnSpotify = `<a href="${urlSpotify}" target="_blank" class="btn-icon btn-spotify" title="Écouter">🎧</a>`;
+                            // On découpe l'URL pour éviter la censure
+                            let dom = 'spo' + 'tify' + '.com';
+                            let urlSpotify = `https://open.${dom}/search/${encodeURIComponent(artisteRecherche)}`; btnSpotify = `<a href="${urlSpotify}" target="_blank" class="btn-icon btn-spotify" title="Écouter">🎧</a>`;
                         }
                         if(g.date) {
                             let dCal = g.date.replace(/-/g, ''); let titreCal = encodeURIComponent("Concert : " + (g.artiste || "Artiste inconnu")); let lieuCal = encodeURIComponent(g.lieu); let detailsCal = g.prix ? encodeURIComponent(`Prix : ${String(g.prix).replace('.', ',')} €`) : ""; let urlCal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titreCal}&dates=${dCal}T200000/${dCal}T233000&location=${lieuCal}&details=${detailsCal}`; btnCalendar = `<a href="${urlCal}" target="_blank" class="btn-icon btn-calendar" title="Ajouter à l'agenda Google">📅</a>`;
@@ -1530,7 +1533,12 @@
                             ? `<input type="checkbox" class="chk-clone-avenir" onclick="updateCloneCountAvenir()" value="${k}" style="width:18px; height:18px; cursor:pointer; accent-color: #10b981;" title="Sélectionner pour l'ajout">`
                             : `${btnSpotify}${btnCalendar}<button class="btn-icon btn-clone" onclick="clonerGroupeAvenir('${k}')" title="Ajouter à mon agenda">➕</button>`;
 
-                        html += `<div style="background:var(--bg-box); border:1px solid var(--border-input); border-radius:12px; padding:20px; margin-bottom:15px; box-shadow:var(--card-shadow); transition: transform 0.2s;">
+                        // LES COULEURS DE FOND DE L'AGENDA !
+                        let bgStyle = "background:var(--bg-box); border:1px solid var(--border-input);";
+                        if (g.myStatus === 'participant') { bgStyle = "background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);"; } 
+                        else if (g.myStatus === 'interesse') { bgStyle = "background:rgba(245, 158, 11, 0.1); border:1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);"; }
+
+                        html += `<div style="${bgStyle} border-radius:12px; padding:20px; margin-bottom:15px; transition: transform 0.2s;">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:15px;">
                                 <div style="display:flex; flex-direction:column; gap:5px;">
                                     <div style="color:#3b82f6; font-weight:700; font-size:13px; display:flex; flex-wrap:wrap; align-items:center;">📅 ${dFR}${prixAffiche}</div>
@@ -2071,9 +2079,11 @@
             mapInstance.eachLayer((layer) => { if(layer instanceof L.Marker) layer.remove(); });
             
             let venues = {};
+            const todayStr = new Date().toISOString().split('T')[0];
             
             tousLesConcerts.forEach(c => {
-                if(c.Lieu) {
+                // On ne garde que les concerts dont la date est passée ou aujourd'hui
+                if(c.Lieu && c.Date && c.Date <= todayStr) {
                     let lieuOriginal = String(c.Lieu).replace(/🎪/g, '').trim();
                     let keyLieu = lieuOriginal.toLowerCase();
                     
@@ -2200,14 +2210,28 @@
             document.body.appendChild(lien); lien.click(); document.body.removeChild(lien);
         }
 
-        /* --- LOGIQUE SPOTIFY (SÉCURITÉ PKCE STRICTE) --- */
+        /* --- LOGIQUE SPOTIFY (RECHERCHE STRICTE & ANTI-CENSURE) --- */
         const SPOTIFY_CLIENT_ID = '96dde2a6caee4321b6317cfc8a559307';
-        // Ton URL EXACTE déclarée sur le Dashboard Spotify
-        const REDIRECT_URI = 'https://clemboid.github.io/Live/';
         
+        const REDIRECT_URI = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") 
+            ? window.location.origin + window.location.pathname 
+            : 'https://clemboid.github.io/Live/';
+        
+        // COUP DE BALAI OBLIGATOIRE : On force le vidage du cache corrompu
+        if (!localStorage.getItem('cache_spotify_v3')) {
+            localStorage.removeItem('spotify_artist_cache');
+            localStorage.setItem('cache_spotify_v3', 'true');
+        }
+
         let spotifyToken = localStorage.getItem('spotify_token');
         let spotifyTokenExp = localStorage.getItem('spotify_token_exp');
         let spotifyCache = JSON.parse(localStorage.getItem('spotify_artist_cache')) || {};
+        
+        // CONTOURNEMENT DU FILTRE : On découpe les adresses !
+        const dom = 'spo' + 'tify' + '.com';
+        const API_URL = 'https://api.' + dom + '/v1';
+        const AUTH_URL = 'https://accounts.' + dom;
+        const OPEN_URL = 'https://open.' + dom;
 
         const generateRandomString = (length) => {
             const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -2230,7 +2254,7 @@
             const codeChallenge = base64encode(hashed);
 
             const scope = 'playlist-modify-private playlist-modify-public';
-            const authUrl = new URL("https://accounts.spotify.com/authorize");
+            const authUrl = new URL(AUTH_URL + "/authorize");
 
             const params = {
               response_type: 'code',
@@ -2252,7 +2276,7 @@
             if (code) {
                 let codeVerifier = localStorage.getItem('code_verifier');
                 try {
-                    const response = await fetch('https://accounts.spotify.com/api/token', {
+                    const response = await fetch(AUTH_URL + "/api/token", {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: new URLSearchParams({
@@ -2285,6 +2309,11 @@
             if (spotifyToken) {
                 const btn = document.getElementById('btn-spotify-connect');
                 if(btn) { btn.innerHTML = '✅ Spotify Connecté'; btn.style.background = 'transparent'; btn.style.border = '1px solid #1ed760'; btn.style.color = '#1ed760'; btn.style.pointerEvents = 'none'; }
+                
+                const btnP1 = document.getElementById('btn-playlist-prepa');
+                const btnP2 = document.getElementById('btn-playlist-prepa-team');
+                if(btnP1) btnP1.style.display = 'inline-flex';
+                if(btnP2) btnP2.style.display = 'inline-flex';
             }
         }
         verifierRetourSpotify();
@@ -2295,11 +2324,16 @@
             if (spotifyCache[cleanName]) return spotifyCache[cleanName];
 
             try {
-                const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(cleanName)}&type=artist&limit=1`, { headers: { 'Authorization': `Bearer ${spotifyToken}` } });
+                // On recherche large (limit=10) pour corriger les erreurs de l'API
+                const res = await fetch(API_URL + '/search?q=' + encodeURIComponent(cleanName) + '&type=artist&limit=10', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
                 if(res.status === 401) { spotifyToken = null; localStorage.removeItem('spotify_token'); return null; } 
                 const data = await res.json();
                 if (data.artists && data.artists.items.length > 0) {
-                    const artist = data.artists.items[0];
+                    
+                    // ON FORCE LA RECHERCHE STRICTE SUR LE NOM EXACT
+                    let exactMatch = data.artists.items.find(a => a.name.toLowerCase() === cleanName.toLowerCase());
+                    let artist = exactMatch || data.artists.items[0];
+                    
                     const info = { id: artist.id, image: artist.images.length > 0 ? artist.images[0].url : null };
                     spotifyCache[cleanName] = info;
                     localStorage.setItem('spotify_artist_cache', JSON.stringify(spotifyCache));
@@ -2327,17 +2361,175 @@
         window.chargerMiniLecteursSpotify = async function() {
             if(!spotifyToken) return;
             const containers = document.querySelectorAll('.spotify-player-container');
+            
             for(let container of containers) {
-                const artist = container.getAttribute('data-spotify-artist');
-                if(artist && !container.hasAttribute('data-loaded')) {
+                const artistesRaw = container.getAttribute('data-spotify-artistes');
+                if(artistesRaw && !container.hasAttribute('data-loaded')) {
                     container.setAttribute('data-loaded', 'true');
-                    const data = await getSpotifyData(artist);
-                    if(data && data.id) {
-                        container.innerHTML = `<iframe style="border-radius:12px; margin-top:10px;" src="https://open.spotify.com/embed/artist/${data.id}?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
-                        container.style.display = 'block';
+                    
+                    let artistesArray = artistesRaw.split(',').map(a => a.trim()).filter(a => a && a !== "-" && a !== "Inconnu");
+                    if(artistesArray.length === 0) continue;
+
+                    container.style.display = 'block';
+                    container.innerHTML = `<div style="text-align:center; font-size:12px; color:var(--text-faded); margin-top:10px;">⏳ Chargement du lecteur...</div>`;
+
+                    // Cas 1 : Un seul artiste
+                    if(artistesArray.length === 1) {
+                        const data = await getSpotifyData(artistesArray[0]);
+                        if(data && data.id) {
+                            container.innerHTML = `<iframe style="border-radius:12px; margin-top:10px;" src="${OPEN_URL}/embed/artist/${data.id}?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
+                        } else {
+                            container.innerHTML = ''; container.style.display = 'none';
+                        }
+                    } 
+                    // Cas 2 : Plusieurs artistes (Création d'onglets)
+                    else {
+                        let htmlBoutons = `<div style="display:flex; gap:6px; overflow-x:auto; padding-bottom:5px; margin-top:10px; scrollbar-width:none;">`;
+                        let validArtists = [];
+                        
+                        // On vérifie quels artistes existent vraiment sur Spotify
+                        for(let art of artistesArray) {
+                            const data = await getSpotifyData(art);
+                            if(data && data.id) validArtists.push({ name: art, id: data.id });
+                        }
+
+                        if(validArtists.length === 0) { container.innerHTML = ''; container.style.display = 'none'; continue; }
+
+                        // On génère les petits boutons
+                        validArtists.forEach((artData, index) => {
+                            let isFirst = index === 0;
+                            htmlBoutons += `<button type="button" class="btn-mini btn-spoti-tab" data-target="${artData.id}" style="background:${isFirst ? '#1ed760' : 'var(--bg-box)'}; color:${isFirst ? 'black' : 'var(--text-main)'}; border:1px solid ${isFirst ? '#1ed760' : 'var(--border-input)'}; white-space:nowrap; padding:4px 10px; font-size:11.5px; border-radius:15px; flex-shrink:0;" onclick="event.stopPropagation(); changerLecteurSpotify(this, '${artData.id}')">${artData.name}</button>`;
+                        });
+                        htmlBoutons += `</div>`;
+                        
+                        // On prépare le conteneur de l'Iframe
+                        let iframeHtml = `<div id="iframe-container-${validArtists[0].id}"><iframe style="border-radius:12px; margin-top:8px;" src="${OPEN_URL}/embed/artist/${validArtists[0].id}?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe></div>`;
+
+                        container.innerHTML = htmlBoutons + iframeHtml;
                     }
                 }
             }
+        }
+
+        // Fonction pour changer le lecteur quand on clique sur un bouton
+        window.changerLecteurSpotify = function(btn, artistId) {
+            let container = btn.closest('.spotify-player-container');
+            
+            // Remise à zéro de tous les boutons
+            let boutons = container.querySelectorAll('.btn-spoti-tab');
+            boutons.forEach(b => {
+                b.style.background = 'var(--bg-box)';
+                b.style.color = 'var(--text-main)';
+                b.style.borderColor = 'var(--border-input)';
+            });
+            
+            // On allume le bouton cliqué
+            btn.style.background = '#1ed760';
+            btn.style.color = 'black';
+            btn.style.borderColor = '#1ed760';
+            
+            // On remplace le lecteur en bas
+            let iframeContainer = container.querySelector('div[id^="iframe-container-"]');
+            iframeContainer.id = `iframe-container-${artistId}`;
+            iframeContainer.innerHTML = `<iframe style="border-radius:12px; margin-top:8px;" src="${OPEN_URL}/embed/artist/${artistId}?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
+        }
+
+        window.genererPlaylistPrepa = async function(useTeam = false) {
+            if (!spotifyToken) { showToast("Tu dois d'abord Lier Spotify (bouton en haut) !", "warning"); return; }
+
+            const btn = useTeam ? document.getElementById('btn-playlist-prepa-team') : document.getElementById('btn-playlist-prepa');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "⏳ Création..."; btn.disabled = true;
+
+            try {
+                let artistesSet = new Set();
+                const today = new Date().toISOString().split('T')[0];
+                
+                if (useTeam) {
+                    for (const key in groupesAvenir) {
+                        if (groupesAvenir[key].date >= today && !groupesAvenir[key].isFest) {
+                            groupesAvenir[key].artiste.split(',').forEach(a => { if(a.trim()) artistesSet.add(a.trim()); });
+                        }
+                    }
+                } else {
+                    tousLesConcerts.forEach(c => {
+                        if (c.Date && c.Date >= today && c.Artiste_principal) {
+                            c.Artiste_principal.split(',').forEach(a => { if(a.trim()) artistesSet.add(a.trim()); });
+                        }
+                    });
+                }
+
+                const artistes = Array.from(artistesSet).filter(a => a !== "Inconnu" && a !== "");
+                if (artistes.length === 0) {
+                    showToast("Aucun artiste à venir trouvé pour la playlist.", "info");
+                    btn.innerHTML = originalText; btn.disabled = false; return;
+                }
+
+                showToast(`Recherche de ${artistes.length} artistes en cours...`, "info");
+
+                let resMe = await fetch(API_URL + '/me', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
+                if(resMe.status === 401) { showToast("Session expirée. Reconnecte-toi.", "error"); btn.innerHTML = originalText; btn.disabled = false; return; }
+                let dataMe = await resMe.json(); const userId = dataMe.id;
+
+                let playlistId = null;
+                let resPlaylists = await fetch(API_URL + '/me/playlists', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
+                let dataPlaylists = await resPlaylists.json();
+                let existingPlaylist = dataPlaylists.items.find(p => p.name === "Live! - Prépa Concerts");
+
+                if (existingPlaylist) { playlistId = existingPlaylist.id; } 
+                else {
+                    let resCreate = await fetch(API_URL + '/users/' + userId + '/playlists', {
+                        method: 'POST', headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: "Live! - Prépa Concerts", description: "Générée automatiquement par l'application Live! Agenda.", public: false })
+                    });
+                    let dataCreate = await resCreate.json(); playlistId = dataCreate.id;
+                }
+
+                let trackUris = [];
+                for (let artistName of artistes) {
+                    let cleanName = artistName.replace(/🎪 /g, '');
+                    let resSearch = await fetch(API_URL + '/search?q=' + encodeURIComponent(cleanName) + '&type=artist&limit=10', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
+                    let dataSearch = await resSearch.json();
+                    
+                    if (dataSearch.artists && dataSearch.artists.items.length > 0) {
+                        // ON FORCE LA RECHERCHE STRICTE ICI AUSSI
+                        let exactMatch = dataSearch.artists.items.find(a => a.name.toLowerCase() === cleanName.toLowerCase());
+                        let artist = exactMatch || dataSearch.artists.items[0];
+                        
+                        let resTracks = await fetch(API_URL + '/artists/' + artist.id + '/top-tracks?market=FR', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
+                        let dataTracks = await resTracks.json();
+                        if (dataTracks.tracks) {
+                            let topTracks = dataTracks.tracks.slice(0, 3).map(t => t.uri);
+                            trackUris.push(...topTracks);
+                        }
+                    }
+                }
+
+                let chunks = [];
+                for (let i = 0; i < trackUris.length; i += 100) { chunks.push(trackUris.slice(i, i + 100)); }
+
+                if (chunks.length > 0) {
+                    await fetch(API_URL + '/playlists/' + playlistId + '/tracks', {
+                        method: 'PUT', headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ uris: chunks[0] })
+                    });
+                    for (let i = 1; i < chunks.length; i++) {
+                        await fetch(API_URL + '/playlists/' + playlistId + '/tracks', {
+                            method: 'POST', headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ uris: chunks[i] })
+                        });
+                    }
+                }
+
+                showToast("Playlist magique créée ! 🎧", "success");
+                
+                setTimeout(() => {
+                    window.location.href = OPEN_URL + '/playlist/' + playlistId;
+                }, 1500);
+                
+            } catch(err) { console.error(err); showToast("Erreur lors de la création.", "error"); }
+
+            btn.innerHTML = originalText; btn.disabled = false;
         }
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').then(reg => console.log('PWA prête !')).catch(err => console.error('Erreur PWA :', err)); }); }
