@@ -173,7 +173,7 @@
         .col-lieu { color: var(--text-muted); white-space: normal; overflow-wrap: break-word; font-size: 13px; line-height: 1.4;}
         .col-prix { font-weight: 600; color: var(--text-muted);}
         .col-billet, .col-statut, .col-role, .col-bieres { text-align: center; }
-        .col-liens { display: flex; justify-content: flex-start; gap: 6px; flex-wrap: nowrap; align-items: center;}
+        .col-liens { display: flex; justify-content: flex-start; gap: 6px; flex-wrap: wrap; align-items: center;}
 
         .date-badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 12px; text-align: center; width: 100%; box-sizing: border-box;}
         .date-avenir { background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); }
@@ -242,9 +242,9 @@
             .entete-grille, .entete-abo { display: none; }
             .badge-statut { width: auto; padding: 4px 8px; font-size: 10.5px; }
             .concert-item { display: grid; grid-template-columns: 1fr max-content max-content; grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet role" "liens bieres note" "actions actions actions"; gap: 8px 10px; padding: 15px 12px; align-items: center; }
-            body.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" "liens note actions"; }
+            body.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" "liens liens note" "actions actions actions"; }
             body.mode-vitrine .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet role" "liens bieres note"; }
-            body.mode-vitrine.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" "liens note ."; }
+            body.mode-vitrine.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" "liens liens note"; }
             .col-artiste { grid-area: artiste; font-size: 17px; width: 100%;} .col-lieu { grid-area: lieu; font-size: 14px;}
             .col-prix { grid-area: prix; text-align: right; font-size: 14px; font-weight: 700; } 
             .col-date { grid-area: date; width:100%; display:flex; flex-direction:column; justify-content:center; align-items:flex-start;}
@@ -344,6 +344,7 @@
                         <div class="onglet" onclick="changerOnglet('tab-stats')" id="onglet-stats">📊 Statistiques</div>
                         <div class="onglet" onclick="changerOnglet('tab-carte')" id="onglet-carte">🗺️ Carte</div>
                         <div class="onglet" onclick="changerOnglet('tab-abos')" id="onglet-abos">🎟️ Abonnements</div>
+                        <div class="onglet" onclick="changerOnglet('tab-parametres')" id="onglet-parametres">⚙️ Paramètres</div>
                     </div>
                 </div>
             </div>
@@ -678,7 +679,47 @@
             </div>
         </div>
     </div>
+<div id="tab-parametres" class="vue-onglet">
+            <div class="carte">
+                <h2>⚙️ Mes Paramètres</h2>
+                <p style="text-align: center; color: var(--text-faded); margin-bottom: 30px;">Gère ton profil public et la sécurité de ton compte.</p>
+                
+                <div class="flex-row">
+                    <div class="flex-1" style="background: var(--bg-box); border: 1px solid var(--border-input); border-radius: 12px; padding: 25px;">
+                        <h3 style="margin-top:0; margin-bottom: 20px;">👤 Mon Profil</h3>
+                        <form id="form-param-profil" onsubmit="sauvegarderProfil(event)">
+                            <div class="form-group">
+                                <label>Pseudo (Visible par la Team)</label>
+                                <input type="text" id="param-pseudo" required>
+                            </div>
+                            <div class="form-group" style="margin-top:20px;">
+                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:var(--text-main); margin:0;">
+                                    <input type="checkbox" id="param-benevole" style="width:auto; cursor:pointer; width:18px; height:18px; accent-color:#3b82f6;">
+                                    🎪 Je suis parfois bénévole
+                                </label>
+                                <p style="font-size: 11px; color: var(--text-faded); margin-top: 5px;">Cocher cette case te permet d'attribuer le rôle "Bénévole" à tes concerts.</p>
+                            </div>
+                            <button type="submit" id="btn-save-profil" class="btn-principal" style="margin-top:20px;">💾 Enregistrer le profil</button>
+                        </form>
+                    </div>
 
+                    <div class="flex-1" style="background: var(--bg-box); border: 1px solid var(--border-input); border-radius: 12px; padding: 25px;">
+                        <h3 style="margin-top:0; margin-bottom: 20px;">🔒 Sécurité</h3>
+                        <form id="form-param-mdp" onsubmit="sauvegarderMdp(event)">
+                            <div class="form-group">
+                                <label>Nouveau mot de passe</label>
+                                <input type="password" id="param-mdp1" required placeholder="••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label>Confirmer le mot de passe</label>
+                                <input type="password" id="param-mdp2" required placeholder="••••••••">
+                            </div>
+                            <button type="submit" id="btn-save-mdp" class="btn-principal" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); margin-top:20px;">🔒 Changer le mot de passe</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     <script>
         const SUPABASE_URL = "https://vrjmvhmcizgrozjwkcoy.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZyam12aG1jaXpncm96andrY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzM3NDYsImV4cCI6MjA4ODA0OTc0Nn0.eoMEiJjkUMfMw5NB8E-A1qQAdqIdbndK8-jCCGZ9vOc";
@@ -966,6 +1007,52 @@
             if (idTab === 'tab-artistes') afficherOngletArtistes();
             if (idTab === 'tab-crew-avenir') afficherConcertsCrewAvenir(); 
             if (idTab === 'tab-carte') setTimeout(initCarte, 100); 
+            if (idTab === 'tab-parametres') chargerParametres();
+        }
+
+        // --- NOUVELLES FONCTIONS PARAMÈTRES ---
+        window.chargerParametres = function() {
+            let myProfile = profilsData.find(p => String(p.id) === String(currentUser.id));
+            if(myProfile) {
+                document.getElementById('param-pseudo').value = myProfile.pseudo || "";
+                document.getElementById('param-benevole').checked = myProfile.est_benevole === true;
+            }
+        }
+
+        window.sauvegarderProfil = async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-profil');
+            btn.disabled = true; btn.innerHTML = "⏳ Enregistrement...";
+            const pseudo = document.getElementById('param-pseudo').value;
+            const isBenevole = document.getElementById('param-benevole').checked;
+            
+            const { error } = await clientSupabase.from('Profils').upsert({ id: currentUser.id, pseudo: pseudo, est_benevole: isBenevole });
+            if(error) { showToast("Erreur lors de l'enregistrement", "error"); }
+            else { 
+                showToast("Profil mis à jour !", "success"); 
+                await chargerProfils(); 
+                if(viewingUserId === currentUser.id) changerVueUtilisateur("ME");
+            }
+            btn.disabled = false; btn.innerHTML = "💾 Enregistrer le profil";
+        }
+
+        window.sauvegarderMdp = async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-mdp');
+            const mdp1 = document.getElementById('param-mdp1').value;
+            const mdp2 = document.getElementById('param-mdp2').value;
+            
+            if(mdp1 !== mdp2) { showToast("Les mots de passe ne correspondent pas.", "warning"); return; }
+            if(mdp1.length < 6) { showToast("Le mot de passe doit faire au moins 6 caractères.", "warning"); return; }
+            
+            btn.disabled = true; btn.innerHTML = "⏳ Modification...";
+            const { error } = await clientSupabase.auth.updateUser({ password: mdp1 });
+            if(error) { showToast("Erreur : " + error.message, "error"); }
+            else { 
+                showToast("Mot de passe modifié avec succès !", "success"); 
+                document.getElementById('form-param-mdp').reset();
+            }
+            btn.disabled = false; btn.innerHTML = "🔒 Changer le mot de passe";
         }
 
         function setupAutocomplete(inputId, listId, isMulti) {
