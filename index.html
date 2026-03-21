@@ -242,9 +242,9 @@
             .entete-grille, .entete-abo { display: none; }
             .badge-statut { width: auto; padding: 4px 8px; font-size: 10.5px; }
             .concert-item { display: grid; grid-template-columns: 1fr max-content max-content; grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet role" "liens bieres note" "actions actions actions"; gap: 8px 10px; padding: 15px 12px; align-items: center; }
-            body.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" "liens liens note" "actions actions actions"; }
-            body.mode-vitrine .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet role" "liens bieres note"; }
-            body.mode-vitrine.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" "liens liens note"; }
+            body.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" "liens note actions"; }
+            body.mode-vitrine .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet role" ". bieres note" "liens liens liens"; }
+            body.mode-vitrine.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" ". . note" "liens liens liens"; }
             .col-artiste { grid-area: artiste; font-size: 17px; width: 100%;} .col-lieu { grid-area: lieu; font-size: 14px;}
             .col-prix { grid-area: prix; text-align: right; font-size: 14px; font-weight: 700; } 
             .col-date { grid-area: date; width:100%; display:flex; flex-direction:column; justify-content:center; align-items:flex-start;}
@@ -678,8 +678,8 @@
                 </form>
             </div>
         </div>
-    </div>
-<div id="tab-parametres" class="vue-onglet">
+
+        <div id="tab-parametres" class="vue-onglet">
             <div class="carte">
                 <h2>⚙️ Mes Paramètres</h2>
                 <p style="text-align: center; color: var(--text-faded); margin-bottom: 30px;">Gère ton profil public et la sécurité de ton compte.</p>
@@ -720,6 +720,7 @@
                 </div>
             </div>
         </div>
+
     <script>
         const SUPABASE_URL = "https://vrjmvhmcizgrozjwkcoy.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZyam12aG1jaXpncm96andrY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzM3NDYsImV4cCI6MjA4ODA0OTc0Nn0.eoMEiJjkUMfMw5NB8E-A1qQAdqIdbndK8-jCCGZ9vOc";
