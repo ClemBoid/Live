@@ -392,6 +392,10 @@
                             <input type="number" id="prix" step="0.01" placeholder="Optionnel">
                         </div>
                         <div class="form-group flex-1">
+                            <label>Style de musique :</label>
+                            <input type="text" id="style_musique" placeholder="Rock, Electro, Rap...">
+                        </div>
+                        <div class="form-group flex-1">
                             <label>Billet (PDF/Image) 🎟️ :</label>
                             <input type="file" id="ticket_file" accept=".pdf,image/*">
                             <input type="hidden" id="ticket_url_existant">
@@ -539,6 +543,7 @@
                 <div class="titre-section">
                     <h2>📅 Concerts à venir de la Team</h2>
                     <div class="actions-titre">
+                        <button id="btn-excel-team" class="btn-mini btn-excel admin-only" onclick="exporterExcelTeam()">📊 Exporter (.csv)</button>
                         <button id="btn-activer-clone-avenir" class="btn-mini btn-clone" onclick="toggleCloneModeAvenir()">➕ Ajouts multiples</button>
                         <button id="btn-select-all-avenir" class="btn-mini btn-vue" style="display:none;" onclick="toggleSelectAllAvenir()">✅ Tout cocher</button>
                     </div>
@@ -1387,13 +1392,24 @@
                 else {
                     filtres.forEach(c => {
                         try {
-                            let valPrix = parseFloat(String(c.Prix||"0").replace(',', '.')); if(!isNaN(valPrix) && c.Statut_billet !== 'cadeau' && c.Role !== 'benevole') bgTotal += valPrix;
+                            let valPrix = parseFloat(String(c.Prix||"0").replace(',', '.')); 
+                            // BUDGET : Uniquement les billets 'achetee' (exclut 'a_acheter' et 'cadeau')
+                            if(!isNaN(valPrix) && c.Statut_billet === 'achetee' && c.Role !== 'benevole') bgTotal += valPrix;
+                            
                             let nbBieresConcert = parseInt(c.Bieres) || 0; totalBieres += nbBieresConcert;
                             let safeDateC = c.Date ? String(c.Date) : "";
-                            if(safeDateC && safeDateC <= today) { nbVus++; let allArt = String(c.Artiste_principal || ""); allArt.split(',').forEach(a => { if(a.trim()!=="") setArt.add(a.trim().toLowerCase()); }); }
+                            
+                            // ARTISTES VUS : Uniquement si la date est passée ET qu'on a le billet (pas juste 'a_acheter')
+                            if(safeDateC && safeDateC <= today && c.Statut_billet !== 'a_acheter') { 
+                                nbVus++; 
+                                let allArt = String(c.Artiste_principal || ""); 
+                                allArt.split(',').forEach(a => { if(a.trim()!=="") setArt.add(a.trim().toLowerCase()); }); 
+                            }
                             
                             let artTextePur = c.Artiste_principal ? String(c.Artiste_principal) : "-"; let safeTitle = artTextePur.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                            let artAffichage = safeTitle; if (c.Coup_de_coeur) artAffichage += ` <span style="color:#ec4899; font-size:14px;" title="Coup de cœur !">💖</span>`;
+                            let styleBadge = c.Style ? `<span style="font-size:10px; background:var(--bg-input); border:1px solid var(--border-input); padding:2px 6px; border-radius:8px; margin-left:8px; color:var(--text-faded); vertical-align:middle; font-weight:600;">${String(c.Style).replace(/</g, '&lt;')}</span>` : "";
+                            let artAffichage = safeTitle + styleBadge; 
+                            if (c.Coup_de_coeur) artAffichage += ` <span style="color:#ec4899; font-size:14px;" title="Coup de cœur !">💖</span>`;
                             if (c.Prive) artAffichage += ` <span style="font-size:14px;" title="Concert secret">🔒</span>`;
                             let lieuAffichage = String(c.Lieu||"").replace(/</g, '&lt;').replace(/>/g, '&gt;'); let isFest = lieuAffichage.includes('🎪'); let lieuPropre = lieuAffichage.replace(/🎪/g, '').trim();
                             
@@ -1840,7 +1856,7 @@
             if(c) {
                 document.getElementById('concert_id').value = c.id; document.getElementById('artiste_principal').value = c.Artiste_principal || "";
                 let lieuBrut = c.Lieu ? String(c.Lieu) : ""; document.getElementById('is_festival').checked = lieuBrut.includes('🎪'); document.getElementById('lieu').value = lieuBrut.replace(/🎪/g, '').trim();
-                document.getElementById('date').value = c.Date || ""; document.getElementById('prix').value = c.Prix || ""; document.getElementById('statut_billet').value = c.Statut_billet || "achetee";
+                document.getElementById('date').value = c.Date || ""; document.getElementById('prix').value = c.Prix || ""; document.getElementById('style_musique').value = c.Style || ""; document.getElementById('statut_billet').value = c.Statut_billet || "achetee";
                 if (document.getElementById('role')) document.getElementById('role').value = c.Role || "spectateur";
                 document.getElementById('is_prive').checked = c.Prive === true;
                 
@@ -1890,7 +1906,7 @@
             }
             
             let valPrixStr = vPx !== "" ? String(vPx).replace(',', '.') : null;
-            const payload = { user_id: currentUser.id, Artiste_principal: document.getElementById('artiste_principal').value || null, Lieu: lieuValue, Date: vDt !== "" ? vDt : null, Prix: valPrixStr, Statut_billet: document.getElementById('statut_billet').value, Role: document.getElementById('role') ? document.getElementById('role').value : "spectateur", Ticket_PDF: ticketFinalPath, Prive: document.getElementById('is_prive').checked };
+            const payload = { user_id: currentUser.id, Artiste_principal: document.getElementById('artiste_principal').value || null, Lieu: lieuValue, Date: vDt !== "" ? vDt : null, Prix: valPrixStr, Style: document.getElementById('style_musique').value || null, Statut_billet: document.getElementById('statut_billet').value, Role: document.getElementById('role') ? document.getElementById('role').value : "spectateur", Ticket_PDF: ticketFinalPath, Prive: document.getElementById('is_prive').checked };
             
             let err;
             if (idEd) { const { error } = await clientSupabase.from('Concerts').update(payload).eq('id', idEd); err = error; } 
@@ -2295,6 +2311,39 @@
                 csv += `${art};${lieu};${dateExp};${prix};${billet};${role};${bieres};${note};${cdc};${comm};${urlTicket};${statut}\n`;
             });
             const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' }); const lien = document.createElement("a"); lien.href = URL.createObjectURL(blob); lien.download = "mes_concerts.csv";
+            document.body.appendChild(lien); lien.click(); document.body.removeChild(lien);
+        }
+
+        // --- EXPORT EXCEL DE LA TEAM ---
+        window.exporterExcelTeam = async function() {
+            showToast("Génération de l'export Team...", "info");
+            const { data: allC, error } = await clientSupabase.from('Concerts').select('*');
+            if(error) { showToast("Erreur lors de la récupération.", "error"); return; }
+            
+            let csv = "Membre;Artistes;Lieu;Date;Prix;Billet;Role;Bieres;Note;Coup_de_coeur;Style;Statut\n"; 
+            const today = new Date().toISOString().split('T')[0];
+            
+            allC.forEach(c => {
+                if (c.Prive && c.user_id !== currentUser.id) return; // Ignore les concerts privés des autres
+                
+                let profile = profilsData.find(p => String(p.id) === String(c.user_id)); 
+                let membre = profile ? (profile.pseudo || "Anonyme") : "Anonyme";
+                let statut = (!c.Date || typeof c.Date !== 'string') ? "A completer" : (c.Date > today ? "A venir" : "Passe"); 
+                let art = String(c.Artiste_principal || "").replace(/;/g, ","); 
+                let lieu = String(c.Lieu || "").replace(/🎪/g, '').replace(/;/g, ",");
+                let prix = (c.Prix !== null && c.Prix !== undefined && c.Prix !== "") ? String(c.Prix).replace('.', ',') : "A completer"; 
+                let dateExp = (c.Date && typeof c.Date === 'string') ? c.Date : "A completer"; 
+                let billet = c.Statut_billet === 'a_acheter' ? "A acheter" : (c.Statut_billet === 'cadeau' ? "Cadeau" : "Achete"); 
+                let role = c.Role === 'benevole' ? "Benevole" : "Spectateur";
+                let bieres = c.Bieres || 0; 
+                let note = c.Note ? parseFloat(c.Note).toFixed(1).replace('.', ',') : ""; 
+                let cdc = c.Coup_de_coeur ? "Oui" : "Non"; 
+                let style = String(c.Style || "").replace(/;/g, ",");
+                
+                csv += `${membre};${art};${lieu};${dateExp};${prix};${billet};${role};${bieres};${note};${cdc};${style};${statut}\n`;
+            });
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' }); 
+            const lien = document.createElement("a"); lien.href = URL.createObjectURL(blob); lien.download = "concerts_team.csv";
             document.body.appendChild(lien); lien.click(); document.body.removeChild(lien);
         }
 
