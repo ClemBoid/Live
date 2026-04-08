@@ -245,7 +245,8 @@
             body.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" "liens note actions"; }
             body.mode-vitrine .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet role" ". bieres note" "liens liens liens"; }
             body.mode-vitrine.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" ". . note" "liens liens liens"; }
-            .col-artiste { grid-area: artiste; font-size: 17px; width: 100%;} .col-lieu { grid-area: lieu; font-size: 14px;}
+            .col-artiste { grid-area: artiste; font-size: 17px; width: 100%; grid-column: 1 / -1; display: flex; flex-direction: column; align-items: flex-start; word-break: break-word;} 
+            .col-lieu { grid-area: lieu; font-size: 14px; width: 100%; grid-column: 1 / -1;}
             .col-prix { grid-area: prix; text-align: right; font-size: 14px; font-weight: 700; } 
             .col-date { grid-area: date; width:100%; display:flex; flex-direction:column; justify-content:center; align-items:flex-start;}
             .col-billet { grid-area: billet; text-align: right; } .col-role { grid-area: role; text-align: right; }
@@ -393,7 +394,10 @@
                         </div>
                         <div class="form-group flex-1">
                             <label>Style de musique :</label>
-                            <input type="text" id="style_musique" placeholder="Rock, Electro, Rap...">
+                            <div class="autocomplete-wrapper">
+                                <input type="text" id="style_musique" autocomplete="off" placeholder="Rock, Electro, Rap...">
+                                <div id="autocomplete-styles" class="autocomplete-list"></div>
+                            </div>
                         </div>
                         <div class="form-group flex-1">
                             <label>Billet (PDF/Image) 🎟️ :</label>
@@ -739,6 +743,7 @@
         let tousLesConcerts = [];
         let listeArtistesGlobale = [];
         let listeSallesGlobale = [];
+        let listeStylesGlobale = [];
         let triActuel = 'date';
         let ordreDescendant = true;
         let tousLesAbos = [];
@@ -1063,30 +1068,48 @@
 
         function setupAutocomplete(inputId, listId, isMulti) {
             const input = document.getElementById(inputId); const list = document.getElementById(listId);
-            input.addEventListener('input', function() {
-                let val = this.value; list.innerHTML = ''; if (!val) { list.style.display = 'none'; return; }
+            
+            function updateList() {
+                let val = input.value; list.innerHTML = ''; 
                 let searchVal = val; if (isMulti) { let parts = val.split(','); searchVal = parts[parts.length - 1].trim(); }
-                if(!searchVal) { list.style.display = 'none'; return; }
                 
-                // Si on cherche une salle, on utilise la base globale. Si on cherche un artiste, on utilise sa base personnelle.
-                let dataArray = inputId === 'lieu' ? listeSallesCommunaute : listeArtistesGlobale;
-                let matches = dataArray.filter(item => normaliserTexte(item).includes(normaliserTexte(searchVal)));
+                // Choix de la base de données selon le champ
+                let dataArray;
+                if (inputId === 'lieu') dataArray = listeSallesCommunaute;
+                else if (inputId === 'style_musique') dataArray = listeStylesGlobale;
+                else dataArray = listeArtistesGlobale;
+                
+                let matches = [];
+                // Si la case est vide, on affiche tout. Sinon, on filtre intelligemment.
+                if (!searchVal) { matches = dataArray; } 
+                else { matches = dataArray.filter(item => normaliserTexte(item).includes(normaliserTexte(searchVal))); }
+                
                 if(matches.length > 0) {
                     list.style.display = 'block';
-                    matches.forEach(match => {
+                    // On limite l'affichage à 50 éléments pour ne pas faire ramer le téléphone
+                    matches.slice(0, 50).forEach(match => {
                         let div = document.createElement('div'); div.className = 'autocomplete-item'; div.textContent = match;
-                        div.onclick = function() {
+                        div.onclick = function(e) {
+                            e.stopPropagation();
                             if(isMulti) { let parts = input.value.split(','); parts[parts.length - 1] = " " + match; input.value = parts.join(',').trim() + ", "; } else { input.value = match; }
                             list.style.display = 'none'; input.focus();
                         };
                         list.appendChild(div);
                     });
                 } else { list.style.display = 'none'; }
-            });
+            }
+
+            // On déclenche la liste quand on tape ET quand on clique (focus) dans la case
+            input.addEventListener('input', updateList);
+            input.addEventListener('focus', updateList);
+            
+            // Évite que la liste disparaisse avant qu'on ait le temps de cliquer sur un choix
+            list.addEventListener('mousedown', function(e) { e.preventDefault(); });
             document.addEventListener('click', function(e) { if (e.target !== input && e.target !== list) { list.style.display = 'none'; } });
         }
         setupAutocomplete('artiste_principal', 'autocomplete-artistes', true);
         setupAutocomplete('lieu', 'autocomplete-salles', false);
+        setupAutocomplete('style_musique', 'autocomplete-styles', false);
 
         async function chargerMesConcerts() {
              const { data, error } = await clientSupabase.from('Concerts').select('*').eq('user_id', currentUser.id);
@@ -1213,14 +1236,16 @@
         window.toggleToutesSalles = function() { document.querySelectorAll('.chk-salle').forEach(cb => cb.checked = false); afficherConcerts(); }
 
         function mettreAJourMenusFiltres() {
-            let setAn = new Set(), setSa = new Set(), setArt = new Set();
+            let setAn = new Set(), setSa = new Set(), setArt = new Set(), setStyle = new Set();
             tousLesConcerts.forEach(c => {
                 if(c.Date && typeof c.Date === 'string') setAn.add(c.Date.substring(0, 4));
                 let lieuPropre = c.Lieu ? String(c.Lieu).replace(/🎪/g, '').trim() : ""; if(lieuPropre) setSa.add(lieuPropre);
                 if(c.Artiste_principal) String(c.Artiste_principal).split(',').forEach(a => { if(a.trim()!=="") setArt.add(a.trim()); });
+                if(c.Style) String(c.Style).split(',').forEach(s => { if(s.trim()!=="") setStyle.add(s.trim()); });
             });
 
             listeArtistesGlobale = Array.from(setArt).sort((a,b) => a.localeCompare(b));
+            listeStylesGlobale = Array.from(setStyle).sort((a,b) => a.localeCompare(b));
             listeSallesGlobale = Array.from(setSa).sort((a,b) => a.localeCompare(b));
             const selAn = Array.from(document.querySelectorAll('.chk-annee:checked')).map(cb => cb.value); const selSa = Array.from(document.querySelectorAll('.chk-salle:checked')).map(cb => cb.value);
 
@@ -1574,7 +1599,7 @@
                     let key = c.Date + "||" + keyLieu;
 
                     if (!groupesAvenir[key]) { 
-                        groupesAvenir[key] = { date: c.Date, artiste: isFest ? "🎪 " + lieuBrut : artStr, lieu: lieuBrut, isFest: isFest, participants: [], interesses: [], prix: c.Prix, myStatus: null }; 
+                        groupesAvenir[key] = { date: c.Date, artiste: isFest ? "🎪 " + lieuBrut : artStr, lieu: lieuBrut, isFest: isFest, style: c.Style || "", participants: [], interesses: [], prix: c.Prix, myStatus: null };
                     } else { 
                         if (isFest) groupesAvenir[key].isFest = true;
                         let artsExistants = groupesAvenir[key].artiste.replace(/🎪/g, '').split(',').map(a => a.trim());
@@ -1615,7 +1640,8 @@
                         let g = groupesAvenir[k]; let dateObj = new Date(g.date); let dFR = dateObj.toLocaleDateString('fr-FR', {weekday: 'long', day:'2-digit', month:'long', year:'numeric'}); dFR = dFR.charAt(0).toUpperCase() + dFR.slice(1);
                         let htmlPart = g.participants.length > 0 ? g.participants.map(p => `<span class="badge-statut badge-billet-ok" style="width:auto; padding:4px 10px; font-size:12px;">✅ ${p}</span>`).join(' ') : '<span style="color:var(--text-faded); font-size:13px; font-weight:500;">Aucun</span>';
                         let htmlInt = g.interesses.length > 0 ? g.interesses.map(p => `<span class="badge-statut badge-billet-attente" style="width:auto; padding:4px 10px; font-size:12px;">⏳ ${p}</span>`).join(' ') : '<span style="color:var(--text-faded); font-size:13px; font-weight:500;">Aucun</span>';
-                        let titreEvent = g.isFest ? `🎪 ${g.lieu}` : `🎸 ${g.artiste} <span style="font-size:14px; font-weight:normal; color:var(--text-faded);">@ ${g.lieu}</span>`;
+                        let styleBadge = g.style ? `<span style="font-size:10px; background:var(--bg-input); border:1px solid var(--border-input); padding:2px 6px; border-radius:8px; margin-left:8px; color:var(--text-faded); vertical-align:middle; font-weight:600;">${String(g.style).replace(/</g, '&lt;')}</span>` : "";
+                        let titreEvent = g.isFest ? `🎪 ${g.lieu}${styleBadge}` : `🎸 ${g.artiste}${styleBadge} <span style="font-size:14px; font-weight:normal; color:var(--text-faded);">@ ${g.lieu}</span>`;
 
                         let prixAffiche = "";
                         if (g.prix !== null && g.prix !== undefined && g.prix !== "") {
