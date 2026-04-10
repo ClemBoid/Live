@@ -245,8 +245,8 @@
             body.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" "liens note actions"; }
             body.mode-vitrine .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet role" ". bieres note" "liens liens liens"; }
             body.mode-vitrine.hide-role .concert-item { grid-template-areas: "artiste artiste artiste" "lieu lieu prix" "date billet bieres" ". . note" "liens liens liens"; }
-            .col-artiste { grid-area: artiste; font-size: 17px; width: 100%; grid-column: 1 / -1; display: flex; flex-direction: column; align-items: flex-start; word-break: break-word;} 
-            .col-lieu { grid-area: lieu; font-size: 14px; width: 100%; grid-column: 1 / -1;}
+            .col-artiste { grid-area: artiste; font-size: 18px; width: 100%; line-height: 1.2; }
+            .col-lieu { grid-area: lieu; font-size: 14px; }
             .col-prix { grid-area: prix; text-align: right; font-size: 14px; font-weight: 700; } 
             .col-date { grid-area: date; width:100%; display:flex; flex-direction:column; justify-content:center; align-items:flex-start;}
             .col-billet { grid-area: billet; text-align: right; } .col-role { grid-area: role; text-align: right; }
@@ -1599,9 +1599,13 @@
                     let key = c.Date + "||" + keyLieu;
 
                     if (!groupesAvenir[key]) { 
-                        groupesAvenir[key] = { date: c.Date, artiste: isFest ? "🎪 " + lieuBrut : artStr, lieu: lieuBrut, isFest: isFest, style: c.Style || "", participants: [], interesses: [], prix: c.Prix, myStatus: null };
+                        // On intègre le style dès la création du groupe
+                        groupesAvenir[key] = { date: c.Date, artiste: isFest ? "🎪 " + lieuBrut : artStr, lieu: lieuBrut, isFest: isFest, style: c.Style || "", participants: [], interesses: [], prix: c.Prix, myStatus: null }; 
                     } else { 
                         if (isFest) groupesAvenir[key].isFest = true;
+                        // On force la récupération du style si quelqu'un d'autre l'a renseigné !
+                        if (c.Style && !groupesAvenir[key].style) groupesAvenir[key].style = c.Style;
+                        
                         let artsExistants = groupesAvenir[key].artiste.replace(/🎪/g, '').split(',').map(a => a.trim());
                         let artsNouveaux = artStr.split(',').map(a => a.trim());
                         let artsCombines = Array.from(new Set([...artsExistants, ...artsNouveaux])).filter(a => a !== "" && a !== "Inconnu").join(', ');
@@ -1640,8 +1644,8 @@
                         let g = groupesAvenir[k]; let dateObj = new Date(g.date); let dFR = dateObj.toLocaleDateString('fr-FR', {weekday: 'long', day:'2-digit', month:'long', year:'numeric'}); dFR = dFR.charAt(0).toUpperCase() + dFR.slice(1);
                         let htmlPart = g.participants.length > 0 ? g.participants.map(p => `<span class="badge-statut badge-billet-ok" style="width:auto; padding:4px 10px; font-size:12px;">✅ ${p}</span>`).join(' ') : '<span style="color:var(--text-faded); font-size:13px; font-weight:500;">Aucun</span>';
                         let htmlInt = g.interesses.length > 0 ? g.interesses.map(p => `<span class="badge-statut badge-billet-attente" style="width:auto; padding:4px 10px; font-size:12px;">⏳ ${p}</span>`).join(' ') : '<span style="color:var(--text-faded); font-size:13px; font-weight:500;">Aucun</span>';
-                        let styleBadge = g.style ? `<span style="font-size:10px; background:var(--bg-input); border:1px solid var(--border-input); padding:2px 6px; border-radius:8px; margin-left:8px; color:var(--text-faded); vertical-align:middle; font-weight:600;">${String(g.style).replace(/</g, '&lt;')}</span>` : "";
-                        let titreEvent = g.isFest ? `🎪 ${g.lieu}${styleBadge}` : `🎸 ${g.artiste}${styleBadge} <span style="font-size:14px; font-weight:normal; color:var(--text-faded);">@ ${g.lieu}</span>`;
+                        let styleBadge = g.style ? `<span style="font-size:10px; background:var(--bg-input); border:1px solid var(--border-input); padding:2px 6px; border-radius:8px; margin-left:8px; color:var(--text-faded); vertical-align:middle; font-weight:600; display:inline-block; margin-top:4px;">${String(g.style).replace(/</g, '&lt;')}</span>` : "";
+                        let titreEvent = g.isFest ? `🎪 ${g.lieu}${styleBadge}` : `🎸 ${g.artiste}${styleBadge} <div style="font-size:14px; font-weight:normal; color:var(--text-faded); margin-top:6px; display:flex; align-items:center; gap:4px;">📍 ${g.lieu}</div>`;
 
                         let prixAffiche = "";
                         if (g.prix !== null && g.prix !== undefined && g.prix !== "") {
@@ -1669,8 +1673,8 @@
                         else if (g.myStatus === 'interesse') { bgStyle = "background:rgba(245, 158, 11, 0.1); border:1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);"; }
 
                         html += `<div style="${bgStyle} border-radius:12px; padding:20px; margin-bottom:15px; transition: transform 0.2s;">
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:15px;">
-                                <div style="display:flex; flex-direction:column; gap:5px;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+                                <div style="display:flex; flex-direction:column; gap:5px; flex:1; min-width:200px;">
                                     <div style="color:#3b82f6; font-weight:700; font-size:13px; display:flex; flex-wrap:wrap; align-items:center;">📅 ${dFR}${prixAffiche}</div>
                                     <div style="font-size:18px; font-weight:800; color:var(--text-main); line-height:1.3;">${titreEvent.replace(/</g, '<')}</div>
                                 </div>
