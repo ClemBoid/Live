@@ -366,10 +366,8 @@
                     <div class="flex-row">
                         <div class="form-group flex-1">
                             <label>Artiste(s) / Line-up :</label>
-                            <div class="autocomplete-wrapper">
-                                <input type="text" id="artiste_principal" autocomplete="off" placeholder="Frankie and the Witch Fingers, Tramhaus">
-                                <div id="autocomplete-artistes" class="autocomplete-list"></div>
-                            </div>
+                            <div id="artistes-container"></div>
+                            <input type="hidden" id="artiste_principal">
                         </div>
                         <div class="form-group flex-1">
                             <label>Lieu / Salle :</label>
@@ -582,7 +580,7 @@
                 </div>
                 <div class="table-artistes-wrapper">
                     <table class="table-artistes">
-                        <thead><tr><th>Artiste</th><th>Nombre de concerts</th><th>Année(s)</th><th>Dépense totale</th></tr></thead>
+                        <thead><tr><th>Artiste</th><th>Nombre de concerts</th><th>Année(s)</th><th>Note moyenne</th><th>Dépense totale</th></tr></thead>
                         <tbody id="liste-artistes-tab"></tbody>
                     </table>
                 </div>
@@ -727,12 +725,29 @@
                         </form>
                     </div>
                 </div>
+
+                <div style="background: var(--bg-box); border: 1px solid var(--border-input); border-radius: 12px; padding: 25px; margin-top: 25px;">
+                    <h3 style="margin-top:0; margin-bottom: 10px;">🔔 Rappels J-1</h3>
+                    <p style="font-size: 13px; color: var(--text-faded); margin: 0 0 15px 0;">Reçois une notif sur ton téléphone la veille de chaque concert (avec météo). Nécessite d'installer l'appli sur l'écran d'accueil (PWA) et d'autoriser les notifications.</p>
+                    <div id="zone-push-statut" style="margin-bottom:12px; font-size:13px; color:var(--text-faded);"></div>
+                    <button type="button" id="btn-activer-push" class="btn-principal" style="margin-top:0;" onclick="activerNotificationsPush()">🔔 Activer les rappels J-1</button>
+                    <button type="button" id="btn-desactiver-push" class="btn-principal" style="margin-top:8px; background: transparent; color: var(--text-muted); border: 1px solid var(--border-input); display:none;" onclick="desactiverNotificationsPush()">🔕 Désactiver les rappels</button>
+                </div>
+
+                <div style="background: var(--bg-box); border: 1px solid var(--border-input); border-radius: 12px; padding: 25px; margin-top: 25px;">
+                    <h3 style="margin-top:0; margin-bottom: 10px;">🧹 Maintenance des données</h3>
+                    <p style="font-size: 13px; color: var(--text-faded); margin: 0 0 15px 0;">Nettoie tes concerts en remplaçant les orthographes d'artistes par la version officielle Spotify (Bandit bandit → Bandit Bandit). Nécessite d'être connecté à Spotify.</p>
+                    <button type="button" id="btn-normaliser-spotify" class="btn-principal" style="background: linear-gradient(135deg, #1ed760 0%, #15a349 100%); margin-top:0;" onclick="normaliserArtistesViaSpotify()">🎧 Normaliser mes artistes via Spotify</button>
+                    <div id="zone-normalisation-spotify" style="margin-top:15px; font-size:13px;"></div>
+                </div>
             </div>
         </div>
 
     <script>
         const SUPABASE_URL = "https://vrjmvhmcizgrozjwkcoy.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZyam12aG1jaXpncm96andrY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzM3NDYsImV4cCI6MjA4ODA0OTc0Nn0.eoMEiJjkUMfMw5NB8E-A1qQAdqIdbndK8-jCCGZ9vOc";
+        // Clé publique VAPID — générée avec `npx web-push generate-vapid-keys`, à remplacer par la tienne après déploiement
+        const VAPID_PUBLIC_KEY = "BDe7Wzu1we4TJl2jRWsruEp7xZgz9QsyQiKZQ8QGkHXnPvyEos-Rgtao1dRaqFYT0XCUa0Rjlh8NSU3v51oG_e8";
         const clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentUser = null; let viewingUserId = null; let profilsData = []; let pendingProposals = []; let currentProposeConcertId = null; let authMode = 'signup'; 
@@ -754,6 +769,19 @@
         function normaliserTexte(t) { return t ? String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : ""; }
         function uniformiserArtistes(artistesStr) { if (!artistesStr) return "inconnu"; return artistesStr.split(',').map(a => normaliserTexte(a).trim()).filter(a => a !== "").sort().join(','); }
         function uniformiserSalle(salleStr) { if (!salleStr) return "inconnu"; let s = normaliserTexte(String(salleStr)); s = s.replace(/🎪/g, '').trim(); s = s.replace(/^(le |la |les |l'|l’)/, ''); s = s.replace(/\(.*?\)/g, '').trim(); s = s.split(/[,-]/)[0].trim(); return s || "inconnu"; }
+        function getSpotifyOfficialName(artistName) {
+            if (!artistName) return null;
+            let cleanName = String(artistName).split(',')[0].trim().replace(/🎪 /g, '');
+            try {
+                let cache = (typeof spotifyCache !== 'undefined' && spotifyCache) ? spotifyCache : (JSON.parse(localStorage.getItem('spotify_artist_cache')) || {});
+                let entry = cache[cleanName];
+                if (entry && entry.name) return entry.name;
+                // Fallback : recherche case-insensitive dans le cache (les clés sont les noms saisis bruts)
+                let nk = normaliserTexte(cleanName);
+                for (let k in cache) { if (normaliserTexte(k) === nk && cache[k] && cache[k].name) return cache[k].name; }
+            } catch(e) {}
+            return null;
+        }
 
         function setAuthMode(mode) {
             authMode = mode; const title = document.getElementById('auth-title'); const btnSubmit = document.getElementById('auth-btn-submit');
@@ -864,7 +892,7 @@
             
             changerOnglet('tab-concerts');
             
-            document.getElementById('artiste_principal').value = p.artiste || ""; document.getElementById('lieu').value = p.lieu ? p.lieu.replace(/🎪/g, '').trim() : ""; document.getElementById('is_festival').checked = (p.lieu || "").includes('🎪');
+            setArtistesFromString(p.artiste || ""); document.getElementById('lieu').value = p.lieu ? p.lieu.replace(/🎪/g, '').trim() : ""; document.getElementById('is_festival').checked = (p.lieu || "").includes('🎪');
             document.getElementById('date').value = p.date || ""; document.getElementById('prix').value = p.prix || ""; document.getElementById('statut_billet').value = "a_acheter";
             if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
             document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = "";
@@ -942,7 +970,7 @@
             
             changerOnglet('tab-concerts');
             
-            document.getElementById('artiste_principal').value = c.Artiste_principal || "";
+            setArtistesFromString(c.Artiste_principal || "");
             let lieuBrut = c.Lieu ? String(c.Lieu) : ""; document.getElementById('is_festival').checked = lieuBrut.includes('🎪'); document.getElementById('lieu').value = lieuBrut.replace(/🎪/g, '').trim();
             document.getElementById('date').value = c.Date || ""; document.getElementById('prix').value = c.Prix || ""; document.getElementById('statut_billet').value = "a_acheter";
             if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
@@ -1017,7 +1045,8 @@
             if (idTab === 'tab-timeline') afficherTimeline();
             if (idTab === 'tab-artistes') afficherOngletArtistes();
             if (idTab === 'tab-crew-avenir') afficherConcertsCrewAvenir(); 
-            if (idTab === 'tab-carte') setTimeout(initCarte, 100); 
+            if (idTab === 'tab-carte') setTimeout(initCarte, 100);
+            if (idTab === 'tab-parametres') rafraichirStatutPush(); 
             if (idTab === 'tab-parametres') chargerParametres();
         }
 
@@ -1066,48 +1095,97 @@
             btn.disabled = false; btn.innerHTML = "🔒 Changer le mot de passe";
         }
 
-        function setupAutocomplete(inputId, listId, isMulti) {
-            const input = document.getElementById(inputId); const list = document.getElementById(listId);
-            
+        function setupAutocompleteForInput(input, list, getData, isMulti) {
             function updateList() {
-                let val = input.value; list.innerHTML = ''; 
+                let val = input.value; list.innerHTML = '';
                 let searchVal = val; if (isMulti) { let parts = val.split(','); searchVal = parts[parts.length - 1].trim(); }
-                
-                // Choix de la base de données selon le champ
-                let dataArray;
-                if (inputId === 'lieu') dataArray = listeSallesCommunaute;
-                else if (inputId === 'style_musique') dataArray = listeStylesGlobale;
-                else dataArray = listeArtistesGlobale;
-                
-                let matches = [];
-                // Si la case est vide, on affiche tout. Sinon, on filtre intelligemment.
-                if (!searchVal) { matches = dataArray; } 
-                else { matches = dataArray.filter(item => normaliserTexte(item).includes(normaliserTexte(searchVal))); }
-                
-                if(matches.length > 0) {
+                let dataArray = getData() || [];
+                let matches = !searchVal ? dataArray : dataArray.filter(item => normaliserTexte(item).includes(normaliserTexte(searchVal)));
+                if (matches.length > 0) {
                     list.style.display = 'block';
-                    // On limite l'affichage à 50 éléments pour ne pas faire ramer le téléphone
                     matches.slice(0, 50).forEach(match => {
                         let div = document.createElement('div'); div.className = 'autocomplete-item'; div.textContent = match;
                         div.onclick = function(e) {
                             e.stopPropagation();
-                            if(isMulti) { let parts = input.value.split(','); parts[parts.length - 1] = " " + match; input.value = parts.join(',').trim() + ", "; } else { input.value = match; }
+                            if (isMulti) { let parts = input.value.split(','); parts[parts.length - 1] = " " + match; input.value = parts.join(',').trim() + ", "; }
+                            else { input.value = match; }
                             list.style.display = 'none'; input.focus();
+                            input.dispatchEvent(new Event('input'));
                         };
                         list.appendChild(div);
                     });
                 } else { list.style.display = 'none'; }
             }
-
-            // On déclenche la liste quand on tape ET quand on clique (focus) dans la case
             input.addEventListener('input', updateList);
             input.addEventListener('focus', updateList);
-            
-            // Évite que la liste disparaisse avant qu'on ait le temps de cliquer sur un choix
             list.addEventListener('mousedown', function(e) { e.preventDefault(); });
             document.addEventListener('click', function(e) { if (e.target !== input && e.target !== list) { list.style.display = 'none'; } });
         }
-        setupAutocomplete('artiste_principal', 'autocomplete-artistes', true);
+
+        function setupAutocomplete(inputId, listId, isMulti) {
+            const input = document.getElementById(inputId); const list = document.getElementById(listId);
+            setupAutocompleteForInput(input, list, () => {
+                if (inputId === 'lieu') return listeSallesCommunaute;
+                if (inputId === 'style_musique') return listeStylesGlobale;
+                return listeArtistesGlobale;
+            }, isMulti);
+        }
+
+        function syncArtistePrincipal() {
+            let vals = [];
+            document.querySelectorAll('#artistes-container .artiste-row-input').forEach(inp => {
+                let v = inp.value.trim(); if (v) vals.push(v);
+            });
+            document.getElementById('artiste_principal').value = vals.join(', ');
+        }
+
+        function renumberArtisteRows() {
+            let rows = document.querySelectorAll('#artistes-container .artiste-row');
+            rows.forEach((r, i) => { r.querySelector('input').placeholder = 'Artiste ' + (i + 1); });
+        }
+
+        function ensureTrailingEmptyArtisteRow() {
+            let container = document.getElementById('artistes-container');
+            let rows = container.querySelectorAll('.artiste-row');
+            if (rows.length === 0 || rows[rows.length - 1].querySelector('input').value.trim() !== '') {
+                addArtisteRow('');
+            }
+        }
+
+        function addArtisteRow(value) {
+            let container = document.getElementById('artistes-container');
+            let listId = 'autocomplete-artistes-row-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+            let div = document.createElement('div');
+            div.className = 'artiste-row';
+            div.style.cssText = 'display:flex; gap:6px; align-items:center; margin-bottom:8px;';
+            div.innerHTML = `
+                <div class="autocomplete-wrapper" style="flex:1;">
+                    <input type="text" class="artiste-row-input" autocomplete="off" placeholder="Artiste">
+                    <div id="${listId}" class="autocomplete-list"></div>
+                </div>
+                <button type="button" class="btn-remove-artiste" title="Retirer cet artiste" style="background:transparent; border:1px solid var(--border-input); color:var(--text-faded); width:38px; height:38px; border-radius:8px; cursor:pointer; font-size:14px; flex-shrink:0;">✕</button>
+            `;
+            container.appendChild(div);
+            let input = div.querySelector('input');
+            input.value = value || '';
+            input.addEventListener('input', () => { syncArtistePrincipal(); ensureTrailingEmptyArtisteRow(); renumberArtisteRows(); });
+            div.querySelector('.btn-remove-artiste').addEventListener('click', () => {
+                div.remove(); ensureTrailingEmptyArtisteRow(); renumberArtisteRows(); syncArtistePrincipal();
+            });
+            setupAutocompleteForInput(input, document.getElementById(listId), () => listeArtistesGlobale, false);
+            renumberArtisteRows();
+        }
+
+        function setArtistesFromString(str) {
+            let container = document.getElementById('artistes-container');
+            container.innerHTML = '';
+            let parts = String(str || '').split(',').map(s => s.trim()).filter(s => s !== '');
+            parts.forEach(p => addArtisteRow(p));
+            ensureTrailingEmptyArtisteRow();
+            syncArtistePrincipal();
+        }
+
+        setArtistesFromString('');
         setupAutocomplete('lieu', 'autocomplete-salles', false);
         setupAutocomplete('style_musique', 'autocomplete-styles', false);
 
@@ -1116,19 +1194,56 @@
              if (!error) mesConcertsPersos = data || [];
         }
 
+        // ---------- IndexedDB mirror (lecture hors-ligne) ----------
+        const IDB_NAME = 'live-cache'; const IDB_STORE = 'concerts';
+        function idbOpen() {
+            return new Promise((resolve, reject) => {
+                let req = indexedDB.open(IDB_NAME, 1);
+                req.onupgradeneeded = e => { let db = e.target.result; if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE); };
+                req.onsuccess = e => resolve(e.target.result);
+                req.onerror = e => reject(e.target.error);
+            });
+        }
+        async function idbSetConcerts(userId, concerts) {
+            try { let db = await idbOpen(); let tx = db.transaction(IDB_STORE, 'readwrite'); tx.objectStore(IDB_STORE).put({ savedAt: Date.now(), concerts }, 'user_' + userId); return new Promise(r => tx.oncomplete = r); }
+            catch(e) { console.warn('IDB set:', e); }
+        }
+        async function idbGetConcerts(userId) {
+            try {
+                let db = await idbOpen();
+                return await new Promise((resolve, reject) => {
+                    let tx = db.transaction(IDB_STORE, 'readonly'); let req = tx.objectStore(IDB_STORE).get('user_' + userId);
+                    req.onsuccess = () => resolve(req.result || null); req.onerror = () => reject(req.error);
+                });
+            } catch(e) { console.warn('IDB get:', e); return null; }
+        }
+
+        function appliquerConcertsCharges(resultats, source) {
+            tousLesConcerts = resultats; mettreAJourMenusFiltres();
+            if (isFirstLoad) { const currYear = new Date().getFullYear().toString(); const chk = document.querySelector(`.chk-annee[value="${currYear}"]`); if (chk) chk.checked = true; isFirstLoad = false; }
+            afficherConcerts();
+            if(document.getElementById('tab-artistes').classList.contains('actif')) afficherOngletArtistes();
+            if(document.getElementById('tab-timeline').classList.contains('actif')) afficherTimeline();
+            if (source === 'cache') showToast("📴 Mode hors-ligne — données du dernier chargement", "warning");
+        }
+
         async function chargerConcerts() {
             try {
                 const { data, error } = await clientSupabase.from('Concerts').select('*').eq('user_id', viewingUserId);
-                if (!error) { 
-                    let resultats = data || [];
-                    if (viewingUserId !== currentUser.id) { resultats = resultats.filter(c => c.Prive !== true); }
-                    tousLesConcerts = resultats; mettreAJourMenusFiltres();
-                    if (isFirstLoad) { const currYear = new Date().getFullYear().toString(); const chk = document.querySelector(`.chk-annee[value="${currYear}"]`); if (chk) chk.checked = true; isFirstLoad = false; }
-                    afficherConcerts(); 
-                    if(document.getElementById('tab-artistes').classList.contains('actif')) afficherOngletArtistes();
-                    if(document.getElementById('tab-timeline').classList.contains('actif')) afficherTimeline();
+                if (error) throw error;
+                let resultats = data || [];
+                if (viewingUserId !== currentUser.id) { resultats = resultats.filter(c => c.Prive !== true); }
+                appliquerConcertsCharges(resultats, 'network');
+                idbSetConcerts(viewingUserId, resultats);
+            } catch(e) {
+                console.error('chargerConcerts (réseau KO):', e);
+                let cached = await idbGetConcerts(viewingUserId);
+                if (cached && cached.concerts) {
+                    appliquerConcertsCharges(cached.concerts, 'cache');
+                } else {
+                    showToast("Pas de connexion et aucune donnée hors-ligne disponible.", "error");
                 }
-            } catch(e) { console.error(e); }
+            }
         }
 
         window.toggleRow = function(e, id) {
@@ -1226,11 +1341,40 @@
 
         document.getElementById('concertForm').addEventListener('input', function() { document.getElementById('zone-agenda').innerHTML = ''; });
 
-        document.getElementById('date').addEventListener('change', function(e) {
-            const val = e.target.value; const alertDiv = document.getElementById('alerte-conflit'); if(!val) { alertDiv.style.display = 'none'; return; }
-            const idEd = document.getElementById('concert_id').value; const conflit = tousLesConcerts.find(c => String(c.Date||"") === val && String(c.id) !== String(idEd));
-            if(conflit) { alertDiv.innerHTML = `⚠️ Tu as déjà prévu d'aller voir <b>${String(conflit.Artiste_principal || "un artiste").replace(/</g, '<').replace(/>/g, '>')}</b> ce jour-là !`; alertDiv.style.display = 'block'; } else { alertDiv.style.display = 'none'; }
-        });
+        function detecterConflitConcert(date, lieuSaisi, idCourant) {
+            if (!date) return null;
+            let lieuNorm = uniformiserSalle(lieuSaisi || "");
+            // Priorité 1 : même date + même salle (normalisées) — c'est un vrai doublon
+            let exact = tousLesConcerts.find(c => String(c.Date||"") === date && String(c.id) !== String(idCourant) && lieuNorm !== "inconnu" && uniformiserSalle(c.Lieu||"") === lieuNorm);
+            if (exact) return { type: 'doublon', concert: exact };
+            // Priorité 2 : même date seule — c'est juste un conflit d'agenda
+            let memeDate = tousLesConcerts.find(c => String(c.Date||"") === date && String(c.id) !== String(idCourant));
+            if (memeDate) return { type: 'meme_date', concert: memeDate };
+            return null;
+        }
+
+        function rafraichirAlerteConflit() {
+            const date = document.getElementById('date').value;
+            const lieu = document.getElementById('lieu').value;
+            const idEd = document.getElementById('concert_id').value;
+            const alertDiv = document.getElementById('alerte-conflit');
+            if (!date) { alertDiv.style.display = 'none'; return; }
+            const conflit = detecterConflitConcert(date, lieu, idEd);
+            if (!conflit) { alertDiv.style.display = 'none'; return; }
+            const artisteHTML = String(conflit.concert.Artiste_principal || "un artiste").replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const lieuHTML = String(conflit.concert.Lieu || "").replace(/🎪/g, '').trim().replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            if (conflit.type === 'doublon') {
+                alertDiv.innerHTML = `🚨 Doublon probable : tu as déjà <b>${artisteHTML}</b>${lieuHTML ? ` @ <b>${lieuHTML}</b>` : ''} à cette date.`;
+                alertDiv.style.background = 'rgba(239,68,68,0.15)';
+            } else {
+                alertDiv.innerHTML = `⚠️ Tu as déjà prévu d'aller voir <b>${artisteHTML}</b> ce jour-là.`;
+                alertDiv.style.background = 'rgba(239,68,68,0.1)';
+            }
+            alertDiv.style.display = 'block';
+        }
+
+        document.getElementById('date').addEventListener('change', rafraichirAlerteConflit);
+        document.getElementById('lieu').addEventListener('input', rafraichirAlerteConflit);
 
         window.toggleToutesAnnees = function() { document.querySelectorAll('.chk-annee').forEach(cb => cb.checked = false); afficherConcerts(); }
         window.toggleToutesSalles = function() { document.querySelectorAll('.chk-salle').forEach(cb => cb.checked = false); afficherConcerts(); }
@@ -1244,9 +1388,24 @@
                 if(c.Style) String(c.Style).split(',').forEach(s => { if(s.trim()!=="") setStyle.add(s.trim()); });
             });
 
-            listeArtistesGlobale = Array.from(setArt).sort((a,b) => a.localeCompare(b));
-            listeStylesGlobale = Array.from(setStyle).sort((a,b) => a.localeCompare(b));
-            listeSallesGlobale = Array.from(setSa).sort((a,b) => a.localeCompare(b));
+            // Dedupe en ignorant la casse / accents.
+            // Pour les artistes : on privilégie l'orthographe officielle Spotify si disponible (cache),
+            // sinon la 1ère orthographe rencontrée.
+            const dedupeCI = (set, preferSpotify) => {
+                let best = {}; // key -> { display, official: bool }
+                Array.from(set).forEach(v => {
+                    let k = normaliserTexte(v);
+                    let off = preferSpotify ? getSpotifyOfficialName(v) : null;
+                    let display = off || v;
+                    let isOff = !!off;
+                    if (!(k in best)) best[k] = { display, official: isOff };
+                    else if (isOff && !best[k].official) best[k] = { display, official: isOff };
+                });
+                return Object.values(best).map(o => o.display).sort((a,b) => a.localeCompare(b));
+            };
+            listeArtistesGlobale = dedupeCI(setArt, true);
+            listeStylesGlobale = dedupeCI(setStyle, false);
+            listeSallesGlobale = dedupeCI(setSa, false);
             const selAn = Array.from(document.querySelectorAll('.chk-annee:checked')).map(cb => cb.value); const selSa = Array.from(document.querySelectorAll('.chk-salle:checked')).map(cb => cb.value);
 
             let htmlAn = `<label class="chk-label" style="font-weight: 700;"><input type="checkbox" id="chk-toutes-annees" onchange="toggleToutesAnnees()"> TOUTES</label>`; let statsOptions = `<option value="tous">Toutes les années</option>`;
@@ -1254,7 +1413,7 @@
             document.getElementById('container-chk-annees').innerHTML = htmlAn; document.getElementById('filtre-stats-annee').innerHTML = statsOptions;
 
             let htmlSa = `<label class="chk-label" style="font-weight: 700;"><input type="checkbox" id="chk-toutes-salles" onchange="toggleToutesSalles()"> TOUTES</label>`;
-            Array.from(setSa).sort().forEach(s => { let safeS = s.replace(/"/g, '"'); htmlSa += `<label class="chk-label"><input type="checkbox" class="chk-salle" value="${safeS}" onchange="afficherConcerts()" ${selSa.includes(s)?"checked":""}> ${s}</label>`; });
+            listeSallesGlobale.forEach(s => { let safeS = s.replace(/"/g, '"'); htmlSa += `<label class="chk-label"><input type="checkbox" class="chk-salle" value="${safeS}" onchange="afficherConcerts()" ${selSa.includes(s)?"checked":""}> ${s}</label>`; });
             document.getElementById('container-chk-salles').innerHTML = htmlSa; 
             if(document.getElementById('salles-list')) document.getElementById('salles-list').innerHTML = '';
         }
@@ -1355,7 +1514,8 @@
                     if (safeDate && safeDate >= today && safeDate < minAvenir) { minAvenir = safeDate; idProchain = c.id; }
                     if (safeDate && safeDate < today && safeDate.endsWith(strMoisJour)) souvenirs.push(c);
                     let mAn = (chkAn.length === 0) || chkAn.includes(safeDate.substring(0,4)) || (!safeDate && chkAn.includes(anneeEnCours));
-                    let mSa = (chkSa.length === 0) || chkSa.includes(lieuPropre);
+                    let lieuNorm = normaliserTexte(lieuPropre);
+                    let mSa = (chkSa.length === 0) || chkSa.some(s => normaliserTexte(s) === lieuNorm);
                     let estPasse = safeDate && safeDate <= today, estAvenir = safeDate && safeDate > today, dateInco = !safeDate;
                     let mStat = (fStatut === "tous") || (fStatut === "passe" && estPasse) || (fStatut === "avenir" && estAvenir) || (fStatut === "inconnu" && dateInco);
                     let mBillet = (fBillet === "tous") || (fBillet === "achetee" && c.Statut_billet !== "a_acheter" && c.Statut_billet !== "cadeau") || (fBillet === "a_acheter" && c.Statut_billet === "a_acheter") || (fBillet === "cadeau" && c.Statut_billet === "cadeau");
@@ -1460,7 +1620,14 @@
                             if(c.Ticket_PDF && isOwner) { btnTicketPDF = `<button type="button" onclick="voirBillet('${c.Ticket_PDF}')" class="btn-icon btn-ticket" title="Voir mon billet 🎟️">🎟️</button>`; }
                             if(artisteRecherche && artisteRecherche !== "-") {
                                 let urlSpotify = `https://open.spotify.com/search/${encodeURIComponent(artisteRecherche)}`; btnSpotify = `<a href="${urlSpotify}" target="_blank" class="btn-icon btn-spotify" title="Écouter">🎧</a>`;
-                                let urlSetlist = `https://www.setlist.fm/search?query=${encodeURIComponent(artisteRecherche + " " + lieuPropre + " " + anneeRech)}`; btnSetlist = estPasseVisuel ? `<a href="${urlSetlist}" target="_blank" class="btn-icon btn-setlist" title="Chercher la Setlist">🎵</a>` : ``;
+                                let urlSetlist;
+                                if (safeDateC) {
+                                    let [yyyy, mm, dd] = safeDateC.split('-');
+                                    urlSetlist = `https://www.setlist.fm/search?query=${encodeURIComponent(`artist:"${artisteRecherche}" eventDate:${dd}-${mm}-${yyyy}`)}`;
+                                } else {
+                                    urlSetlist = `https://www.setlist.fm/search?query=${encodeURIComponent(artisteRecherche + " " + lieuPropre + " " + anneeRech)}`;
+                                }
+                                btnSetlist = estPasseVisuel ? `<a href="${urlSetlist}" target="_blank" class="btn-icon btn-setlist" title="Chercher la Setlist du soir">🎵</a>` : ``;
                             }
                             if(safeDateC) {
                                 let dCal = safeDateC.replace(/-/g, ''); let titreCal = encodeURIComponent("Concert : " + (c.Artiste_principal || "Artiste inconnu")); let lieuCal = encodeURIComponent(lieuPropre); let detailsCal = c.Prix ? encodeURIComponent(`Prix : ${String(c.Prix).replace('.', ',')} €`) : ""; let urlCal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titreCal}&dates=${dCal}T200000/${dCal}T233000&location=${lieuCal}&details=${detailsCal}`; btnCalendar = `<a href="${urlCal}" target="_blank" class="btn-icon btn-calendar" title="Ajouter à l'agenda Google">📅</a>`;
@@ -1608,7 +1775,17 @@
                         
                         let artsExistants = groupesAvenir[key].artiste.replace(/🎪/g, '').split(',').map(a => a.trim());
                         let artsNouveaux = artStr.split(',').map(a => a.trim());
-                        let artsCombines = Array.from(new Set([...artsExistants, ...artsNouveaux])).filter(a => a !== "" && a !== "Inconnu").join(', ');
+                        let bestArts = {}; // key -> { display, official }
+                        [...artsExistants, ...artsNouveaux].forEach(a => {
+                            if (a === "" || a === "Inconnu") return;
+                            let nk = normaliserTexte(a);
+                            let off = getSpotifyOfficialName(a);
+                            let display = off || a;
+                            let isOff = !!off;
+                            if (!(nk in bestArts)) bestArts[nk] = { display, official: isOff };
+                            else if (isOff && !bestArts[nk].official) bestArts[nk] = { display, official: isOff };
+                        });
+                        let artsCombines = Object.values(bestArts).map(o => o.display).join(', ');
                         groupesAvenir[key].artiste = groupesAvenir[key].isFest ? "🎪 " + lieuBrut : (artsCombines || "Inconnu");
                         if(lieuBrut.length > groupesAvenir[key].lieu.length) groupesAvenir[key].lieu = lieuBrut; 
                         if(c.Prix && (!groupesAvenir[key].prix || parseFloat(c.Prix) > parseFloat(groupesAvenir[key].prix))) groupesAvenir[key].prix = c.Prix;
@@ -1734,7 +1911,7 @@
             
             changerOnglet('tab-concerts');
             
-            document.getElementById('artiste_principal').value = g.isFest ? "" : g.artiste.replace('🎪 ', '');
+            setArtistesFromString(g.isFest ? "" : g.artiste.replace('🎪 ', ''));
             document.getElementById('is_festival').checked = g.isFest; 
             document.getElementById('lieu').value = g.lieu.replace('🎪', '').trim();
             document.getElementById('date').value = g.date || ""; 
@@ -1790,26 +1967,44 @@
             const today = new Date().toISOString().split('T')[0];
             tousLesConcerts.forEach(c => {
                 if (c.Date && c.Date > today) return; // Ignore les concerts à venir
-                
+                if (c.Statut_billet === 'a_acheter') return; // Uniquement billets achetés ou cadeaux
+
                 if(c.Artiste_principal) {
                     let allArt = String(c.Artiste_principal); let anneeConcert = c.Date ? String(c.Date).substring(0,4) : "Inconnue";
-                    allArt.split(',').forEach(a => {
-                        let nom = a.trim();
-                        if(nom !== "") {
-                            if(!statsArtistes[nom]) statsArtistes[nom] = { count: 0, depense: 0, annees: new Set() };
-                            statsArtistes[nom].count += 1; if(anneeConcert !== "Inconnue") { statsArtistes[nom].annees.add(anneeConcert); }
-                            let prixVal = parseFloat(String(c.Prix||"0").replace(',','.')); if(!isNaN(prixVal) && c.Statut_billet !== 'cadeau' && c.Role !== 'benevole') { statsArtistes[nom].depense += prixVal; }
+                    let notesJson = c.Notes_artistes || {};
+                    if (typeof notesJson === 'string') { try { notesJson = JSON.parse(notesJson); } catch(e) { notesJson = {}; } }
+                    let prixVal = parseFloat(String(c.Prix||"0").replace(',','.'));
+                    let artsConcert = allArt.split(',').map(a => a.trim()).filter(a => a !== "");
+                    artsConcert.forEach(nom => {
+                        let key = normaliserTexte(nom);
+                        let off = getSpotifyOfficialName(nom);
+                        if (!statsArtistes[key]) statsArtistes[key] = { display: off || nom, official: !!off, count: 0, depense: 0, annees: new Set(), notes: [] };
+                        else if (off && !statsArtistes[key].official) { statsArtistes[key].display = off; statsArtistes[key].official = true; }
+                        statsArtistes[key].count += 1;
+                        if (anneeConcert !== "Inconnue") statsArtistes[key].annees.add(anneeConcert);
+                        if (!isNaN(prixVal) && c.Statut_billet !== 'cadeau' && c.Role !== 'benevole') statsArtistes[key].depense += prixVal;
+                        let nArt = null;
+                        if (notesJson && Object.keys(notesJson).length > 0) {
+                            let matchKey = Object.keys(notesJson).find(k => normaliserTexte(k) === key);
+                            if (matchKey) nArt = parseFloat(notesJson[matchKey]);
+                        } else if (artsConcert.length === 1) {
+                            nArt = parseFloat(c.Note);
                         }
+                        if (!isNaN(nArt) && nArt > 0) statsArtistes[key].notes.push(nArt);
                     });
                 }
             });
-            let sortedArtistes = Object.keys(statsArtistes).filter(art => rech === "" || normaliserTexte(art).includes(rech)).sort((a,b) => a.localeCompare(b));
+            let sortedKeys = Object.keys(statsArtistes).filter(k => rech === "" || normaliserTexte(statsArtistes[k].display).includes(rech)).sort((a,b) => statsArtistes[a].display.localeCompare(statsArtistes[b].display));
             let html = '';
-            if(sortedArtistes.length === 0) { html = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-faded);">Aucun artiste trouvé.</td></tr>'; } 
-            else { 
+            if(sortedKeys.length === 0) { html = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-faded);">Aucun artiste trouvé.</td></tr>'; }
+            else {
                 let safeHtml = '';
-                sortedArtistes.forEach((art) => { 
-                    let anneesStr = Array.from(statsArtistes[art].annees).sort().join(', '); if(!anneesStr) anneesStr = "-"; 
+                sortedKeys.forEach((k) => {
+                    let s = statsArtistes[k];
+                    let art = s.display;
+                    let anneesStr = Array.from(s.annees).sort().join(', '); if(!anneesStr) anneesStr = "-";
+                    let moyNote = s.notes.length > 0 ? (s.notes.reduce((a,b)=>a+b,0) / s.notes.length) : 0;
+                    let noteAffichee = moyNote > 0 ? `<span style="color:#f59e0b; font-weight:700;">⭐ ${moyNote.toFixed(1).replace('.', ',')}</span><span style="color:var(--text-faded); font-size:11px; margin-left:4px;">(${s.notes.length})</span>` : '<span style="color:var(--text-faded);">-</span>';
                     safeHtml += `<tr>
                         <td style="font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:15px;">
                             <div class="spotify-avatar-container" data-spotify-artist="${art.replace(/"/g, '"')}" style="width:40px; height:40px; border-radius:50%; background:var(--bg-box); overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
@@ -1817,11 +2012,12 @@
                             </div>
                             ${art.replace(/</g, '<').replace(/>/g, '>')}
                         </td>
-                        <td style="color:var(--text-muted);">${statsArtistes[art].count} fois</td>
+                        <td style="color:var(--text-muted);">${s.count} fois</td>
                         <td style="color:var(--text-muted); font-size: 13px;">${anneesStr}</td>
-                        <td style="color:var(--text-muted); font-weight:600;">${statsArtistes[art].depense > 0 ? statsArtistes[art].depense.toFixed(2).replace('.',',') + ' €' : '-'}</td>
+                        <td>${noteAffichee}</td>
+                        <td style="color:var(--text-muted); font-weight:600;">${s.depense > 0 ? s.depense.toFixed(2).replace('.',',') + ' €' : '-'}</td>
                     </tr>`;
-                }); 
+                });
                 html = safeHtml;
             }
             document.getElementById('liste-artistes-tab').innerHTML = html;
@@ -1864,7 +2060,7 @@
 
         function afficherTimeline() {
             const today = new Date().toISOString().split('T')[0];
-            let passes = tousLesConcerts.filter(c => c.Date && typeof c.Date==='string' && c.Date <= today).sort((a,b) => (b.Date > a.Date ? 1 : -1));
+            let passes = tousLesConcerts.filter(c => c.Date && typeof c.Date==='string' && c.Date <= today && c.Statut_billet !== 'a_acheter').sort((a,b) => (b.Date > a.Date ? 1 : -1));
             let html = "", lastAnnee = ""; let side = "gauche";
             passes.forEach(c => {
                 try {
@@ -1884,7 +2080,7 @@
         window.preparerEdition = function(id) {
             const c = tousLesConcerts.find(x => String(x.id) === String(id));
             if(c) {
-                document.getElementById('concert_id').value = c.id; document.getElementById('artiste_principal').value = c.Artiste_principal || "";
+                document.getElementById('concert_id').value = c.id; setArtistesFromString(c.Artiste_principal || "");
                 let lieuBrut = c.Lieu ? String(c.Lieu) : ""; document.getElementById('is_festival').checked = lieuBrut.includes('🎪'); document.getElementById('lieu').value = lieuBrut.replace(/🎪/g, '').trim();
                 document.getElementById('date').value = c.Date || ""; document.getElementById('prix').value = c.Prix || ""; document.getElementById('style_musique').value = c.Style || ""; document.getElementById('statut_billet').value = c.Statut_billet || "achetee";
                 if (document.getElementById('role')) document.getElementById('role').value = c.Role || "spectateur";
@@ -1912,7 +2108,7 @@
         }
 
         window.annulerEdition = function() {
-            document.getElementById('concertForm').reset(); document.getElementById('concert_id').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('alerte-conflit').style.display = 'none';
+            document.getElementById('concertForm').reset(); document.getElementById('concert_id').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('alerte-conflit').style.display = 'none'; setArtistesFromString("");
             document.getElementById('titre-formulaire-texte').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Enregistrer le concert`; document.getElementById('btn-annuler').style.display = "none"; document.getElementById('zone-agenda').innerHTML = ""; 
             toggleFormConcert(false);
         }
@@ -1920,9 +2116,23 @@
         window.supprimerConcert = async function(id) { if(confirm("Supprimer ce concert ?")) { await clientSupabase.from('Concerts').delete().eq('id', id); showToast("Concert supprimé.", "warning"); chargerConcerts(); } }
 
         document.getElementById('concertForm').addEventListener('submit', async function(e) {
-            e.preventDefault(); const btnSubmit = document.getElementById('btn-submit'); const btnText = document.getElementById('btn-text'); const btnLoader = document.getElementById('btn-loader'); btnText.style.display = 'none'; btnLoader.style.display = 'inline'; btnSubmit.disabled = true;
+            e.preventDefault(); const btnSubmit = document.getElementById('btn-submit'); const btnText = document.getElementById('btn-text'); const btnLoader = document.getElementById('btn-loader');
             const idEd = document.getElementById('concert_id').value; const vPx = document.getElementById('prix').value; const vDt = document.getElementById('date').value;
             let lieuValue = document.getElementById('lieu').value.trim(); if(document.getElementById('is_festival').checked && !lieuValue.includes('🎪')) { lieuValue += ' 🎪'; }
+
+            // Détection de doublon (date + salle normalisée) avant insertion
+            if (vDt && !idEd) {
+                let conflit = detecterConflitConcert(vDt, lieuValue, idEd);
+                if (conflit && conflit.type === 'doublon') {
+                    let artisteExistant = conflit.concert.Artiste_principal || "un artiste";
+                    let lieuExistant = String(conflit.concert.Lieu || "").replace(/🎪/g, '').trim();
+                    if (!confirm(`Tu as déjà "${artisteExistant}" @ ${lieuExistant} le ${new Date(vDt).toLocaleDateString('fr-FR')}.\n\nCe nouveau concert ressemble fortement à un doublon. Continuer quand même ?`)) {
+                        return;
+                    }
+                }
+            }
+
+            btnText.style.display = 'none'; btnLoader.style.display = 'inline'; btnSubmit.disabled = true;
             
             const fileInput = document.getElementById('ticket_file'); let ticketFinalPath = document.getElementById('ticket_url_existant').value;
             if (ticketFinalPath === "SUPPRIMER") { ticketFinalPath = null; }
@@ -2385,9 +2595,10 @@
             : 'https://clemboid.github.io/Live/';
         
         // COUP DE BALAI OBLIGATOIRE : On force le vidage du cache corrompu
-        if (!localStorage.getItem('cache_spotify_v3')) {
+        if (!localStorage.getItem('cache_spotify_v4')) {
             localStorage.removeItem('spotify_artist_cache');
-            localStorage.setItem('cache_spotify_v3', 'true');
+            localStorage.removeItem('cache_spotify_v3');
+            localStorage.setItem('cache_spotify_v4', 'true');
         }
 
         let spotifyToken = localStorage.getItem('spotify_token');
@@ -2501,7 +2712,7 @@
                     let exactMatch = data.artists.items.find(a => a.name.toLowerCase() === cleanName.toLowerCase());
                     let artist = exactMatch || data.artists.items[0];
                     
-                    const info = { id: artist.id, image: artist.images.length > 0 ? artist.images[0].url : null };
+                    const info = { id: artist.id, image: artist.images.length > 0 ? artist.images[0].url : null, name: artist.name };
                     spotifyCache[cleanName] = info;
                     localStorage.setItem('spotify_artist_cache', JSON.stringify(spotifyCache));
                     return info;
@@ -2510,19 +2721,154 @@
             return null;
         }
 
+        let spotifyRerenderInFlight = false;
         window.chargerPhotosArtistesSpotify = async function() {
             if(!spotifyToken) return;
             const containers = document.querySelectorAll('.spotify-avatar-container');
+            let nouveauxNomsOfficiels = false;
             for(let container of containers) {
                 const artist = container.getAttribute('data-spotify-artist');
                 if(artist && !container.hasAttribute('data-loaded')) {
                     container.setAttribute('data-loaded', 'true');
+                    let cleanName = artist.split(',')[0].trim().replace(/🎪 /g, '');
+                    let avaitDejaNom = !!(spotifyCache[cleanName] && spotifyCache[cleanName].name);
                     const data = await getSpotifyData(artist);
                     if(data && data.image) {
                         container.innerHTML = `<img src="${data.image}" style="width:100%; height:100%; object-fit:cover;">`;
                     }
+                    if (data && data.name && !avaitDejaNom && normaliserTexte(data.name) === normaliserTexte(cleanName) && data.name !== cleanName) {
+                        nouveauxNomsOfficiels = true;
+                    }
                 }
             }
+            // Si on a appris de nouvelles orthographes officielles, on re-render l'onglet Artistes pour mettre à jour les libellés
+            if (nouveauxNomsOfficiels && !spotifyRerenderInFlight && document.getElementById('tab-artistes') && document.getElementById('tab-artistes').classList.contains('actif')) {
+                spotifyRerenderInFlight = true;
+                try { afficherOngletArtistes(); } finally { spotifyRerenderInFlight = false; }
+            }
+        }
+
+        // ---------- Web Push (rappels J-1) ----------
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const raw = atob(base64); const out = new Uint8Array(raw.length);
+            for (let i = 0; i < raw.length; ++i) out[i] = raw.charCodeAt(i);
+            return out;
+        }
+
+        function pushSupporte() {
+            return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+        }
+
+        async function rafraichirStatutPush() {
+            const zone = document.getElementById('zone-push-statut');
+            const btnOn = document.getElementById('btn-activer-push');
+            const btnOff = document.getElementById('btn-desactiver-push');
+            if (!zone || !btnOn || !btnOff) return;
+            if (!pushSupporte()) { zone.innerHTML = '⚠️ Ton navigateur ne supporte pas les notifications push.'; btnOn.disabled = true; return; }
+            if (VAPID_PUBLIC_KEY === "REMPLACE_PAR_TA_CLE_PUBLIQUE_VAPID") { zone.innerHTML = '⚠️ Clé VAPID pas encore configurée (voir <code>supabase/README.md</code>).'; btnOn.disabled = true; return; }
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                const sub = await reg.pushManager.getSubscription();
+                if (sub && Notification.permission === 'granted') {
+                    zone.innerHTML = '✅ Rappels J-1 activés sur cet appareil.';
+                    btnOn.style.display = 'none'; btnOff.style.display = 'block';
+                } else {
+                    zone.innerHTML = 'Rappels désactivés sur cet appareil.';
+                    btnOn.style.display = 'block'; btnOff.style.display = 'none';
+                }
+            } catch(e) { zone.innerHTML = '⚠️ ' + e.message; }
+        }
+
+        window.activerNotificationsPush = async function() {
+            const btn = document.getElementById('btn-activer-push');
+            if (!pushSupporte()) { showToast("Push non supporté sur ce navigateur", "error"); return; }
+            btn.disabled = true; const labelOrig = btn.innerHTML; btn.innerHTML = '⏳ Demande d\'autorisation...';
+            try {
+                const perm = await Notification.requestPermission();
+                if (perm !== 'granted') { showToast("Autorisation refusée", "warning"); return; }
+                const reg = await navigator.serviceWorker.ready;
+                let sub = await reg.pushManager.getSubscription();
+                if (!sub) {
+                    sub = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    });
+                }
+                const json = sub.toJSON();
+                const { error } = await clientSupabase.from('push_subscriptions').upsert({
+                    user_id: currentUser.id,
+                    endpoint: json.endpoint,
+                    p256dh: json.keys.p256dh,
+                    auth: json.keys.auth,
+                    user_agent: navigator.userAgent.slice(0, 200)
+                }, { onConflict: 'endpoint' });
+                if (error) throw error;
+                showToast("Rappels J-1 activés 🔔", "success");
+            } catch(e) {
+                console.error(e); showToast("Erreur : " + e.message, "error");
+            } finally {
+                btn.disabled = false; btn.innerHTML = labelOrig; rafraichirStatutPush();
+            }
+        }
+
+        window.desactiverNotificationsPush = async function() {
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                const sub = await reg.pushManager.getSubscription();
+                if (sub) {
+                    await clientSupabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+                    await sub.unsubscribe();
+                }
+                showToast("Rappels désactivés sur cet appareil", "info");
+            } catch(e) { showToast("Erreur : " + e.message, "error"); }
+            finally { rafraichirStatutPush(); }
+        }
+
+        window.normaliserArtistesViaSpotify = async function() {
+            const zone = document.getElementById('zone-normalisation-spotify');
+            const btn = document.getElementById('btn-normaliser-spotify');
+            if (!spotifyToken) { zone.innerHTML = '<span style="color:#ef4444;">❌ Connecte-toi d\'abord à Spotify (onglet Concerts → bouton "🎧 Lier Spotify").</span>'; return; }
+
+            const concertsAvecArtistes = tousLesConcerts.filter(c => c.user_id === currentUser.id && c.Artiste_principal && String(c.Artiste_principal).trim() !== "");
+            if (concertsAvecArtistes.length === 0) { zone.innerHTML = '<span style="color:var(--text-faded);">Aucun concert à normaliser.</span>'; return; }
+
+            if (!confirm(`Vérifier ${concertsAvecArtistes.length} concert(s) via Spotify et remplacer les orthographes par la version officielle ?\n\nLes concerts non trouvés sur Spotify ne seront pas modifiés.`)) return;
+
+            btn.disabled = true; const labelOrig = btn.innerHTML;
+            let modifies = 0, inchanges = 0, erreurs = 0, total = concertsAvecArtistes.length;
+
+            for (let i = 0; i < concertsAvecArtistes.length; i++) {
+                const c = concertsAvecArtistes[i];
+                btn.innerHTML = `⏳ ${i+1} / ${total}...`;
+                zone.innerHTML = `<span style="color:var(--text-faded);">Analyse de "${String(c.Artiste_principal).slice(0, 60)}"...</span>`;
+
+                let parts = String(c.Artiste_principal).split(',').map(a => a.trim()).filter(a => a !== "");
+                let partsNormalises = [];
+                let changement = false;
+                for (let p of parts) {
+                    let data = await getSpotifyData(p);
+                    if (data && data.name) {
+                        if (data.name !== p) changement = true;
+                        partsNormalises.push(data.name);
+                    } else {
+                        partsNormalises.push(p);
+                    }
+                }
+                if (changement) {
+                    let nouveau = partsNormalises.join(', ');
+                    const { error } = await clientSupabase.from('Concerts').update({ Artiste_principal: nouveau }).eq('id', c.id);
+                    if (error) erreurs++; else { c.Artiste_principal = nouveau; modifies++; }
+                } else {
+                    inchanges++;
+                }
+            }
+
+            btn.disabled = false; btn.innerHTML = labelOrig;
+            zone.innerHTML = `<div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.4); padding:12px; border-radius:8px; color:var(--text-main);">✅ Terminé : <b>${modifies}</b> concert(s) mis à jour, ${inchanges} déjà OK${erreurs ? `, <span style="color:#ef4444;">${erreurs} erreur(s)</span>` : ''}.</div>`;
+            showToast(`${modifies} concert(s) normalisé(s)`, modifies > 0 ? "success" : "info");
+            if (modifies > 0) { mettreAJourMenusFiltres(); afficherConcerts(); if (document.getElementById('tab-artistes').classList.contains('actif')) afficherOngletArtistes(); }
         }
 
         window.chargerMiniLecteursSpotify = async function() {
