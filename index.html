@@ -277,6 +277,14 @@
                     <label>Votre Pseudo (Visible par la Team)</label>
                     <input type="text" id="auth-pseudo" placeholder="Ex: Julien">
                 </div>
+                <div class="form-group" id="group-prenom" style="display: none;">
+                    <label>Prénom (pour que tes amis te retrouvent)</label>
+                    <input type="text" id="auth-prenom" placeholder="Ex: Clément" autocomplete="off" autocapitalize="words" name="live-signup-prenom">
+                </div>
+                <div class="form-group" id="group-nom" style="display: none;">
+                    <label>Nom</label>
+                    <input type="text" id="auth-nom" placeholder="Ex: Boidin" autocomplete="off" autocapitalize="words" name="live-signup-nom">
+                </div>
                 <div class="form-group" id="group-benevole" style="display: none; align-items: center; justify-content: center; gap: 8px;">
                     <input type="checkbox" id="auth-is-benevole" style="width: auto; margin:0; cursor:pointer;">
                     <label for="auth-is-benevole" style="margin: 0; cursor:pointer; font-weight:normal;">🎪 Je suis parfois bénévole</label>
@@ -345,6 +353,7 @@
                         <div class="onglet" onclick="changerOnglet('tab-stats')" id="onglet-stats">📊 Statistiques</div>
                         <div class="onglet" onclick="changerOnglet('tab-carte')" id="onglet-carte">🗺️ Carte</div>
                         <div class="onglet" onclick="changerOnglet('tab-abos')" id="onglet-abos">🎟️ Abonnements</div>
+                        <div class="onglet" onclick="changerOnglet('tab-amis')" id="onglet-amis">👥 Amis <span id="badge-demandes-amis" style="display:none; background:#ef4444; color:white; border-radius:10px; padding:1px 7px; font-size:11px; font-weight:bold; margin-left:2px;"></span></div>
                         <div class="onglet" onclick="changerOnglet('tab-parametres')" id="onglet-parametres">⚙️ Paramètres</div>
                     </div>
                 </div>
@@ -686,6 +695,34 @@
             </div>
         </div>
 
+        <div id="tab-amis" class="vue-onglet">
+            <div class="carte">
+                <h2 style="margin-top:0;">👥 Mes amis</h2>
+                <p style="color:var(--text-faded); margin-top:-5px;">Ton agenda est privé. Seuls tes amis acceptés peuvent voir tes concerts, et toi les leurs.</p>
+
+                <div class="form-group" style="margin-top:20px;">
+                    <label>🔎 Rechercher un membre par pseudo</label>
+                    <input type="text" id="recherche-ami" placeholder="Tape un pseudo..." oninput="rafraichirRechercheAmis()" autocomplete="off">
+                </div>
+                <div id="resultats-recherche-amis" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;"></div>
+            </div>
+
+            <div class="carte">
+                <h3 style="margin-top:0;">📥 Demandes reçues</h3>
+                <div id="demandes-recues" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+
+            <div class="carte">
+                <h3 style="margin-top:0;">📤 Demandes envoyées</h3>
+                <div id="demandes-envoyees" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+
+            <div class="carte">
+                <h3 style="margin-top:0;">🤝 Mes amis</h3>
+                <div id="liste-amis" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+        </div>
+
         <div id="tab-parametres" class="vue-onglet">
             <div class="carte">
                 <h2>⚙️ Mes Paramètres</h2>
@@ -698,6 +735,14 @@
                             <div class="form-group">
                                 <label>Pseudo (Visible par la Team)</label>
                                 <input type="text" id="param-pseudo" required>
+                            </div>
+                            <div class="form-group" style="margin-top:15px;">
+                                <label>Prénom (pour que tes amis te retrouvent)</label>
+                                <input type="text" id="param-prenom" placeholder="Ex: Clément" autocomplete="off" autocapitalize="words" name="live-prenom">
+                            </div>
+                            <div class="form-group" style="margin-top:15px;">
+                                <label>Nom</label>
+                                <input type="text" id="param-nom" placeholder="Ex: Boidin" autocomplete="off" autocapitalize="words" name="live-nom">
                             </div>
                             <div class="form-group" style="margin-top:20px;">
                                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:var(--text-main); margin:0;">
@@ -750,7 +795,8 @@
         const VAPID_PUBLIC_KEY = "BDe7Wzu1we4TJl2jRWsruEp7xZgz9QsyQiKZQ8QGkHXnPvyEos-Rgtao1dRaqFYT0XCUa0Rjlh8NSU3v51oG_e8";
         const clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let currentUser = null; let viewingUserId = null; let profilsData = []; let pendingProposals = []; let currentProposeConcertId = null; let authMode = 'signup'; 
+        let currentUser = null; let viewingUserId = null; let profilsData = []; let pendingProposals = []; let currentProposeConcertId = null; let authMode = 'signup';
+        let amisData = []; let mesAmisIds = [];
         let mesConcertsPersos = []; let lastFetchedMeteoConcertId = null; let lastFetchedMeteoHTML = ""; let lastFetchedTeamConcertId = null; let lastFetchedTeamHTML = "";
         let isFirstLoad = true;
         let groupesAvenir = {};
@@ -786,6 +832,7 @@
         function setAuthMode(mode) {
             authMode = mode; const title = document.getElementById('auth-title'); const btnSubmit = document.getElementById('auth-btn-submit');
             document.getElementById('group-pseudo').style.display = 'none'; document.getElementById('group-benevole').style.display = 'none';
+            document.getElementById('group-prenom').style.display = 'none'; document.getElementById('group-nom').style.display = 'none';
             document.getElementById('group-email').style.display = 'block'; document.getElementById('group-password').style.display = 'block';
             document.getElementById('group-forgot-link').style.display = 'none'; document.getElementById('auth-toggle-link').style.display = 'none'; document.getElementById('auth-back-login').style.display = 'none';
             document.getElementById('auth-pseudo').removeAttribute('required'); document.getElementById('auth-password').setAttribute('required', 'true'); document.getElementById('label-password').innerText = "Mot de passe";
@@ -795,6 +842,7 @@
                 document.getElementById('auth-toggle-link').style.display = 'block'; document.getElementById('auth-toggle-link').innerText = "Pas de compte ? Créer mon agenda"; document.getElementById('auth-toggle-link').onclick = () => setAuthMode('signup'); document.getElementById('auth-toggle-link').onclick = () => setAuthMode('signup');
             } else if (mode === 'signup') {
                 title.innerText = "Créer Mon Agenda"; btnSubmit.innerText = "S'inscrire"; document.getElementById('group-pseudo').style.display = 'block';
+                document.getElementById('group-prenom').style.display = 'block'; document.getElementById('group-nom').style.display = 'block';
                 document.getElementById('group-benevole').style.display = 'flex'; document.getElementById('auth-pseudo').setAttribute('required', 'true');
                 document.getElementById('auth-toggle-link').style.display = 'block'; document.getElementById('auth-toggle-link').innerText = "Déjà un compte ? Se connecter"; document.getElementById('auth-toggle-link').onclick = () => setAuthMode('login');
             } else if (mode === 'forgot') {
@@ -805,6 +853,7 @@
                 document.getElementById('group-email').style.display = 'none'; document.getElementById('auth-email').removeAttribute('required'); 
                 document.getElementById('label-password').innerText = "Choisis ton mot de passe";
                 document.getElementById('group-pseudo').style.display = 'block'; document.getElementById('auth-pseudo').setAttribute('required', 'true'); document.getElementById('group-benevole').style.display = 'flex';
+                document.getElementById('group-prenom').style.display = 'block'; document.getElementById('group-nom').style.display = 'block';
             }
         }
 
@@ -823,18 +872,20 @@
                     if (error) showToast("Erreur : Email ou mot de passe incorrect.", "error"); else showToast("Connexion réussie !", "success");
                 } else if (authMode === 'signup') {
                     const pseudo = document.getElementById('auth-pseudo').value; const isBenevole = document.getElementById('auth-is-benevole').checked;
+                    const prenom = document.getElementById('auth-prenom').value || null; const nom = document.getElementById('auth-nom').value || null;
                     const { data, error } = await clientSupabase.auth.signUp({ email, password });
-                    if (error) { let msg = error.message; if(msg.includes("already registered")) msg = "Cette adresse email est déjà utilisée."; if(msg.includes("Password should be")) msg = "Le mot de passe doit faire au moins 6 caractères."; showToast("Erreur : " + msg, "error"); } 
-                    else if (data.user) { await clientSupabase.from('Profils').upsert({ id: data.user.id, pseudo: pseudo, est_benevole: isBenevole }); showToast("Compte créé avec succès ! Bienvenue 🤘", "success"); currentUser = data.user; viewingUserId = currentUser.id; afficherApplication(); }
+                    if (error) { let msg = error.message; if(msg.includes("already registered")) msg = "Cette adresse email est déjà utilisée."; if(msg.includes("Password should be")) msg = "Le mot de passe doit faire au moins 6 caractères."; showToast("Erreur : " + msg, "error"); }
+                    else if (data.user) { await clientSupabase.from('Profils').upsert({ id: data.user.id, pseudo: pseudo, prenom: prenom, nom: nom, est_benevole: isBenevole }); showToast("Compte créé avec succès ! Bienvenue 🤘", "success"); currentUser = data.user; viewingUserId = currentUser.id; afficherApplication(); }
                 } else if (authMode === 'forgot') {
                     const { error } = await clientSupabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
                     if (error) showToast("Erreur : " + error.message, "error"); else showToast("Vérifiez votre boîte mail (et vos spams) !", "success");
                 } else if (authMode === 'update_password') {
                     const pseudo = document.getElementById('auth-pseudo').value; const isBenevole = document.getElementById('auth-is-benevole').checked;
+                    const prenom = document.getElementById('auth-prenom').value || null; const nom = document.getElementById('auth-nom').value || null;
                     const { error } = await clientSupabase.auth.updateUser({ password: password });
-                    if (error) { showToast("Erreur : " + error.message, "error"); } else { 
+                    if (error) { showToast("Erreur : " + error.message, "error"); } else {
                         const userActuel = (await clientSupabase.auth.getUser()).data.user;
-                        if (userActuel) { await clientSupabase.from('Profils').upsert({ id: userActuel.id, pseudo: pseudo, est_benevole: isBenevole }); }
+                        if (userActuel) { await clientSupabase.from('Profils').upsert({ id: userActuel.id, pseudo: pseudo, prenom: prenom, nom: nom, est_benevole: isBenevole }); }
                         showToast("Compte finalisé avec succès ! Bienvenue 🤘", "success"); setAuthMode('login'); window.location.hash = ''; afficherApplication(); 
                     }
                 }
@@ -860,12 +911,41 @@
 
         async function afficherApplication() {
             document.getElementById('auth-section').style.display = 'none'; document.getElementById('app-section').style.display = 'block';
-            await chargerProfils(); await chargerSallesCommunaute(); await verifierPropositions(); changerVueUtilisateur("ME");
+            await chargerProfils(); await chargerAmis(); await chargerSallesCommunaute(); await verifierPropositions(); changerVueUtilisateur("ME");
         }
 
         async function chargerProfils() {
             const { data, error } = await clientSupabase.from('Profils').select('*');
-            if (!error && data) { profilsData = data; let options = ''; data.forEach(p => { if (p.id !== currentUser.id) { options += `<option value="${p.id}">👀 Agenda de ${p.pseudo || 'Anonyme'}</option>`; } }); document.getElementById('crew-list').innerHTML = options; }
+            if (!error && data) { profilsData = data; }
+        }
+
+        // Charge les liens d'amitié me concernant et reconstruit la liste déroulante (amis acceptés uniquement)
+        async function chargerAmis() {
+            const { data, error } = await clientSupabase.from('Amis').select('*').or(`demandeur_id.eq.${currentUser.id},destinataire_id.eq.${currentUser.id}`);
+            amisData = (!error && data) ? data : [];
+            mesAmisIds = amisData.filter(a => a.statut === 'accepte').map(a => a.demandeur_id === currentUser.id ? a.destinataire_id : a.demandeur_id);
+            // Liste déroulante : uniquement les agendas des amis
+            let options = '';
+            mesAmisIds.forEach(fid => {
+                let p = profilsData.find(pr => String(pr.id) === String(fid));
+                if (p) options += `<option value="${p.id}">👀 Agenda de ${p.pseudo || 'Anonyme'}</option>`;
+            });
+            document.getElementById('crew-list').innerHTML = options;
+            // Badge demandes reçues
+            let nbRecues = amisData.filter(a => a.statut === 'en_attente' && a.destinataire_id === currentUser.id).length;
+            let badge = document.getElementById('badge-demandes-amis');
+            if (badge) { if (nbRecues > 0) { badge.textContent = nbRecues; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; } }
+        }
+
+        // Statut d'amitié avec un autre membre : 'accepte' | 'envoyee' | 'recue' | 'aucun'
+        function statutAmitie(otherId) {
+            let lien = amisData.find(a =>
+                (a.demandeur_id === currentUser.id && a.destinataire_id === otherId) ||
+                (a.destinataire_id === currentUser.id && a.demandeur_id === otherId));
+            if (!lien) return { statut: 'aucun', lien: null };
+            if (lien.statut === 'accepte') return { statut: 'accepte', lien };
+            if (lien.demandeur_id === currentUser.id) return { statut: 'envoyee', lien };
+            return { statut: 'recue', lien };
         }
 
         async function verifierPropositions() {
@@ -911,8 +991,8 @@
             let isFest = (c.Lieu || "").includes('🎪'); let lieuPropre = (c.Lieu || "").replace(/🎪/g, '').trim(); let dFR = c.Date ? new Date(c.Date).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'}) : "";
             let txt = isFest ? `🎪 ${lieuPropre}` : `🎸 ${c.Artiste_principal} @ ${lieuPropre}`; if(dFR) txt += ` le ${dFR}`; document.getElementById('propose-concert-details').innerHTML = txt;
             let friendsHTML = '';
-            profilsData.forEach(p => { if(p.id !== currentUser.id) { friendsHTML += `<label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px; background:var(--bg-box); border-radius:8px;"><input type="checkbox" class="chk-friend-propose" value="${p.id}" style="width:18px; height:18px; cursor:pointer;"><span style="color:var(--text-main); font-weight:600;">${p.pseudo || 'Anonyme'}</span></label>`; } });
-            document.getElementById('propose-friends-list').innerHTML = friendsHTML || "<p style='color:var(--text-faded);'>Aucun ami dans la Team pour l'instant.</p>";
+            mesAmisIds.forEach(fid => { let p = profilsData.find(pr => String(pr.id) === String(fid)); if(p) { friendsHTML += `<label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px; background:var(--bg-box); border-radius:8px;"><input type="checkbox" class="chk-friend-propose" value="${p.id}" style="width:18px; height:18px; cursor:pointer;"><span style="color:var(--text-main); font-weight:600;">${p.pseudo || 'Anonyme'}</span></label>`; } });
+            document.getElementById('propose-friends-list').innerHTML = friendsHTML || "<p style='color:var(--text-faded);'>Aucun ami pour l'instant. Ajoute des amis dans l'onglet 👥 Amis.</p>";
             document.getElementById('modal-propose').style.display = 'flex';
         }
         window.fermerModalProposition = function() { document.getElementById('modal-propose').style.display = 'none'; currentProposeConcertId = null; }
@@ -924,6 +1004,77 @@
             const payloads = receivers.map(rid => ({ sender_id: currentUser.id, receiver_id: rid, artiste: c.Artiste_principal || null, lieu: c.Lieu || null, date: c.Date ? c.Date : null, prix: c.Prix || null }));
             const { error } = await clientSupabase.from('Propositions').insert(payloads);
             if(error) { showToast("Erreur d'envoi.", "error"); console.error(error); } else { showToast("Invitations envoyées à la Team ! 🚀", "success"); fermerModalProposition(); }
+        }
+
+        // ===== SYSTÈME D'AMIS =====
+        function rafraichirOngletAmis() {
+            rafraichirRechercheAmis();
+            // Demandes reçues
+            let recues = amisData.filter(a => a.statut === 'en_attente' && a.destinataire_id === currentUser.id);
+            let htmlRecues = recues.map(a => {
+                let p = profilsData.find(pr => String(pr.id) === String(a.demandeur_id));
+                let pseudo = p ? (p.pseudo || 'Anonyme') : 'Un membre';
+                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-box); border-radius:8px;"><span style="font-weight:600;">👤 ${pseudo}</span><div style="display:flex; gap:8px;"><button class="btn-mini" style="background:#10b981; color:white; border:none;" onclick="accepterAmi('${a.id}')">✅ Accepter</button><button class="btn-mini" style="background:transparent; border:1px solid var(--border-input); color:var(--text-faded);" onclick="retirerAmi('${a.id}')">✖ Refuser</button></div></div>`;
+            }).join('');
+            document.getElementById('demandes-recues').innerHTML = htmlRecues || "<p style='color:var(--text-faded); margin:0;'>Aucune demande reçue.</p>";
+
+            // Demandes envoyées
+            let envoyees = amisData.filter(a => a.statut === 'en_attente' && a.demandeur_id === currentUser.id);
+            let htmlEnvoyees = envoyees.map(a => {
+                let p = profilsData.find(pr => String(pr.id) === String(a.destinataire_id));
+                let pseudo = p ? (p.pseudo || 'Anonyme') : 'Un membre';
+                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-box); border-radius:8px;"><span style="font-weight:600;">👤 ${pseudo} <span style="color:var(--text-faded); font-weight:normal; font-size:13px;">— en attente…</span></span><button class="btn-mini" style="background:transparent; border:1px solid var(--border-input); color:var(--text-faded);" onclick="retirerAmi('${a.id}')">Annuler</button></div>`;
+            }).join('');
+            document.getElementById('demandes-envoyees').innerHTML = htmlEnvoyees || "<p style='color:var(--text-faded); margin:0;'>Aucune demande en attente.</p>";
+
+            // Liste d'amis
+            let htmlAmis = mesAmisIds.map(fid => {
+                let p = profilsData.find(pr => String(pr.id) === String(fid));
+                let pseudo = p ? (p.pseudo || 'Anonyme') : 'Un membre';
+                let lien = amisData.find(a => a.statut === 'accepte' && (a.demandeur_id === fid || a.destinataire_id === fid));
+                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-box); border-radius:8px;"><span style="font-weight:600;">🤝 ${pseudo}</span><button class="btn-mini" style="background:transparent; border:1px solid var(--border-input); color:var(--text-faded);" onclick="retirerAmi('${lien.id}')">Retirer</button></div>`;
+            }).join('');
+            document.getElementById('liste-amis').innerHTML = htmlAmis || "<p style='color:var(--text-faded); margin:0;'>Tu n'as pas encore d'amis. Cherche un pseudo ci-dessus.</p>";
+        }
+
+        window.rafraichirRechercheAmis = function() {
+            let terme = normaliserTexte(document.getElementById('recherche-ami').value.trim());
+            let zone = document.getElementById('resultats-recherche-amis');
+            if (!terme) { zone.innerHTML = ''; return; }
+            let resultats = profilsData.filter(p => p.id !== currentUser.id && (normaliserTexte(p.pseudo || '').includes(terme) || normaliserTexte(p.prenom || '').includes(terme) || normaliserTexte(p.nom || '').includes(terme) || normaliserTexte(((p.prenom || '') + ' ' + (p.nom || '')).trim()).includes(terme)));
+            if (resultats.length === 0) { zone.innerHTML = "<p style='color:var(--text-faded); margin:0;'>Aucun membre trouvé.</p>"; return; }
+            zone.innerHTML = resultats.map(p => {
+                let st = statutAmitie(p.id);
+                let action = '';
+                if (st.statut === 'accepte') action = `<span style="color:#10b981; font-weight:600;">✅ Ami</span>`;
+                else if (st.statut === 'envoyee') action = `<span style="color:var(--text-faded);">⏳ Demande envoyée</span>`;
+                else if (st.statut === 'recue') action = `<button class="btn-mini" style="background:#10b981; color:white; border:none;" onclick="accepterAmi('${st.lien.id}')">✅ Accepter</button>`;
+                else action = `<button class="btn-mini" style="background:#6366f1; color:white; border:none;" onclick="envoyerDemandeAmi('${p.id}')">➕ Ajouter</button>`;
+                let identite = (p.prenom || p.nom) ? ` <span style="color:var(--text-faded); font-weight:normal; font-size:13px;">(${[p.prenom, p.nom].filter(Boolean).join(' ')})</span>` : '';
+                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-box); border-radius:8px;"><span style="font-weight:600;">👤 ${p.pseudo || 'Anonyme'}${identite}</span>${action}</div>`;
+            }).join('');
+        }
+
+        window.envoyerDemandeAmi = async function(otherId) {
+            const { error } = await clientSupabase.from('Amis').insert({ demandeur_id: currentUser.id, destinataire_id: otherId, statut: 'en_attente' });
+            if (error) { showToast("Erreur lors de l'envoi.", "error"); console.error(error); return; }
+            showToast("Demande d'ami envoyée ! 🤝", "success");
+            await chargerAmis(); rafraichirOngletAmis();
+        }
+
+        window.accepterAmi = async function(lienId) {
+            const { error } = await clientSupabase.from('Amis').update({ statut: 'accepte' }).eq('id', lienId);
+            if (error) { showToast("Erreur.", "error"); console.error(error); return; }
+            showToast("Vous êtes maintenant amis ! 🎉", "success");
+            await chargerAmis(); rafraichirOngletAmis();
+        }
+
+        window.retirerAmi = async function(lienId) {
+            const { error } = await clientSupabase.from('Amis').delete().eq('id', lienId);
+            if (error) { showToast("Erreur.", "error"); console.error(error); return; }
+            showToast("Lien supprimé.", "warning");
+            await chargerAmis(); rafraichirOngletAmis();
+            if (viewingUserId !== currentUser.id) changerVueUtilisateur("ME");
         }
 
         window.changerVueUtilisateur = async function(userId) {
@@ -1046,8 +1197,9 @@
             if (idTab === 'tab-artistes') afficherOngletArtistes();
             if (idTab === 'tab-crew-avenir') afficherConcertsCrewAvenir(); 
             if (idTab === 'tab-carte') setTimeout(initCarte, 100);
-            if (idTab === 'tab-parametres') rafraichirStatutPush(); 
+            if (idTab === 'tab-parametres') rafraichirStatutPush();
             if (idTab === 'tab-parametres') chargerParametres();
+            if (idTab === 'tab-amis') rafraichirOngletAmis();
         }
 
         // --- NOUVELLES FONCTIONS PARAMÈTRES ---
@@ -1055,6 +1207,8 @@
             let myProfile = profilsData.find(p => String(p.id) === String(currentUser.id));
             if(myProfile) {
                 document.getElementById('param-pseudo').value = myProfile.pseudo || "";
+                document.getElementById('param-prenom').value = myProfile.prenom || "";
+                document.getElementById('param-nom').value = myProfile.nom || "";
                 document.getElementById('param-benevole').checked = myProfile.est_benevole === true;
             }
         }
@@ -1064,13 +1218,15 @@
             const btn = document.getElementById('btn-save-profil');
             btn.disabled = true; btn.innerHTML = "⏳ Enregistrement...";
             const pseudo = document.getElementById('param-pseudo').value;
+            const prenom = document.getElementById('param-prenom').value || null;
+            const nom = document.getElementById('param-nom').value || null;
             const isBenevole = document.getElementById('param-benevole').checked;
-            
-            const { error } = await clientSupabase.from('Profils').upsert({ id: currentUser.id, pseudo: pseudo, est_benevole: isBenevole });
+
+            const { error } = await clientSupabase.from('Profils').upsert({ id: currentUser.id, pseudo: pseudo, prenom: prenom, nom: nom, est_benevole: isBenevole });
             if(error) { showToast("Erreur lors de l'enregistrement", "error"); }
             else { 
-                showToast("Profil mis à jour !", "success"); 
-                await chargerProfils(); 
+                showToast("Profil mis à jour !", "success");
+                await chargerProfils(); await chargerAmis();
                 if(viewingUserId === currentUser.id) changerVueUtilisateur("ME");
             }
             btn.disabled = false; btn.innerHTML = "💾 Enregistrer le profil";
