@@ -277,6 +277,14 @@
                     <label>Votre Pseudo (Visible par la Team)</label>
                     <input type="text" id="auth-pseudo" placeholder="Ex: Julien">
                 </div>
+                <div class="form-group" id="group-prenom" style="display: none;">
+                    <label>Prénom (pour que tes amis te retrouvent)</label>
+                    <input type="text" id="auth-prenom" placeholder="Ex: Clément">
+                </div>
+                <div class="form-group" id="group-nom" style="display: none;">
+                    <label>Nom</label>
+                    <input type="text" id="auth-nom" placeholder="Ex: Boidin">
+                </div>
                 <div class="form-group" id="group-benevole" style="display: none; align-items: center; justify-content: center; gap: 8px;">
                     <input type="checkbox" id="auth-is-benevole" style="width: auto; margin:0; cursor:pointer;">
                     <label for="auth-is-benevole" style="margin: 0; cursor:pointer; font-weight:normal;">🎪 Je suis parfois bénévole</label>
@@ -728,6 +736,14 @@
                                 <label>Pseudo (Visible par la Team)</label>
                                 <input type="text" id="param-pseudo" required>
                             </div>
+                            <div class="form-group" style="margin-top:15px;">
+                                <label>Prénom (pour que tes amis te retrouvent)</label>
+                                <input type="text" id="param-prenom" placeholder="Ex: Clément">
+                            </div>
+                            <div class="form-group" style="margin-top:15px;">
+                                <label>Nom</label>
+                                <input type="text" id="param-nom" placeholder="Ex: Boidin">
+                            </div>
                             <div class="form-group" style="margin-top:20px;">
                                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:var(--text-main); margin:0;">
                                     <input type="checkbox" id="param-benevole" style="width:auto; cursor:pointer; width:18px; height:18px; accent-color:#3b82f6;">
@@ -816,6 +832,7 @@
         function setAuthMode(mode) {
             authMode = mode; const title = document.getElementById('auth-title'); const btnSubmit = document.getElementById('auth-btn-submit');
             document.getElementById('group-pseudo').style.display = 'none'; document.getElementById('group-benevole').style.display = 'none';
+            document.getElementById('group-prenom').style.display = 'none'; document.getElementById('group-nom').style.display = 'none';
             document.getElementById('group-email').style.display = 'block'; document.getElementById('group-password').style.display = 'block';
             document.getElementById('group-forgot-link').style.display = 'none'; document.getElementById('auth-toggle-link').style.display = 'none'; document.getElementById('auth-back-login').style.display = 'none';
             document.getElementById('auth-pseudo').removeAttribute('required'); document.getElementById('auth-password').setAttribute('required', 'true'); document.getElementById('label-password').innerText = "Mot de passe";
@@ -825,6 +842,7 @@
                 document.getElementById('auth-toggle-link').style.display = 'block'; document.getElementById('auth-toggle-link').innerText = "Pas de compte ? Créer mon agenda"; document.getElementById('auth-toggle-link').onclick = () => setAuthMode('signup'); document.getElementById('auth-toggle-link').onclick = () => setAuthMode('signup');
             } else if (mode === 'signup') {
                 title.innerText = "Créer Mon Agenda"; btnSubmit.innerText = "S'inscrire"; document.getElementById('group-pseudo').style.display = 'block';
+                document.getElementById('group-prenom').style.display = 'block'; document.getElementById('group-nom').style.display = 'block';
                 document.getElementById('group-benevole').style.display = 'flex'; document.getElementById('auth-pseudo').setAttribute('required', 'true');
                 document.getElementById('auth-toggle-link').style.display = 'block'; document.getElementById('auth-toggle-link').innerText = "Déjà un compte ? Se connecter"; document.getElementById('auth-toggle-link').onclick = () => setAuthMode('login');
             } else if (mode === 'forgot') {
@@ -835,6 +853,7 @@
                 document.getElementById('group-email').style.display = 'none'; document.getElementById('auth-email').removeAttribute('required'); 
                 document.getElementById('label-password').innerText = "Choisis ton mot de passe";
                 document.getElementById('group-pseudo').style.display = 'block'; document.getElementById('auth-pseudo').setAttribute('required', 'true'); document.getElementById('group-benevole').style.display = 'flex';
+                document.getElementById('group-prenom').style.display = 'block'; document.getElementById('group-nom').style.display = 'block';
             }
         }
 
@@ -853,18 +872,20 @@
                     if (error) showToast("Erreur : Email ou mot de passe incorrect.", "error"); else showToast("Connexion réussie !", "success");
                 } else if (authMode === 'signup') {
                     const pseudo = document.getElementById('auth-pseudo').value; const isBenevole = document.getElementById('auth-is-benevole').checked;
+                    const prenom = document.getElementById('auth-prenom').value || null; const nom = document.getElementById('auth-nom').value || null;
                     const { data, error } = await clientSupabase.auth.signUp({ email, password });
-                    if (error) { let msg = error.message; if(msg.includes("already registered")) msg = "Cette adresse email est déjà utilisée."; if(msg.includes("Password should be")) msg = "Le mot de passe doit faire au moins 6 caractères."; showToast("Erreur : " + msg, "error"); } 
-                    else if (data.user) { await clientSupabase.from('Profils').upsert({ id: data.user.id, pseudo: pseudo, est_benevole: isBenevole }); showToast("Compte créé avec succès ! Bienvenue 🤘", "success"); currentUser = data.user; viewingUserId = currentUser.id; afficherApplication(); }
+                    if (error) { let msg = error.message; if(msg.includes("already registered")) msg = "Cette adresse email est déjà utilisée."; if(msg.includes("Password should be")) msg = "Le mot de passe doit faire au moins 6 caractères."; showToast("Erreur : " + msg, "error"); }
+                    else if (data.user) { await clientSupabase.from('Profils').upsert({ id: data.user.id, pseudo: pseudo, prenom: prenom, nom: nom, est_benevole: isBenevole }); showToast("Compte créé avec succès ! Bienvenue 🤘", "success"); currentUser = data.user; viewingUserId = currentUser.id; afficherApplication(); }
                 } else if (authMode === 'forgot') {
                     const { error } = await clientSupabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
                     if (error) showToast("Erreur : " + error.message, "error"); else showToast("Vérifiez votre boîte mail (et vos spams) !", "success");
                 } else if (authMode === 'update_password') {
                     const pseudo = document.getElementById('auth-pseudo').value; const isBenevole = document.getElementById('auth-is-benevole').checked;
+                    const prenom = document.getElementById('auth-prenom').value || null; const nom = document.getElementById('auth-nom').value || null;
                     const { error } = await clientSupabase.auth.updateUser({ password: password });
-                    if (error) { showToast("Erreur : " + error.message, "error"); } else { 
+                    if (error) { showToast("Erreur : " + error.message, "error"); } else {
                         const userActuel = (await clientSupabase.auth.getUser()).data.user;
-                        if (userActuel) { await clientSupabase.from('Profils').upsert({ id: userActuel.id, pseudo: pseudo, est_benevole: isBenevole }); }
+                        if (userActuel) { await clientSupabase.from('Profils').upsert({ id: userActuel.id, pseudo: pseudo, prenom: prenom, nom: nom, est_benevole: isBenevole }); }
                         showToast("Compte finalisé avec succès ! Bienvenue 🤘", "success"); setAuthMode('login'); window.location.hash = ''; afficherApplication(); 
                     }
                 }
@@ -1020,7 +1041,7 @@
             let terme = normaliserTexte(document.getElementById('recherche-ami').value.trim());
             let zone = document.getElementById('resultats-recherche-amis');
             if (!terme) { zone.innerHTML = ''; return; }
-            let resultats = profilsData.filter(p => p.id !== currentUser.id && normaliserTexte(p.pseudo || '').includes(terme));
+            let resultats = profilsData.filter(p => p.id !== currentUser.id && (normaliserTexte(p.pseudo || '').includes(terme) || normaliserTexte(p.prenom || '').includes(terme) || normaliserTexte(p.nom || '').includes(terme) || normaliserTexte(((p.prenom || '') + ' ' + (p.nom || '')).trim()).includes(terme)));
             if (resultats.length === 0) { zone.innerHTML = "<p style='color:var(--text-faded); margin:0;'>Aucun membre trouvé.</p>"; return; }
             zone.innerHTML = resultats.map(p => {
                 let st = statutAmitie(p.id);
@@ -1029,7 +1050,8 @@
                 else if (st.statut === 'envoyee') action = `<span style="color:var(--text-faded);">⏳ Demande envoyée</span>`;
                 else if (st.statut === 'recue') action = `<button class="btn-mini" style="background:#10b981; color:white; border:none;" onclick="accepterAmi('${st.lien.id}')">✅ Accepter</button>`;
                 else action = `<button class="btn-mini" style="background:#6366f1; color:white; border:none;" onclick="envoyerDemandeAmi('${p.id}')">➕ Ajouter</button>`;
-                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-box); border-radius:8px;"><span style="font-weight:600;">👤 ${p.pseudo || 'Anonyme'}</span>${action}</div>`;
+                let identite = (p.prenom || p.nom) ? ` <span style="color:var(--text-faded); font-weight:normal; font-size:13px;">(${[p.prenom, p.nom].filter(Boolean).join(' ')})</span>` : '';
+                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-box); border-radius:8px;"><span style="font-weight:600;">👤 ${p.pseudo || 'Anonyme'}${identite}</span>${action}</div>`;
             }).join('');
         }
 
@@ -1185,6 +1207,8 @@
             let myProfile = profilsData.find(p => String(p.id) === String(currentUser.id));
             if(myProfile) {
                 document.getElementById('param-pseudo').value = myProfile.pseudo || "";
+                document.getElementById('param-prenom').value = myProfile.prenom || "";
+                document.getElementById('param-nom').value = myProfile.nom || "";
                 document.getElementById('param-benevole').checked = myProfile.est_benevole === true;
             }
         }
@@ -1194,9 +1218,11 @@
             const btn = document.getElementById('btn-save-profil');
             btn.disabled = true; btn.innerHTML = "⏳ Enregistrement...";
             const pseudo = document.getElementById('param-pseudo').value;
+            const prenom = document.getElementById('param-prenom').value || null;
+            const nom = document.getElementById('param-nom').value || null;
             const isBenevole = document.getElementById('param-benevole').checked;
-            
-            const { error } = await clientSupabase.from('Profils').upsert({ id: currentUser.id, pseudo: pseudo, est_benevole: isBenevole });
+
+            const { error } = await clientSupabase.from('Profils').upsert({ id: currentUser.id, pseudo: pseudo, prenom: prenom, nom: nom, est_benevole: isBenevole });
             if(error) { showToast("Erreur lors de l'enregistrement", "error"); }
             else { 
                 showToast("Profil mis à jour !", "success");
