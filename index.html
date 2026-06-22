@@ -343,6 +343,7 @@
                         <optgroup label="👀 Agendas de la Team" id="crew-list"></optgroup>
                     </select>
                     <button id="btn-spotify-connect" class="btn-mini admin-only" style="background:#1ed760; color:black; font-weight:bold; border:none;" onclick="connecterSpotify()">🎧 Lier Spotify</button>
+                    <button id="btn-playlist-annee" class="btn-mini admin-only" style="display:none; background:#1ed760; color:black; font-weight:bold; border:none;" onclick="genererPlaylistAnnee()">🎵 Playlist de mes artistes vus cette année</button>
                 </div>
                 <div class="nav-onglets-wrapper">
                     <div class="nav-onglets" id="nav-onglets-container">
@@ -505,7 +506,7 @@
                 </div>
 
                 <div class="stats-container">
-                    <div class="stat-box">Concerts vus<span id="stat-jours">0</span></div>
+                    <div class="stat-box">Jours de concerts<span id="stat-jours">0</span></div>
                     <div class="stat-box">Artistes vus<span id="stat-artistes">0</span></div>
                     <div class="stat-box">Bières bues<span id="stat-bieres" class="highlight">0</span></div>
                     <div class="stat-box">Budget total<span id="stat-prix" class="highlight">0,00 €</span></div>
@@ -548,6 +549,7 @@
                 <div id="map-container" style="height: 500px; border-radius: 15px; border: 1px solid var(--border-input); z-index:1;"></div>
             </div>
         </div>
+
 
         <div id="tab-crew-avenir" class="vue-onglet">
             <div class="carte">
@@ -1075,6 +1077,123 @@
             showToast("Lien supprimé.", "warning");
             await chargerAmis(); rafraichirOngletAmis();
             if (viewingUserId !== currentUser.id) changerVueUtilisateur("ME");
+        }
+
+        // ===== À DÉCOUVRIR (Bandsintown + Ticketmaster via Edge Function) =====
+        const DECOUVERTE_CACHE_KEY = 'live_decouverte_v1';
+
+        // Récupère mes artistes vus + styles à partir de mes concerts passés
+        async function mesArtistesEtStyles() {
+            const { data, error } = await clientSupabase.from('Concerts').select('Artiste_principal, Style, Date, Statut_billet').eq('user_id', currentUser.id);
+            if (error || !data) return { artists: [], styles: [] };
+            let today = new Date().toISOString().slice(0,10);
+            let artistesSet = new Set(); let stylesCount = {};
+            data.forEach(c => {
+                // Artistes : on prend ceux des concerts (multi-artistes séparés par virgule)
+                (c.Artiste_principal || '').split(',').map(a => a.trim()).filter(Boolean).forEach(a => artistesSet.add(a));
+                if (c.Style) { let s = c.Style.trim(); if(s) stylesCount[s] = (stylesCount[s]||0) + 1; }
+            });
+            // Styles triés par fréquence
+            let styles = Object.keys(stylesCount).sort((a,b) => stylesCount[b]-stylesCount[a]);
+            return { artists: Array.from(artistesSet), styles };
+        }
+
+        async function resoudrePosition() {
+            let ville = document.getElementById('decouverte-ville').value.trim();
+            if (ville) {
+                let res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(ville)}&count=1&language=fr`);
+                let geo = await res.json();
+                if (geo.results && geo.results.length) return { lat: geo.results[0].latitude, lng: geo.results[0].longitude, label: geo.results[0].name };
+                throw new Error("Ville introuvable");
+            }
+            // Géolocalisation navigateur
+            return await new Promise((resolve, reject) => {
+                if (!navigator.geolocation) { reject(new Error("Géolocalisation non disponible — saisis une ville")); return; }
+                navigator.geolocation.getCurrentPosition(
+                    pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, label: "ta position" }),
+                    () => reject(new Error("Position refusée — saisis une ville")),
+                    { timeout: 10000 }
+                );
+            });
+        }
+
+        window.lancerDecouverte = async function() {
+            let statut = document.getElementById('decouverte-statut');
+            let zone = document.getElementById('decouverte-resultats');
+            statut.textContent = "📍 Localisation…";
+            try {
+                let pos = await resoudrePosition();
+                let radiusKm = parseInt(document.getElementById('decouverte-rayon').value, 10) || 100;
+                statut.textContent = "🔎 Recherche des concerts près de " + pos.label + "…";
+                let { artists, styles } = await mesArtistesEtStyles();
+                if (artists.length === 0 && styles.length === 0) { statut.textContent = "Ajoute d'abord quelques concerts pour qu'on connaisse tes goûts !"; return; }
+
+                let { data, error } = await clientSupabase.functions.invoke('decouverte', { body: { artists, styles, lat: pos.lat, lng: pos.lng, radiusKm } });
+                if (error) { statut.textContent = "Erreur lors de la recherche."; console.error(error); return; }
+
+                let events = (data && data.events) || [];
+                localStorage.setItem(DECOUVERTE_CACHE_KEY, JSON.stringify({ ts: Date.now(), label: pos.label, events }));
+                statut.textContent = events.length ? `${events.length} concert(s) trouvé(s) près de ${pos.label}.` : `Aucun concert trouvé près de ${pos.label} dans ce rayon.`;
+                rendreDecouverte(events);
+            } catch(e) {
+                statut.textContent = "⚠️ " + e.message;
+            }
+        }
+
+        function afficherDecouverteCache() {
+            let zone = document.getElementById('decouverte-resultats');
+            let raw = localStorage.getItem(DECOUVERTE_CACHE_KEY);
+            if (!raw) { return; }
+            try {
+                let c = JSON.parse(raw);
+                rendreDecouverte(c.events || []);
+                let h = Math.round((Date.now() - c.ts) / 3600000);
+                document.getElementById('decouverte-statut').textContent = `Derniers résultats (${c.events.length}) près de ${c.label || '?'} — il y a ${h}h. Relance pour rafraîchir.`;
+            } catch(e) {}
+        }
+
+        function rendreDecouverte(events) {
+            let zone = document.getElementById('decouverte-resultats');
+            if (!events.length) { zone.innerHTML = ""; return; }
+            zone.innerHTML = events.map((e, i) => {
+                let dFR = e.date ? new Date(e.date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'long', year:'numeric' }) : "";
+                let dist = e.distanceKm != null ? `📍 ${e.distanceKm} km` : "";
+                let genre = e.genre ? `🎵 ${e.genre}` : "";
+                let src = (e.source === 'bandsintown' || e.source === 'artiste_vu') ? "⭐ Artiste déjà vu" : "🔮 Suggestion";
+                let meta = [dFR, e.salle, e.ville, dist, genre].filter(Boolean).join(' · ');
+                return `<div class="carte" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:200px;">
+                        <div style="font-size:11px; color:var(--text-faded); text-transform:uppercase; letter-spacing:.5px;">${src}</div>
+                        <div style="font-weight:700; font-size:16px;">${(e.artiste||'').replace(/</g,'&lt;')}</div>
+                        <div style="color:var(--text-faded); font-size:13px; margin-top:2px;">${meta.replace(/</g,'&lt;')}</div>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        ${e.url ? `<a href="${e.url}" target="_blank" rel="noopener" class="btn-mini" style="background:#f59e0b; color:white; text-decoration:none;">🎟️ Billetterie</a>` : ''}
+                        <button class="btn-mini" style="background:#6366f1; color:white; border:none;" onclick="ajouterDepuisDecouverte(${i})">➕ Mon agenda</button>
+                    </div>
+                </div>`;
+            }).join('');
+            window._decouverteEvents = events;
+        }
+
+        window.ajouterDepuisDecouverte = function(i) {
+            let e = (window._decouverteEvents || [])[i]; if(!e) return;
+            changerOnglet('tab-concerts');
+            if (document.getElementById('view-selector').value !== "ME") { document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME"); }
+            setArtistesFromString(e.artiste || "");
+            document.getElementById('lieu').value = e.salle || e.ville || "";
+            document.getElementById('is_festival').checked = false;
+            document.getElementById('date').value = e.date || "";
+            document.getElementById('prix').value = "";
+            document.getElementById('statut_billet').value = "a_acheter";
+            if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
+            if(document.getElementById('style_musique')) document.getElementById('style_musique').value = e.genre || "";
+            document.getElementById('concert_id').value = "";
+            document.getElementById('titre-formulaire-texte').innerHTML = `🎸 Ajouter ce concert`;
+            document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`;
+            document.getElementById('btn-annuler').style.display = "block";
+            toggleFormConcert(true);
+            setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior:'smooth', block:'start' }); showToast("Concert pré-rempli ! Vérifie et valide.", "success"); }, 100);
         }
 
         window.changerVueUtilisateur = async function(userId) {
@@ -2848,6 +2967,8 @@
                 const btnP2 = document.getElementById('btn-playlist-prepa-team');
                 if(btnP1) btnP1.style.display = 'inline-flex';
                 if(btnP2) btnP2.style.display = 'inline-flex';
+                const btnPA = document.getElementById('btn-playlist-annee');
+                if(btnPA) btnPA.style.display = 'inline-flex';
             }
         }
         verifierRetourSpotify();
@@ -3101,6 +3222,78 @@
             let iframeContainer = container.querySelector('div[id^="iframe-container-"]');
             iframeContainer.id = `iframe-container-${artistId}`;
             iframeContainer.innerHTML = `<iframe style="border-radius:12px; margin-top:8px;" src="${OPEN_URL}/embed/artist/${artistId}?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
+        }
+
+        // Playlist des artistes DÉJÀ VUS pendant l'année en cours
+        window.genererPlaylistAnnee = async function() {
+            if (!spotifyToken) { showToast("Tu dois d'abord Lier Spotify (bouton en haut) !", "warning"); return; }
+            const annee = new Date().getFullYear();
+            const btn = document.getElementById('btn-playlist-annee');
+            const originalText = btn.innerHTML; btn.innerHTML = "⏳ Création..."; btn.disabled = true;
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                let artistesSet = new Set();
+                // Concerts perso, passés (ou aujourd'hui), de l'année en cours
+                let source = (typeof mesConcertsPersos !== 'undefined' && mesConcertsPersos.length) ? mesConcertsPersos : tousLesConcerts;
+                source.forEach(c => {
+                    if (c.Date && c.Date.slice(0,4) === String(annee) && c.Date <= today && c.Artiste_principal && c.Statut_billet !== 'a_acheter') {
+                        c.Artiste_principal.split(',').forEach(a => { if(a.trim()) artistesSet.add(a.trim()); });
+                    }
+                });
+                const artistes = Array.from(artistesSet).filter(a => a !== "Inconnu" && a !== "");
+                if (artistes.length === 0) { showToast(`Aucun artiste vu en ${annee} pour l'instant.`, "info"); btn.innerHTML = originalText; btn.disabled = false; return; }
+
+                showToast(`Recherche de ${artistes.length} artiste(s) vus en ${annee}...`, "info");
+                let resMe = await fetch(API_URL + '/me', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
+                if(resMe.status === 401) { showToast("Session Spotify expirée. Reconnecte-toi.", "error"); btn.innerHTML = originalText; btn.disabled = false; return; }
+                let dataMe = await resMe.json(); const userId = dataMe.id;
+                const nomPlaylist = `Live! - Mes artistes vus en ${annee}`;
+
+                let playlistId = null;
+                let resPlaylists = await fetch(API_URL + '/me/playlists?limit=50', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
+                let dataPlaylists = await resPlaylists.json();
+                let existing = (dataPlaylists.items || []).find(p => p.name === nomPlaylist);
+                if (existing) { playlistId = existing.id; }
+                else {
+                    let resCreate = await fetch(API_URL + '/users/' + userId + '/playlists', {
+                        method: 'POST', headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: nomPlaylist, description: `Les artistes que j'ai vus en concert en ${annee}. Générée par Live!`, public: false })
+                    });
+                    let dataCreate = await resCreate.json(); playlistId = dataCreate.id;
+                }
+
+                let trackUris = [];
+                for (let artistName of artistes) {
+                    let cleanName = artistName.replace(/🎪 /g, '');
+                    let resSearch = await fetch(API_URL + '/search?q=' + encodeURIComponent(cleanName) + '&type=artist&limit=10', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
+                    let dataSearch = await resSearch.json();
+                    if (dataSearch.artists && dataSearch.artists.items.length > 0) {
+                        let exactMatch = dataSearch.artists.items.find(a => a.name.toLowerCase() === cleanName.toLowerCase());
+                        let artist = exactMatch || dataSearch.artists.items[0];
+                        let resTracks = await fetch(API_URL + '/artists/' + artist.id + '/top-tracks?market=FR', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
+                        let dataTracks = await resTracks.json();
+                        if (dataTracks.tracks) trackUris.push(...dataTracks.tracks.slice(0, 3).map(t => t.uri));
+                    }
+                }
+
+                let chunks = [];
+                for (let i = 0; i < trackUris.length; i += 100) chunks.push(trackUris.slice(i, i + 100));
+                if (chunks.length > 0) {
+                    await fetch(API_URL + '/playlists/' + playlistId + '/tracks', {
+                        method: 'PUT', headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ uris: chunks[0] })
+                    });
+                    for (let i = 1; i < chunks.length; i++) {
+                        await fetch(API_URL + '/playlists/' + playlistId + '/tracks', {
+                            method: 'POST', headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ uris: chunks[i] })
+                        });
+                    }
+                }
+                showToast(`Playlist « ${nomPlaylist} » créée ! 🎧`, "success");
+                setTimeout(() => { window.open(OPEN_URL + '/playlist/' + playlistId, '_blank'); }, 1200);
+            } catch(err) { console.error(err); showToast("Erreur lors de la création.", "error"); }
+            btn.innerHTML = originalText; btn.disabled = false;
         }
 
         window.genererPlaylistPrepa = async function(useTeam = false) {
