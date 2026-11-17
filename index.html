@@ -18,31 +18,31 @@
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&display=swap" rel="stylesheet">
     
     <style>
-        :root { --bg-body: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%); --bg-carte: rgba(255, 255, 255, 0.9); --border-carte: rgba(0, 0, 0, 0.05); --text-main: #0f172a; --text-muted: #334155; --text-faded: #64748b; --bg-input: #ffffff; --border-input: #cbd5e1; --bg-box: #f1f5f9; --border-ligne: #e2e8f0; --hover-ligne: rgba(59, 130, 246, 0.08); --zebra-bg: rgba(0, 0, 0, 0.02); --card-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        body.dark-mode { --bg-body: radial-gradient(circle at 50% 0%, #1e293b 0%, #080f1e 100%); --bg-carte: rgba(30, 41, 59, 0.6); --border-carte: rgba(255, 255, 255, 0.08); --text-main: #f8fafc; --text-muted: #cbd5e1; --text-faded: #94a3b8; --bg-input: rgba(15, 23, 42, 0.8); --border-input: #334155; --bg-box: rgba(15, 23, 42, 0.4); --border-ligne: rgba(51, 65, 85, 0.5); --hover-ligne: rgba(59, 130, 246, 0.05); --zebra-bg: rgba(255, 255, 255, 0.015); --card-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        :root { --bg-body: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%); --bg-carte: rgba(255, 255, 255, 0.9); --border-carte: rgba(0, 0, 0, 0.05); --text-main: #0f172a; --text-muted: #334155; --text-faded: #64748b; --bg-input: #ffffff; --border-input: #cbd5e1; --bg-box: #f1f5f9; --border-ligne: #e2e8f0; --hover-ligne: color-mix(in srgb, var(--ink) 8%, transparent); --zebra-bg: rgba(0, 0, 0, 0.02); --card-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        body.dark-mode { --bg-body: radial-gradient(circle at 50% 0%, #1e293b 0%, #080f1e 100%); --bg-carte: rgba(30, 41, 59, 0.6); --border-carte: rgba(255, 255, 255, 0.08); --text-main: #f8fafc; --text-muted: #cbd5e1; --text-faded: #94a3b8; --bg-input: rgba(15, 23, 42, 0.8); --border-input: #334155; --bg-box: rgba(15, 23, 42, 0.4); --border-ligne: rgba(51, 65, 85, 0.5); --hover-ligne: color-mix(in srgb, var(--ink) 5%, transparent); --zebra-bg: rgba(255, 255, 255, 0.015); --card-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         *, *::before, *::after { box-sizing: border-box; }
         body { font-family: 'Outfit', sans-serif; background: var(--bg-body); background-attachment: fixed; color: var(--text-main); max-width: 1200px; margin: 0 auto; padding: 20px; line-height: 1.6; transition: background 0.3s, color 0.3s; scroll-behavior: smooth; }
         
         #auth-section { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
         .auth-box { background: var(--bg-carte); padding: 40px; border-radius: 20px; box-shadow: var(--card-shadow); border: 1px solid var(--border-carte); width: 100%; max-width: 400px; text-align: center; backdrop-filter: blur(12px);}
         .auth-box h2 { font-weight: 800; margin-bottom: 25px; }
-        .toggle-auth { color: #3b82f6; cursor: pointer; font-size: 13px; font-weight: 600; display: block; margin-top: 10px;}
+        .toggle-auth { color: var(--ink); cursor: pointer; font-size: 13px; font-weight: 600; display: block; margin-top: 10px;}
         .toggle-auth:hover { text-decoration: underline; }
         .auth-link-forgot { font-size: 12px; color: var(--text-faded); text-decoration: none; transition: color 0.2s; }
-        .auth-link-forgot:hover { color: #3b82f6; text-decoration: underline; }
+        .auth-link-forgot:hover { color: var(--ink); text-decoration: underline; }
 
         #app-section { display: none; position: relative; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; padding-right: 60px;}
-        .view-dropdown { font-size: 16px; font-weight: 700; padding: 10px 20px; border-radius: 12px; background: var(--bg-carte); color: var(--text-main); border: 1px solid #3b82f6; cursor: pointer; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2); outline: none;}
+        .view-dropdown { font-size: 16px; font-weight: 700; padding: 10px 20px; border-radius: 12px; background: var(--bg-carte); color: var(--text-main); border: 1px solid var(--ink); cursor: pointer; box-shadow: 0 4px 15px color-mix(in srgb, var(--ink) 20%, transparent); outline: none;}
         
         .nav-onglets-wrapper { width: 100%; margin-bottom: 15px; }
         .nav-onglets { display: flex; flex-wrap: wrap; gap: 10px; background: var(--bg-carte); padding: 15px; border-radius: 15px; border: 1px solid var(--border-carte); backdrop-filter: blur(10px); width: 100%; box-sizing: border-box; }
         .onglet { padding: 12px 15px; border-radius: 10px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all 0.3s; font-size: 14px; white-space: nowrap; display: flex; align-items: center; justify-content: center; flex: 1 1 auto; }
         .onglet:hover { color: var(--text-main); background: rgba(100,116,139,0.1); }
-        .onglet.actif { background: #3b82f6; color: white; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+        .onglet.actif { background: var(--ink); color: white; box-shadow: 0 4px 15px color-mix(in srgb, var(--ink) 40%, transparent); }
         
         .btn-logout-absolute { position: fixed; top: 15px; right: 15px; background: var(--bg-carte); border: 1px solid var(--border-carte); border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; box-shadow: var(--card-shadow); transition: all 0.3s; backdrop-filter: blur(10px); z-index: 10000; }
-        .btn-logout-absolute:hover { transform: scale(1.1); background: rgba(239, 68, 68, 0.1); }
+        .btn-logout-absolute:hover { transform: scale(1.1); background: color-mix(in srgb, var(--danger) 10%, transparent); }
         .btn-flottant { position: fixed; z-index: 9999; background: var(--bg-carte); border: 1px solid var(--border-carte); border-radius: 50%; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: all 0.3s; color: var(--text-main); backdrop-filter: blur(10px); }
         .btn-theme { bottom: 30px; right: 30px; }
         .btn-top { bottom: 30px; left: 30px; display: none; opacity: 0; transition: opacity 0.3s; }
@@ -51,7 +51,7 @@
         #clone-sticky-banner { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--bg-carte); backdrop-filter:blur(15px); border-top:1px solid var(--border-carte); padding:15px 20px; z-index:10001; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); flex-wrap:wrap; justify-content:center; align-items:center; gap:20px; animation: slideUp 0.3s ease forwards; }
         #toast-container { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
         .toast { background: var(--bg-carte); color: var(--text-main); padding: 12px 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); backdrop-filter: blur(12px); font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border-carte); animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; pointer-events: auto;}
-        .toast.success { border-left: 4px solid #10b981; } .toast.warning { border-left: 4px solid #f59e0b; } .toast.error { border-left: 4px solid #ef4444; } .toast.info { border-left: 4px solid #3b82f6; }
+        .toast.success { border-left: 4px solid var(--ink); } .toast.warning { border-left: 4px solid var(--accent); } .toast.error { border-left: 4px solid var(--danger); } .toast.info { border-left: 4px solid var(--ink); }
         .toast.fade-out { animation: fadeOut 0.3s ease forwards; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
@@ -63,12 +63,12 @@
         #bannieres-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 10px; }
         #meteo-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
         .banniere { padding: 15px 20px; border-radius: 12px; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 12px; animation: fadeIn 0.6s ease; box-shadow: var(--card-shadow); text-align: center; flex-wrap: wrap;}
-        .banniere-hype { background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%); color: white; font-size: 16px; cursor: pointer; transition: transform 0.2s;}
+        .banniere-hype { background: var(--ink); color: var(--ground); font-size: 16px; cursor: pointer; transition: transform 0.2s;}
         .banniere-hype:hover { transform: scale(1.02); }
         .banniere-hype span.jour { background: rgba(255,255,255,0.35); padding: 4px 10px; border-radius: 8px; }
         .banniere-meteo { background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: white; font-size: 15px; }
-        .banniere-souvenir { background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%); color: white; }
-        .banniere-proposition { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); color: white; justify-content:space-between;}
+        .banniere-souvenir { background: var(--ink); color: var(--ground); }
+        .banniere-proposition { background: var(--ink); color: var(--ground); justify-content:space-between;}
 
         .vue-onglet { display: none; animation: fadeIn 0.4s ease; pointer-events: auto; }
         .vue-onglet.actif { display: block; }
@@ -85,30 +85,30 @@
         input[type="text"], input[type="password"], input[type="email"], input[type="date"], input[type="number"], select, input[type="file"] { width: 100%; padding: 12px 16px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-input); border-radius: 10px; box-sizing: border-box; font-family: 'Outfit'; font-size: 14px; transition: all 0.3s; }
         input[type="file"] { padding: 9px 16px; cursor: pointer; }
         input[type="file"]::file-selector-button { background: var(--bg-box); border: 1px solid var(--border-input); padding: 6px 12px; border-radius: 6px; color: var(--text-main); cursor: pointer; font-family: 'Outfit'; font-weight: 600; margin-right: 15px;}
-        input:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+        input:focus, select:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ink) 15%, transparent); }
         
         .flex-row { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap;} .flex-1 { flex: 1; min-width: 200px;}
         .autocomplete-wrapper { position: relative; width: 100%; }
         .autocomplete-list { position: absolute; top: calc(100% + 5px); left: 0; right: 0; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: 10px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .autocomplete-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid var(--border-ligne); font-size: 14px; color: var(--text-main);}
         .autocomplete-item:last-child { border-bottom: none; }
-        .autocomplete-item:hover { background: var(--hover-ligne); color: #3b82f6; font-weight: 600;}
+        .autocomplete-item:hover { background: var(--hover-ligne); color: var(--ink); font-weight: 600;}
 
-        .btn-principal { width: 100%; padding: 14px; background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 15px; transition: all 0.3s; }
+        .btn-principal { width: 100%; padding: 14px; background: var(--ink); color: var(--ground); border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 15px; transition: all 0.3s; }
         .btn-principal:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3); }
         .btn-annuler { width: 100%; padding: 14px; background: transparent; color: var(--text-faded); border: 1px solid var(--border-input); border-radius: 10px; margin-top: 10px; cursor: pointer; display: none; font-weight: 600; }
         
         .btn-mini { padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; border: none; transition: all 0.2s; display: flex; align-items: center; gap: 6px; justify-content:center;}
-        .btn-excel { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
-        .btn-excel:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(16,185,129,0.3); }
-        .btn-reset { background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); }
-        .btn-reset:hover { background: rgba(245, 158, 11, 0.25); transform: translateY(-2px); }
+        .btn-excel { background: linear-gradient(135deg, var(--ink) 0%, var(--ink) 100%); color: white; }
+        .btn-excel:hover { transform: translateY(-2px); box-shadow: 0 5px 15px color-mix(in srgb, var(--ink) 30%, transparent); }
+        .btn-reset { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+        .btn-reset:hover { background: color-mix(in srgb, var(--accent) 25%, transparent); transform: translateY(-2px); }
         .btn-vue { background: var(--bg-box); color: var(--text-main); border: 1px solid var(--border-input); }
         .btn-vue:hover { background: var(--border-input); transform: translateY(-2px); }
         .btn-google { display: inline-block; background-color: #4285F4; color: white; padding: 12px 20px; border-radius: 10px; text-decoration: none; font-weight: bold; transition: background 0.2s; text-align: center; width: 100%; box-sizing: border-box; box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);}
         .btn-google:hover { background-color: #357ae8; transform: translateY(-2px); }
 
-        #alerte-conflit { display: none; margin-top: 5px; color: #ef4444; font-size: 13px; font-weight: 600; background: rgba(239,68,68,0.1); padding: 8px 12px; border-radius: 8px; }
+        #alerte-conflit { display: none; margin-top: 5px; color: var(--danger); font-size: 13px; font-weight: 600; background: color-mix(in srgb, var(--danger) 10%, transparent); padding: 8px 12px; border-radius: 8px; }
 
         .filtres-top { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; justify-content: space-between; align-items: flex-end;}
         .filtres-checkboxes { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
@@ -117,13 +117,13 @@
         .liste-scrollable { max-height: 130px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .chk-label { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
         .chk-label input[type="checkbox"] { appearance: none; width: 18px; height: 18px; border: 2px solid var(--border-input); border-radius: 5px; background: transparent; cursor: pointer; position: relative; }
-        .chk-label input[type="checkbox"]:checked { background: #3b82f6; border-color: #3b82f6; }
+        .chk-label input[type="checkbox"]:checked { background: var(--ink); border-color: var(--ink); }
         .chk-label input[type="checkbox"]:checked::after { content: ''; position: absolute; left: 5px; top: 1px; width: 4px; height: 9px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
         
         .stats-container { display: flex; justify-content: space-around; background: var(--bg-box); padding: 20px; border-radius: 16px; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; border: 1px solid var(--border-carte); }
         .stat-box { text-align: center; color: var(--text-faded); font-size: 12px; font-weight: 600; text-transform: uppercase;}
         .stat-box span { display: block; font-size: 30px; font-weight: 800; color: var(--text-main); margin-top: 4px; text-transform: none;}
-        .stat-box span.highlight { color: #3b82f6; }
+        .stat-box span.highlight { color: var(--ink); }
 
         .entete-grille { display: grid; grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 140px 95px; gap: 10px; padding: 12px 20px; border-bottom: 1px solid var(--border-input); color: var(--text-faded); font-weight: 600; font-size: 11px; text-transform: uppercase; }
         .concert-item { display: grid; grid-template-columns: 85px 2fr 1.5fr 60px 80px 85px 45px 55px 140px 95px; gap: 10px; align-items: center; padding: 14px 20px; font-size: 14px; cursor: pointer; }
@@ -140,17 +140,17 @@
 
         .col-triable { cursor: pointer; user-select: none; transition: color 0.2s; display: flex; align-items: center; gap: 4px;}
         .col-triable:hover { color: var(--text-main); }
-        .indicateur-tri { font-size: 10px; color: #3b82f6; }
-        .col-note { font-weight: bold; color: #f59e0b; text-align: center; }
+        .indicateur-tri { font-size: 10px; color: var(--ink); }
+        .col-note { font-weight: bold; color: var(--accent); text-align: center; }
         
         .row-container { border-bottom: 1px solid var(--border-ligne); transition: background-color 0.2s, border-radius 0.2s; }
         .row-container:nth-child(odd) { background-color: var(--zebra-bg); }
         .row-container:hover { background-color: var(--hover-ligne); border-radius: 8px; }
         
-        .row-coup-de-coeur { background-color: rgba(236, 72, 153, 0.05) !important; border-radius: 8px; border-left: 3px solid #ec4899; }
-        .row-coup-de-coeur:hover { background-color: rgba(236, 72, 153, 0.1) !important; }
+        .row-coup-de-coeur { background-color: color-mix(in srgb, var(--danger) 5%, transparent) !important; border-radius: 8px; border-left: 3px solid var(--danger); }
+        .row-coup-de-coeur:hover { background-color: color-mix(in srgb, var(--danger) 10%, transparent) !important; }
         
-        .row-container.prochain-concert { border-left: 4px solid #34d399 !important; background-color: rgba(52, 211, 153, 0.08) !important; border-radius: 8px; box-shadow: 0 0 15px rgba(52, 211, 153, 0.15); }
+        .row-container.prochain-concert { border-left: 4px solid var(--ink) !important; background-color: rgba(52, 211, 153, 0.08) !important; border-radius: 8px; box-shadow: 0 0 15px rgba(52, 211, 153, 0.15); }
         
         .concert-details { padding: 0 20px 15px 85px; display: none; gap: 40px; animation: fadeIn 0.2s ease; cursor: default; }
         .concert-details.open { display: flex; flex-wrap: wrap; }
@@ -159,10 +159,10 @@
         
         .star { transition: transform 0.2s; user-select: none; }
         .star:hover { transform: scale(1.2); }
-        .star-active { color: #f59e0b; text-shadow: 0 0 5px rgba(245,158,11,0.3); }
+        .star-active { color: var(--accent); text-shadow: 0 0 5px color-mix(in srgb, var(--accent) 30%, transparent); }
         .star-inactive { color: var(--border-input); }
         .comm-textarea { flex: 1; min-width: 250px; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: 8px; padding: 10px; font-family: 'Outfit'; color: var(--text-main); font-size: 13px; resize: vertical; min-height: 40px; outline: none; transition: border-color 0.2s; }
-        .comm-textarea:focus { border-color: #3b82f6; }
+        .comm-textarea:focus { border-color: var(--ink); }
 
         .entete-abo { display: grid; grid-template-columns: 1.5fr 1.2fr 1fr 1fr 80px 80px; gap: 15px; padding: 12px 20px; border-bottom: 1px solid var(--border-input); color: var(--text-faded); font-weight: 600; font-size: 11px; text-transform: uppercase; }
         .abo-item { display: grid; grid-template-columns: 1.5fr 1.2fr 1fr 1fr 80px 80px; gap: 15px; align-items: center; border-bottom: 1px solid var(--border-ligne); padding: 14px 20px; transition: all 0.2s; font-size: 14px; }
@@ -178,34 +178,34 @@
         .col-liens { display: flex; justify-content: flex-start; gap: 6px; flex-wrap: wrap; align-items: center;}
 
         .date-badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 12px; text-align: center; width: 100%; box-sizing: border-box;}
-        .date-avenir { background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .date-avenir { background: color-mix(in srgb, var(--ink) 15%, transparent); color: var(--ink); border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent); }
         .date-passe { background: rgba(100, 116, 139, 0.15); color: var(--text-faded); border: 1px solid rgba(100,116,139,0.2); }
 
         .badge-statut { font-size: 11px; padding: 4px 6px; border-radius: 12px; font-weight: 700; text-transform: uppercase; display: inline-block; text-align: center; width: 100%; box-sizing: border-box;}
-        .badge-billet-ok { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
-        .badge-billet-attente { background: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); }
-        .badge-billet-cadeau { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .badge-billet-ok { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent); }
+        .badge-billet-attente { background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+        .badge-billet-cadeau { background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
         .badge-role-spectateur { background: rgba(100, 116, 139, 0.1); color: var(--text-muted); border: 1px solid rgba(100, 116, 139, 0.3); }
-        .badge-role-benevole { background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); }
-        .donnee-manquante { color: #f87171; font-size: 12px; font-weight: 500;}
+        .badge-role-benevole { background: color-mix(in srgb, var(--danger) 10%, transparent); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent); }
+        .donnee-manquante { color: var(--danger); font-size: 12px; font-weight: 500;}
 
-        .biere-control { display: inline-flex; align-items: center; justify-content: center; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; overflow: hidden; width: 100%; max-width: 80px; margin: 0 auto;}
-        .btn-biere-mod { background: transparent; border: none; color: #d97706; cursor: pointer; font-weight: bold; padding: 4px 6px; transition: 0.2s; font-size: 14px; display: flex; align-items: center; justify-content: center; width: 25px;}
-        .btn-biere-mod:hover { background: rgba(245, 158, 11, 0.2); }
-        .biere-count { font-size: 12px; font-weight: 700; color: #d97706; flex: 1; pointer-events: none;}
+        .biere-control { display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--accent) 10%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 8px; overflow: hidden; width: 100%; max-width: 80px; margin: 0 auto;}
+        .btn-biere-mod { background: transparent; border: none; color: var(--accent); cursor: pointer; font-weight: bold; padding: 4px 6px; transition: 0.2s; font-size: 14px; display: flex; align-items: center; justify-content: center; width: 25px;}
+        .btn-biere-mod:hover { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+        .biere-count { font-size: 12px; font-weight: 700; color: var(--accent); flex: 1; pointer-events: none;}
         .boutons-actions { display: flex; gap: 6px; justify-content: flex-end; }
         .btn-icon { border: none; padding: 6px; border-radius: 8px; cursor: pointer; background: var(--bg-box); color: var(--text-faded); transition: all 0.2s; font-size: 14px; display: flex; align-items: center; justify-content: center; text-decoration: none;}
         .btn-icon:hover { transform: scale(1.1); }
-        .btn-setlist:hover { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+        .btn-setlist:hover { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
         .btn-spotify:hover { background: rgba(30, 215, 96, 0.15); color: #1ed760; }
         .btn-calendar:hover { background: rgba(66, 133, 244, 0.15); color: #4285F4; }
-        .btn-ticket:hover { background: rgba(236, 72, 153, 0.15); color: #ec4899; }
-        .btn-edit:hover { background: rgba(59, 130, 246, 0.15); color: #3b82f6;}
-        .btn-del:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444;}
+        .btn-ticket:hover { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
+        .btn-edit:hover { background: color-mix(in srgb, var(--ink) 15%, transparent); color: var(--ink);}
+        .btn-del:hover { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger);}
         
-        .btn-clone { background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.3); }
-        .btn-clone:hover { background: rgba(16, 185, 129, 0.25); transform: scale(1.05); }
-        .btn-propose:hover { background: rgba(245, 158, 11, 0.15); color: #f59e0b; transform: scale(1.1); }
+        .btn-clone { background: color-mix(in srgb, var(--ink) 15%, transparent); color: var(--ink); font-weight: 600; border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent); }
+        .btn-clone:hover { background: color-mix(in srgb, var(--ink) 25%, transparent); transform: scale(1.05); }
+        .btn-propose:hover { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); transform: scale(1.1); }
         
 
         .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 20px;}
@@ -248,8 +248,8 @@
         .mode-vitrine .admin-only { display: none !important; }
 
         /* ================= THÈME « AFFICHE » — sauge et forêt ================= */
-        :root { --ink: #1F3327; --ground: #C9D5C3; --paper: #FFFFFF; --bg-body: #C9D5C3; --bg-carte: #FFFFFF; --border-carte: #1F3327; --text-main: #1F3327; --text-muted: #1F3327; --text-faded: #3F5246; --bg-input: #FFFFFF; --border-input: #1F3327; --bg-box: #E6ECE3; --border-ligne: rgba(31,51,39,0.25); --hover-ligne: rgba(31,51,39,0.07); --zebra-bg: rgba(31,51,39,0.03); --card-shadow: none; }
-        body.dark-mode { --ink: #EFE6D2; --ground: #1E3A32; --paper: #2A4A40; --bg-body: #1E3A32; --bg-carte: #2A4A40; --border-carte: #EFE6D2; --text-main: #EFE6D2; --text-muted: #EFE6D2; --text-faded: #C9CDB8; --bg-input: #1E3A32; --border-input: #EFE6D2; --bg-box: #24423A; --border-ligne: rgba(239,230,210,0.25); --hover-ligne: rgba(239,230,210,0.08); --zebra-bg: rgba(239,230,210,0.03); --card-shadow: none; }
+        :root { --ink: #1F3327; --ground: #C9D5C3; --paper: #FFFFFF; --bg-body: #C9D5C3; --bg-carte: #FFFFFF; --border-carte: #1F3327; --text-main: #1F3327; --text-muted: #1F3327; --text-faded: #3F5246; --bg-input: #FFFFFF; --border-input: #1F3327; --bg-box: #E6ECE3; --border-ligne: rgba(31,51,39,0.25); --hover-ligne: rgba(31,51,39,0.07); --zebra-bg: rgba(31,51,39,0.03); --card-shadow: none; --accent: #9A6A22; --danger: #A23B2A; }
+        body.dark-mode { --ink: #EFE6D2; --ground: #1E3A32; --paper: #2A4A40; --bg-body: #1E3A32; --bg-carte: #2A4A40; --border-carte: #EFE6D2; --text-main: #EFE6D2; --text-muted: #EFE6D2; --text-faded: #C9CDB8; --bg-input: #1E3A32; --border-input: #EFE6D2; --bg-box: #24423A; --border-ligne: rgba(239,230,210,0.25); --hover-ligne: rgba(239,230,210,0.08); --zebra-bg: rgba(239,230,210,0.03); --card-shadow: none;  --accent: #E0B567; --danger: #E58A78; }
         body { font-family: 'Archivo', sans-serif; background: var(--bg-body); max-width: none; margin: 0; padding: 0; line-height: 1.5; }
         input, select, textarea, button { font-family: inherit; }
         #auth-section { padding: 20px; }
@@ -524,6 +524,13 @@
         @keyframes glisseD { from { transform: translateX(-28px); opacity: .4; } to { transform: none; opacity: 1; } }
         .glisse-gauche { animation: glisseG .22s ease-out; } .glisse-droite { animation: glisseD .22s ease-out; }
         @media (prefers-reduced-motion: reduce) { .glisse-gauche, .glisse-droite { animation: none; } }
+        .qui-y-va { margin: 14px 0 4px; }
+        .quiva-ligne { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px; padding: 4px 0; }
+        .choix-calendrier { margin-top: 10px; padding: 12px; border: 2px solid var(--ink); background: var(--bg-box); display: grid; gap: 8px; }
+        @media (max-width: 640px) { .quiva-ligne { grid-template-columns: 1fr; gap: 0; } }
+        /* Style affiche : coins carrés partout, sauf les ronds voulus */
+        [style*="border-radius"]:not([style*="50%"]) { border-radius: 0 !important; }
+        input[type="checkbox"] { accent-color: var(--ink); }
     </style>
 </head>
 <body> 
@@ -573,15 +580,10 @@
 
     <div id="clone-sticky-banner">
         <span id="clone-count" style="font-weight:bold; color:var(--text-main); font-size:15px;">0 concert(s) sélectionné(s)</span>
-        <button class="btn-mini" style="background:#10b981; color:white; font-size:14px; padding:10px 20px; border:none;" onclick="clonerSelection()">Valider l'ajout</button>
+        <button class="btn-mini" style="background:var(--ink); color:white; font-size:14px; padding:10px 20px; border:none;" onclick="clonerSelection()">Valider l'ajout</button>
         <button class="btn-mini btn-reset" onclick="toggleCloneMode()" style="font-size:14px; padding:10px 20px;">Annuler</button>
     </div>
 
-    <div id="clone-sticky-banner-avenir" style="display:none; position:fixed; bottom:0; left:0; right:0; background:var(--bg-carte); backdrop-filter:blur(15px); border-top:1px solid var(--border-carte); padding:15px 20px; z-index:10001; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); flex-wrap:wrap; justify-content:center; align-items:center; gap:20px; animation: slideUp 0.3s ease forwards;">
-        <span id="clone-count-avenir" style="font-weight:bold; color:var(--text-main); font-size:15px;">0 concert(s) sélectionné(s)</span>
-        <button class="btn-mini" style="background:#10b981; color:white; font-size:14px; padding:10px 20px; border:none;" onclick="clonerSelectionAvenir()">Valider l'ajout</button>
-        <button class="btn-mini btn-reset" onclick="toggleCloneModeAvenir()" style="font-size:14px; padding:10px 20px;">Annuler</button>
-    </div>
 
     <div id="modal-propose">
         <div class="carte modal-content">
@@ -711,6 +713,8 @@
                 <h3 style="margin-top:0;">Notifications que je veux recevoir</h3>
                 <p class="texte-aide">Ces réglages s'appliquent à tous tes appareils abonnés.</p>
                 <label class="chk-ligne"><input type="checkbox" id="pref-j1" onchange="sauverPrefsNotif()">Rappel la veille d'un concert</label>
+                <label class="chk-ligne"><input type="checkbox" id="pref-jour_j" onchange="sauverPrefsNotif()">Le jour J au matin (itinéraire et billet en un geste)</label>
+                <label class="chk-ligne"><input type="checkbox" id="pref-alertes" onchange="sauverPrefsNotif()">Nouvelle date d'un artiste que j'ai déjà vu (salles suivies)</label>
                 <label class="chk-ligne"><input type="checkbox" id="pref-billet" onchange="sauverPrefsNotif()">Rappel de billet à acheter (7 jours et 2 jours avant)</label>
                 <label class="chk-ligne"><input type="checkbox" id="pref-propositions" onchange="sauverPrefsNotif()">Un ami me propose un concert</label>
                 <label class="chk-ligne"><input type="checkbox" id="pref-amis" onchange="sauverPrefsNotif()">Demandes d'ami reçues et acceptées</label>
@@ -740,12 +744,8 @@
                 <div class="nav-onglets-wrapper">
                     <div class="nav-onglets" id="nav-onglets-container">
                         <div class="onglet actif" onclick="changerOnglet('tab-concerts')" id="onglet-concerts">Concerts</div>
-                        <div class="onglet" onclick="changerOnglet('tab-crew-avenir')" id="onglet-crew-avenir">À venir (Team)</div>
-                        <div class="onglet" onclick="changerOnglet('tab-artistes')" id="onglet-artistes">Artistes</div>
-                        <div class="onglet" onclick="changerOnglet('tab-stats')" id="onglet-stats">Statistiques</div>
-                        <div class="onglet" onclick="changerOnglet('tab-carte')" id="onglet-carte">Carte</div>
                         <div class="onglet" onclick="changerOnglet('tab-abos')" id="onglet-abos">Abonnements</div>
-                        <div class="onglet" onclick="changerOnglet('tab-amis')" id="onglet-amis">Amis <span id="badge-demandes-amis" style="display:none; background:#ef4444; color:white; border-radius:10px; padding:1px 7px; font-size:11px; font-weight:bold; margin-left:2px;"></span></div>
+                        <div class="onglet" onclick="changerOnglet('tab-amis')" id="onglet-amis">Amis <span id="badge-demandes-amis" style="display:none; background:var(--danger); color:var(--paper); border-radius:10px; padding:1px 7px; font-size:11px; font-weight:bold; margin-left:2px;"></span></div>
                         <div class="onglet" onclick="changerOnglet('tab-parametres')" id="onglet-parametres">Paramètres</div>
                     </div>
                 </div>
@@ -782,7 +782,7 @@
             <div id="bannieres-container"></div>
 
             <div class="carte admin-only form-carte">
-                <h1 id="titre-formulaire" onclick="toggleFormConcert()" style="cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:0; transition:color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color=''">
+                <h1 id="titre-formulaire" onclick="toggleFormConcert()" style="cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:0; transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color=''">
                     <span id="titre-formulaire-texte">Ajouter un Concert</span>
                 </h1>
                 <div id="form-container-wrapper" style="display:none; margin-top:30px;">
@@ -827,8 +827,8 @@
                             <input type="file" id="ticket_file" accept=".pdf,image/*">
                             <input type="hidden" id="ticket_url_existant">
                             <div id="ticket_nom_existant_container" style="display:none; align-items:center; gap:10px; margin-top:4px;">
-                                <span id="ticket_nom_existant" style="font-size:12px; color:#10b981; font-weight:bold;"></span>
-                                <button type="button" id="btn_supprimer_ticket" style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:12px; text-decoration:underline; padding:0;">Retirer ce billet</button>
+                                <span id="ticket_nom_existant" style="font-size:12px; color:var(--ink); font-weight:bold;"></span>
+                                <button type="button" id="btn_supprimer_ticket" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:12px; text-decoration:underline; padding:0;">Retirer ce billet</button>
                             </div>
                         </div>
                     </div>
@@ -850,7 +850,7 @@
                         </div>
                         <div class="form-group flex-1" style="display:flex; align-items:center; margin-top:20px;">
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0; font-weight:600; color:var(--text-main);">
-                                <input type="checkbox" id="is_prive" style="width:auto; cursor:pointer; accent-color:#3b82f6; width:18px; height:18px;">
+                                <input type="checkbox" id="is_prive" style="width:auto; cursor:pointer; accent-color:var(--ink); width:18px; height:18px;">
                                  Concert secret (invisible)
                             </label>
                         </div>
@@ -958,100 +958,10 @@
             </div>
         </div>
 
-        <div id="tab-carte" class="vue-onglet">
-            <div class="carte">
-                <h2>Ma Carte de Concerts</h2>
-                <p style="text-align: center; color: var(--text-faded); margin-bottom: 20px;">Toutes les salles et festivals où tu es allé(e).</p>
-                <div id="map-container" style="height: 500px; border-radius: 15px; border: 1px solid var(--border-input); z-index:1;"></div>
-            </div>
-        </div>
 
 
-        <div id="tab-crew-avenir" class="vue-onglet">
-            <div class="carte">
-                <div class="titre-section">
-                    <h2>Concerts à venir de la Team</h2>
-                    <div class="actions-titre">
-                        <button id="btn-excel-team" class="btn-mini btn-excel admin-only" onclick="exporterExcelTeam()">Exporter (.csv)</button>
-                        <button id="btn-activer-clone-avenir" class="btn-mini btn-clone" onclick="toggleCloneModeAvenir()">Ajouts multiples</button>
-                        <button id="btn-select-all-avenir" class="btn-mini btn-vue" style="display:none;" onclick="toggleSelectAllAvenir()">Tout cocher</button>
-                    </div>
-                </div>
-                <p style="text-align: center; color: var(--text-faded); margin-bottom: 20px; margin-top: -15px;">Qui va voir quoi prochainement ?</p>
-                <div style="margin-bottom: 30px; text-align: center;">
-                    <input type="text" id="recherche-crew-avenir" placeholder="Rechercher un artiste, une salle, un pote..." oninput="afficherConcertsCrewAvenir()" style="max-width: 500px; text-align: center; margin: 0 auto; display: block;">
-                </div>
-                
-                <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-                    <button id="btn-toggle-vue-avenir" class="btn-mini btn-vue" onclick="toggleVueAgendaAvenir()">Passer en Vue Calendrier</button>
-                </div>
 
-                <div id="liste-crew-avenir"><div style="text-align:center; color:var(--text-faded);">Chargement...</div></div>
 
-                <div id="vue-calendrier-avenir" style="display:none;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:var(--bg-box); padding:10px 15px; border-radius:12px; border:1px solid var(--border-input);">
-                        <button class="btn-mini btn-vue" onclick="naviguerCalendrierAvenir(-1)">◀ Précédent</button>
-                        <h3 id="mois-annee-calendrier-avenir" style="margin:0; text-transform:capitalize; font-size:16px;"></h3>
-                        <button class="btn-mini btn-vue" onclick="naviguerCalendrierAvenir(1)">Suivant ▶</button>
-                    </div>
-                    <div id="grille-calendrier-avenir"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-artistes" class="vue-onglet">
-            <div class="carte">
-                <h2>Tous mes Artistes</h2>
-                <div style="margin-bottom: 25px; display: flex; justify-content: center;">
-                    <input type="text" id="recherche-artiste-tab" placeholder="Rechercher un artiste précis..." oninput="afficherOngletArtistes()" style="max-width: 400px; text-align: center;">
-                </div>
-                <div class="table-artistes-wrapper">
-                    <table class="table-artistes">
-                        <thead><tr><th>Artiste</th><th>Nombre de concerts</th><th>Année(s)</th><th>Note moyenne</th><th>Dépense totale</th></tr></thead>
-                        <tbody id="liste-artistes-tab"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-stats" class="vue-onglet">
-            <div class="carte admin-only">
-                <h2>La Team & Moi (Concerts en commun)</h2>
-                <p style="text-align: center; color: var(--text-faded); margin-bottom: 20px;">Avec qui partages-tu le plus de concerts (passés et prévus) ?</p>
-                <div id="affinite-container" style="display:flex; flex-direction:column; gap:10px;"></div>
-            </div>
-
-            <div class="carte">
-                <h2>Mes Statistiques Visuelles</h2>
-                <div class="filtres-top" style="justify-content: center; margin-bottom: 20px; align-items:center;">
-                    <div style="min-width: 250px; text-align: center;">
-                        <label>Filtrer l'année globale :</label>
-                        <select id="filtre-stats-annee" onchange="genererGraphiques()" style="text-align: center;">
-                            <option value="tous">Toutes les années</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="charts-grid">
-                    <div class="chart-box">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
-                            <h3 id="titre-chart-principal" style="margin:0; flex:1; text-align:left;">Évolution</h3>
-                            <select id="filtre-stats-type" onchange="genererGraphiques()" style="padding:6px; font-size:12px; width:auto; border-radius:8px;">
-                                <option value="concerts">Nombre de Concerts</option>
-                                <option value="artistes">Artistes vus</option>
-                                <option value="depenses">Budget Dépensé (€)</option>
-                            </select>
-                        </div>
-                        <canvas id="chartPrincipal"></canvas>
-                    </div>
-                    <div class="chart-box">
-                        <h3 id="titre-chart-salles">Toutes les salles fréquentées</h3>
-                        <canvas id="chartSalles"></canvas>
-                        <div id="details-salles" style="margin-top:20px; font-size:13px; color:var(--text-faded); line-height:1.6; max-height:250px; overflow-y:auto; padding-right:10px;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <div id="tab-abos" class="vue-onglet">
             <div class="carte">
@@ -1153,7 +1063,7 @@
                             </div>
                             <div class="form-group" style="margin-top:20px;">
                                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:var(--text-main); margin:0;">
-                                    <input type="checkbox" id="param-benevole" style="width:auto; cursor:pointer; width:18px; height:18px; accent-color:#3b82f6;">
+                                    <input type="checkbox" id="param-benevole" style="width:auto; cursor:pointer; width:18px; height:18px; accent-color:var(--ink);">
                                      Je suis parfois bénévole
                                 </label>
                                 <p style="font-size: 11px; color: var(--text-faded); margin-top: 5px;">Cocher cette case te permet d'attribuer le rôle "Bénévole" à tes concerts.</p>
@@ -1173,7 +1083,7 @@
                                 <label>Confirmer le mot de passe</label>
                                 <input type="password" id="param-mdp2" required placeholder="••••••••">
                             </div>
-                            <button type="submit" id="btn-save-mdp" class="btn-principal" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); margin-top:20px;">Changer le mot de passe</button>
+                            <button type="submit" id="btn-save-mdp" class="btn-principal" style="background: var(--danger); color: var(--paper); margin-top:20px;">Changer le mot de passe</button>
                         </form>
                     </div>
                 </div>
@@ -1232,8 +1142,6 @@
         let amisData = []; let mesAmisIds = [];
         let mesConcertsPersos = []; let lastFetchedMeteoConcertId = null; let lastFetchedMeteoHTML = ""; let lastFetchedTeamConcertId = null; let lastFetchedTeamHTML = "";
         let isFirstLoad = true;
-        let groupesAvenir = {};
-        let isCloneModeAvenir = false;
         let tousLesConcerts = [];
         let listeArtistesGlobale = [];
         let listeSallesGlobale = [];
@@ -1351,7 +1259,16 @@
 
         async function afficherApplication() {
             document.getElementById('auth-section').style.display = 'none'; document.getElementById('app-section').style.display = 'block';
-            await assurerProfil(); await chargerProfils(); await chargerAmis(); await chargerSallesCommunaute(); await verifierPropositions(); changerVueUtilisateur("ME");
+            await assurerProfil(); await chargerProfils(); await chargerAmis(); await chargerSallesCommunaute(); await verifierPropositions(); await changerVueUtilisateur("ME");
+            ouvrirLienNotification();
+        }
+        // Une notification peut ouvrir directement la fiche d'un concert ou les recommandations
+        function ouvrirLienNotification() {
+            const q = new URLSearchParams(window.location.search); const idC = q.get('concert'), onglet = q.get('onglet');
+            if (!idC && !onglet) return;
+            history.replaceState({}, document.title, window.location.pathname);
+            if (onglet === 'reco') { allerA('tab-reco'); return; }
+            if (idC && /^\d+$/.test(idC) && concertParId(idC)) { allerA('tab-concerts').then(() => { agendaVue = 'avenir'; calOuvrir(idC); }); }
         }
 
         // Après confirmation de l'email, le profil est créé à la première connexion à partir des infos saisies à l'inscription
@@ -1412,7 +1329,7 @@
                     let sender = profilsData.find(profil => String(profil.id) === String(p.sender_id)); let senderPseudo = sender ? sender.pseudo : "Un ami";
                     let dFR = ""; if(p.date) { dFR = " le " + new Date(p.date).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'}); }
                     let txtEvent = (p.lieu || "").includes('🎪') ? (p.lieu || "").replace(/🎪/g, '').trim() : `${p.artiste} à ${p.lieu}`;
-                    html += `<div class="banniere banniere-proposition" id="prop-banner-${p.id}"><div>📣 <b>${senderPseudo}</b> te propose d'aller à <b>${txtEvent}</b>${dFR} !</div><div style="display:flex; gap:10px;"><button class="btn-mini" style="background:white; color:#f59e0b;" onclick="accepterProposition('${p.id}')">Ajouter</button><button class="btn-mini" style="background:transparent; border:1px solid white; color:white;" onclick="refuserProposition('${p.id}')">Ignorer</button></div></div>`;
+                    html += `<div class="banniere banniere-proposition" id="prop-banner-${p.id}"><div>📣 <b>${senderPseudo}</b> te propose d'aller à <b>${txtEvent}</b>${dFR} !</div><div style="display:flex; gap:10px;"><button class="btn-mini" style="background:var(--ground); color:var(--ink);" onclick="accepterProposition('${p.id}')">Ajouter</button><button class="btn-mini" style="background:transparent; border:1px solid white; color:white;" onclick="refuserProposition('${p.id}')">Ignorer</button></div></div>`;
                 });
                 document.getElementById('propositions-container').innerHTML = html;
             }
@@ -1535,122 +1452,8 @@
         }
 
         // ===== À DÉCOUVRIR (Bandsintown + Ticketmaster via Edge Function) =====
-        const DECOUVERTE_CACHE_KEY = 'live_decouverte_v1';
 
         // Récupère mes artistes vus + styles à partir de mes concerts passés
-        async function mesArtistesEtStyles() {
-            const { data, error } = await clientSupabase.from('Concerts').select('Artiste_principal, Style, Date, Statut_billet').eq('user_id', currentUser.id);
-            if (error || !data) return { artists: [], styles: [] };
-            let today = new Date().toISOString().slice(0,10);
-            let artistesSet = new Set(); let stylesCount = {};
-            data.forEach(c => {
-                // Artistes : on prend ceux des concerts (multi-artistes séparés par virgule)
-                (c.Artiste_principal || '').split(',').map(a => a.trim()).filter(Boolean).forEach(a => artistesSet.add(a));
-                if (c.Style) { let s = c.Style.trim(); if(s) stylesCount[s] = (stylesCount[s]||0) + 1; }
-            });
-            // Styles triés par fréquence
-            let styles = Object.keys(stylesCount).sort((a,b) => stylesCount[b]-stylesCount[a]);
-            return { artists: Array.from(artistesSet), styles };
-        }
-
-        async function resoudrePosition() {
-            let ville = document.getElementById('decouverte-ville').value.trim();
-            if (ville) {
-                let res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(ville)}&count=1&language=fr`);
-                let geo = await res.json();
-                if (geo.results && geo.results.length) return { lat: geo.results[0].latitude, lng: geo.results[0].longitude, label: geo.results[0].name };
-                throw new Error("Ville introuvable");
-            }
-            // Géolocalisation navigateur
-            return await new Promise((resolve, reject) => {
-                if (!navigator.geolocation) { reject(new Error("Géolocalisation non disponible — saisis une ville")); return; }
-                navigator.geolocation.getCurrentPosition(
-                    pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, label: "ta position" }),
-                    () => reject(new Error("Position refusée — saisis une ville")),
-                    { timeout: 10000 }
-                );
-            });
-        }
-
-        window.lancerDecouverte = async function() {
-            let statut = document.getElementById('decouverte-statut');
-            let zone = document.getElementById('decouverte-resultats');
-            statut.textContent = "📍 Localisation…";
-            try {
-                let pos = await resoudrePosition();
-                let radiusKm = parseInt(document.getElementById('decouverte-rayon').value, 10) || 100;
-                statut.textContent = "🔎 Recherche des concerts près de " + pos.label + "…";
-                let { artists, styles } = await mesArtistesEtStyles();
-                if (artists.length === 0 && styles.length === 0) { statut.textContent = "Ajoute d'abord quelques concerts pour qu'on connaisse tes goûts !"; return; }
-
-                let { data, error } = await clientSupabase.functions.invoke('decouverte', { body: { artists, styles, lat: pos.lat, lng: pos.lng, radiusKm } });
-                if (error) { statut.textContent = "Erreur lors de la recherche."; console.error(error); return; }
-
-                let events = (data && data.events) || [];
-                localStorage.setItem(DECOUVERTE_CACHE_KEY, JSON.stringify({ ts: Date.now(), label: pos.label, events }));
-                statut.textContent = events.length ? `${events.length} concert(s) trouvé(s) près de ${pos.label}.` : `Aucun concert trouvé près de ${pos.label} dans ce rayon.`;
-                rendreDecouverte(events);
-            } catch(e) {
-                statut.textContent = "⚠️ " + e.message;
-            }
-        }
-
-        function afficherDecouverteCache() {
-            let zone = document.getElementById('decouverte-resultats');
-            let raw = localStorage.getItem(DECOUVERTE_CACHE_KEY);
-            if (!raw) { return; }
-            try {
-                let c = JSON.parse(raw);
-                rendreDecouverte(c.events || []);
-                let h = Math.round((Date.now() - c.ts) / 3600000);
-                document.getElementById('decouverte-statut').textContent = `Derniers résultats (${c.events.length}) près de ${c.label || '?'} — il y a ${h}h. Relance pour rafraîchir.`;
-            } catch(e) {}
-        }
-
-        function rendreDecouverte(events) {
-            let zone = document.getElementById('decouverte-resultats');
-            if (!events.length) { zone.innerHTML = ""; return; }
-            zone.innerHTML = events.map((e, i) => {
-                let dFR = e.date ? new Date(e.date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'long', year:'numeric' }) : "";
-                let dist = e.distanceKm != null ? `📍 ${e.distanceKm} km` : "";
-                let genre = e.genre ? `🎵 ${e.genre}` : "";
-                let src = (e.source === 'bandsintown' || e.source === 'artiste_vu') ? "⭐ Artiste déjà vu" : "🔮 Suggestion";
-                let meta = [dFR, e.salle, e.ville, dist, genre].filter(Boolean).join(' · ');
-                return `<div class="carte" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:200px;">
-                        <div style="font-size:11px; color:var(--text-faded); text-transform:uppercase; letter-spacing:.5px;">${src}</div>
-                        <div style="font-weight:700; font-size:16px;">${(e.artiste||'').replace(/</g,'&lt;')}</div>
-                        <div style="color:var(--text-faded); font-size:13px; margin-top:2px;">${meta.replace(/</g,'&lt;')}</div>
-                    </div>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        ${e.url ? `<a href="${e.url}" target="_blank" rel="noopener" class="btn-mini" style="background:#f59e0b; color:white; text-decoration:none;">🎟️ Billetterie</a>` : ''}
-                        <button class="btn-mini" style="background:#6366f1; color:white; border:none;" onclick="ajouterDepuisDecouverte(${i})">➕ Mon agenda</button>
-                    </div>
-                </div>`;
-            }).join('');
-            window._decouverteEvents = events;
-        }
-
-        window.ajouterDepuisDecouverte = function(i) {
-            let e = (window._decouverteEvents || [])[i]; if(!e) return;
-            changerOnglet('tab-concerts');
-            if (document.getElementById('view-selector').value !== "ME") { document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME"); }
-            setArtistesFromString(e.artiste || "");
-            document.getElementById('lieu').value = e.salle || e.ville || "";
-            document.getElementById('is_festival').checked = false;
-            document.getElementById('date').value = e.date || "";
-            document.getElementById('prix').value = "";
-            document.getElementById('statut_billet').value = "a_acheter";
-            if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
-            if(document.getElementById('style_musique')) document.getElementById('style_musique').value = e.genre || "";
-            document.getElementById('concert_id').value = "";
-            document.getElementById('titre-formulaire-texte').innerHTML = `🎸 Ajouter ce concert`;
-            document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`;
-            document.getElementById('btn-annuler').style.display = "block";
-            toggleFormConcert(true);
-            setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior:'smooth', block:'start' }); showToast("Concert pré-rempli ! Vérifie et valide.", "success"); }, 100);
-        }
-
         window.changerVueUtilisateur = async function(userId) {
             let actualTargetId = userId; isCloneMode = false; let currentActiveTabId = document.querySelector('.vue-onglet.actif').id;
             
@@ -1757,19 +1560,13 @@
             document.body.classList.toggle('dark-mode');
             if (document.body.classList.contains('dark-mode')) { localStorage.setItem('theme', 'dark'); btnTheme.textContent = '☀️'; } 
             else { localStorage.setItem('theme', 'light'); btnTheme.textContent = '🌙'; }
-            if (document.getElementById('tab-stats').classList.contains('actif')) genererGraphiques(); 
         });
 
         function changerOnglet(idTab) {
             if (isCloneMode) toggleCloneMode();
-            if (isCloneModeAvenir) toggleCloneModeAvenir();
             document.querySelectorAll('.vue-onglet').forEach(tab => tab.classList.remove('actif')); document.querySelectorAll('.onglet').forEach(btn => btn.classList.remove('actif'));
             let elementTab = document.getElementById(idTab); if(elementTab) elementTab.classList.add('actif');
             let btnID = idTab.replace('tab-', 'onglet-'); let btnElement = document.getElementById(btnID); if(btnElement) btnElement.classList.add('actif');
-            if (idTab === 'tab-stats') { genererGraphiques(); if (viewingUserId === currentUser.id) genererAffinite(); }
-            if (idTab === 'tab-artistes') afficherOngletArtistes();
-            if (idTab === 'tab-crew-avenir') afficherConcertsCrewAvenir(); 
-            if (idTab === 'tab-carte') setTimeout(initCarte, 100);
             if (idTab === 'tab-parametres') rafraichirStatutPush();
             if (idTab === 'tab-parametres') chargerParametres();
             if (idTab === 'tab-amis') rafraichirOngletAmis();
@@ -1951,7 +1748,6 @@
             tousLesConcerts = resultats; mettreAJourMenusFiltres();
             if (isFirstLoad) { const currYear = new Date().getFullYear().toString(); const chk = document.querySelector(`.chk-annee[value="${currYear}"]`); if (chk) chk.checked = true; isFirstLoad = false; }
             afficherConcerts();
-            if(document.getElementById('tab-artistes').classList.contains('actif')) afficherOngletArtistes();
             if (currentUser && viewingUserId === currentUser.id) mesConcertsPersos = resultats;
             if (source === 'cache') showToast("📴 Mode hors-ligne — données du dernier chargement", "warning");
         }
@@ -2094,10 +1890,10 @@
             const lieuHTML = String(conflit.concert.Lieu || "").replace(/🎪/g, '').trim().replace(/</g, '&lt;').replace(/>/g, '&gt;');
             if (conflit.type === 'doublon') {
                 alertDiv.innerHTML = `🚨 Doublon probable : tu as déjà <b>${artisteHTML}</b>${lieuHTML ? ` @ <b>${lieuHTML}</b>` : ''} à cette date.`;
-                alertDiv.style.background = 'rgba(239,68,68,0.15)';
+                alertDiv.style.background = 'color-mix(in srgb, var(--danger) 15%, transparent)';
             } else {
                 alertDiv.innerHTML = `⚠️ Tu as déjà prévu d'aller voir <b>${artisteHTML}</b> ce jour-là.`;
-                alertDiv.style.background = 'rgba(239,68,68,0.1)';
+                alertDiv.style.background = 'color-mix(in srgb, var(--danger) 10%, transparent)';
             }
             alertDiv.style.display = 'block';
         }
@@ -2139,7 +1935,7 @@
 
             let htmlAn = `<label class="chk-label" style="font-weight: 700;"><input type="checkbox" id="chk-toutes-annees" onchange="toggleToutesAnnees()"> TOUTES</label>`; let statsOptions = `<option value="tous">Toutes les années</option>`;
             Array.from(setAn).sort().reverse().forEach(a => { htmlAn += `<label class="chk-label"><input type="checkbox" class="chk-annee" value="${a}" onchange="afficherConcerts()" ${selAn.includes(a)?"checked":""}> ${a}</label>`; statsOptions += `<option value="${a}">${a}</option>`; });
-            document.getElementById('container-chk-annees').innerHTML = htmlAn; document.getElementById('filtre-stats-annee').innerHTML = statsOptions;
+            document.getElementById('container-chk-annees').innerHTML = htmlAn; { const fsa = document.getElementById('filtre-stats-annee'); if (fsa) fsa.innerHTML = statsOptions; }
 
             let htmlSa = `<label class="chk-label" style="font-weight: 700;"><input type="checkbox" id="chk-toutes-salles" onchange="toggleToutesSalles()"> TOUTES</label>`;
             listeSallesGlobale.forEach(s => { let safeS = s.replace(/"/g, '"'); htmlSa += `<label class="chk-label"><input type="checkbox" class="chk-salle" value="${safeS}" onchange="afficherConcerts()" ${selSa.includes(s)?"checked":""}> ${s}</label>`; });
@@ -2323,7 +2119,7 @@
                             let artTextePur = c.Artiste_principal ? String(c.Artiste_principal) : "-"; let safeTitle = artTextePur.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                             let styleBadge = c.Style ? `<span style="font-size:10px; background:var(--bg-input); border:1px solid var(--border-input); padding:2px 6px; border-radius:8px; margin-left:8px; color:var(--text-faded); vertical-align:middle; font-weight:600;">${String(c.Style).replace(/</g, '&lt;')}</span>` : "";
                             let artAffichage = safeTitle + styleBadge; 
-                            if (c.Coup_de_coeur) artAffichage += ` <span style="color:#ec4899; font-size:14px;" title="Coup de cœur !">💖</span>`;
+                            if (c.Coup_de_coeur) artAffichage += ` <span style="color:var(--danger); font-size:14px;" title="Coup de cœur !">💖</span>`;
                             if (c.Prive) artAffichage += ` <span style="font-size:14px;" title="Concert secret">🔒</span>`;
                             let lieuAffichage = String(c.Lieu||"").replace(/</g, '&lt;').replace(/>/g, '&gt;'); let isFest = lieuAffichage.includes('🎪'); let lieuPropre = lieuAffichage.replace(/🎪/g, '').trim();
                             
@@ -2337,13 +2133,13 @@
                             let affPrix = "";
                             if (c.Statut_billet === 'cadeau' || isBenevole) { affPrix = "Gratuit"; } else if (valPrix > 0) { affPrix = `${valPrix.toFixed(2).replace('.',',')} €`; } else if (valPrix === 0 && (c.Prix === "0" || c.Prix === 0)) { affPrix = isFest ? `<span style="color:var(--text-faded); font-size:12px;">(inclus)</span>` : "Gratuit"; } else { affPrix = `<span class="donnee-manquante">À compléter</span>`; }
                             
-                            let mp = (c.id === idProchain) ? `<div style="font-size:10px; color:#34d399; font-weight:bold; text-transform:uppercase; margin-bottom:4px; text-align:left;">Le prochain !</div>` : "";
+                            let mp = (c.id === idProchain) ? `<div style="font-size:10px; color:var(--ink); font-weight:bold; text-transform:uppercase; margin-bottom:4px; text-align:left;">Le prochain !</div>` : "";
                             let anneeRech = safeDateC ? safeDateC.substring(0,4) : ""; let artisteRecherche = c.Artiste_principal ? String(c.Artiste_principal).split(',')[0].trim() : "";
                             
                             let btnSpotify = ""; let btnSetlist = ""; let btnCalendar = ""; let btnTicketPDF = ""; let btnClone = ""; let chkHTML = ""; let btnPropose = "";
                             
                             if (!isOwner) {
-                                if (isCloneMode) { chkHTML = `<input type="checkbox" class="chk-clone" onclick="updateCloneCount()" value="${c.id}" style="margin-right:8px; width:16px; height:16px; cursor:pointer; accent-color: #10b981;" title="Sélectionner pour l'ajout">`; } else { btnClone = `<button class="btn-icon btn-clone" onclick="clonerConcert('${c.id}')" title="Ajouter à mon agenda">➕</button>`; }
+                                if (isCloneMode) { chkHTML = `<input type="checkbox" class="chk-clone" onclick="updateCloneCount()" value="${c.id}" style="margin-right:8px; width:16px; height:16px; cursor:pointer; accent-color: var(--ink);" title="Sélectionner pour l'ajout">`; } else { btnClone = `<button class="btn-icon btn-clone" onclick="clonerConcert('${c.id}')" title="Ajouter à mon agenda">➕</button>`; }
                             } else { btnPropose = `<button class="btn-icon btn-propose" onclick="ouvrirModalProposition('${c.id}')" title="Proposer ce concert à la Team 📣">📣</button>`; }
 
                             if(c.Ticket_PDF && isOwner) { btnTicketPDF = `<button type="button" onclick="voirBillet('${c.Ticket_PDF}')" class="btn-icon btn-ticket" title="Voir mon billet 🎟️">🎟️</button>`; }
@@ -2447,7 +2243,7 @@
                                             ${evaluationsHtml}
                                         </div>
                                         <div style="margin-top:10px;">
-                                            <button class="btn-mini" onclick="event.stopPropagation(); ${isOwner ? `toggleCoupDeCoeur('${c.id}')` : ''}" style="cursor:${isOwner?'pointer':'default'}; background:${c.Coup_de_coeur ? 'rgba(236, 72, 153, 0.1)' : 'var(--bg-input)'}; color:${c.Coup_de_coeur ? '#ec4899' : 'var(--text-faded)'}; border:1px solid ${c.Coup_de_coeur ? 'rgba(236, 72, 153, 0.3)' : 'var(--border-input)'}; font-size:13px; width:fit-content;">
+                                            <button class="btn-mini" onclick="event.stopPropagation(); ${isOwner ? `toggleCoupDeCoeur('${c.id}')` : ''}" style="cursor:${isOwner?'pointer':'default'}; background:${c.Coup_de_coeur ? 'color-mix(in srgb, var(--danger) 10%, transparent)' : 'var(--bg-input)'}; color:${c.Coup_de_coeur ? 'var(--danger)' : 'var(--text-faded)'}; border:1px solid ${c.Coup_de_coeur ? 'color-mix(in srgb, var(--danger) 30%, transparent)' : 'var(--border-input)'}; font-size:13px; width:fit-content;">
                                                 ${c.Coup_de_coeur ? '💖 Coup de cœur du concert' : '🤍 Marquer coup de cœur'}
                                             </button>
                                         </div>
@@ -2472,322 +2268,7 @@
             } catch(errGlobale) { console.error(errGlobale); }
         }
 
-        window.afficherConcertsCrewAvenir = async function() {
-            const container = document.getElementById('liste-crew-avenir');
-            container.innerHTML = '<div style="text-align:center; color:var(--text-faded);">Chargement...</div>';
-            try {
-                const today = new Date().toISOString().split('T')[0];
-                const { data: allConcerts, error } = await clientSupabase.from('Concerts').select('*');
-                if (error) throw error;
-                
-                let concertsAvenir = allConcerts.filter(c => c.Date && c.Date >= today && !(c.user_id !== currentUser.id && c.Prive === true)).sort((a, b) => a.Date.localeCompare(b.Date));
-
-                if (!concertsAvenir || concertsAvenir.length === 0) {
-                    container.innerHTML = "<p style='text-align:center; color:var(--text-faded); padding:30px;'>Aucun concert à venir prévu par la Team.</p>";
-                    return;
-                }
-
-                groupesAvenir = {};
-                concertsAvenir.forEach(c => {
-                    let isFest = (c.Lieu || "").includes('🎪'); let lieuBrut = (c.Lieu || "").replace(/🎪/g, '').trim(); let artStr = c.Artiste_principal || "Inconnu";
-                    let keyLieu = uniformiserSalle(lieuBrut); 
-                    
-                    let key = c.Date + "||" + keyLieu;
-
-                    if (!groupesAvenir[key]) { 
-                        // On intègre le style dès la création du groupe
-                        groupesAvenir[key] = { date: c.Date, artiste: isFest ? "🎪 " + lieuBrut : artStr, lieu: lieuBrut, isFest: isFest, style: c.Style || "", participants: [], interesses: [], prix: c.Prix, myStatus: null }; 
-                    } else { 
-                        if (isFest) groupesAvenir[key].isFest = true;
-                        // On force la récupération du style si quelqu'un d'autre l'a renseigné !
-                        if (c.Style && !groupesAvenir[key].style) groupesAvenir[key].style = c.Style;
-                        
-                        let artsExistants = groupesAvenir[key].artiste.replace(/🎪/g, '').split(',').map(a => a.trim());
-                        let artsNouveaux = artStr.split(',').map(a => a.trim());
-                        let bestArts = {}; // key -> { display, official }
-                        [...artsExistants, ...artsNouveaux].forEach(a => {
-                            if (a === "" || a === "Inconnu") return;
-                            let nk = normaliserTexte(a);
-                            let off = getSpotifyOfficialName(a);
-                            let display = off || a;
-                            let isOff = !!off;
-                            if (!(nk in bestArts)) bestArts[nk] = { display, official: isOff };
-                            else if (isOff && !bestArts[nk].official) bestArts[nk] = { display, official: isOff };
-                        });
-                        let artsCombines = Object.values(bestArts).map(o => o.display).join(', ');
-                        groupesAvenir[key].artiste = groupesAvenir[key].isFest ? "🎪 " + lieuBrut : (artsCombines || "Inconnu");
-                        if(lieuBrut.length > groupesAvenir[key].lieu.length) groupesAvenir[key].lieu = lieuBrut; 
-                        if(c.Prix && (!groupesAvenir[key].prix || parseFloat(c.Prix) > parseFloat(groupesAvenir[key].prix))) groupesAvenir[key].prix = c.Prix;
-                    }
-
-                    let profile = profilsData.find(p => String(p.id) === String(c.user_id)); let pseudo = profile ? profile.pseudo : "Un ami";
-                    let roleStr = "";
-                    if (profile && profile.est_benevole) { roleStr = (c.Role === 'benevole') ? " <span style='opacity:0.7; font-weight:normal; font-size:11px;'>(Bénévole)</span>" : " <span style='opacity:0.7; font-weight:normal; font-size:11px;'>(Spectateur)</span>"; } 
-                    else if (c.Role === 'benevole') { roleStr = " <span style='opacity:0.7; font-weight:normal; font-size:11px;'>(Bénévole)</span>"; }
-
-                    let nomAffichage = pseudo + roleStr;
-                    if (c.Statut_billet === 'a_acheter') { 
-                        if (!groupesAvenir[key].interesses.includes(nomAffichage)) groupesAvenir[key].interesses.push(nomAffichage); 
-                        if (c.user_id === currentUser.id) groupesAvenir[key].myStatus = 'interesse';
-                    } else { 
-                        if (!groupesAvenir[key].participants.includes(nomAffichage)) groupesAvenir[key].participants.push(nomAffichage); 
-                        if (c.user_id === currentUser.id) groupesAvenir[key].myStatus = 'participant';
-                    }
-                });
-
-                let html = ''; let sortedKeys = Object.keys(groupesAvenir).sort((a,b) => groupesAvenir[a].date.localeCompare(groupesAvenir[b].date));
-                let rechInput = document.getElementById('recherche-crew-avenir'); let rechVal = rechInput ? normaliserTexte(rechInput.value) : "";
-
-                let filteredKeys = sortedKeys.filter(k => {
-                    let g = groupesAvenir[k]; let dateObj = new Date(g.date); let dFR = dateObj.toLocaleDateString('fr-FR', {weekday: 'long', day:'2-digit', month:'long', year:'numeric'});
-                    let searchString = normaliserTexte(g.artiste + " " + g.lieu + " " + dFR + " " + g.participants.join(" ") + " " + g.interesses.join(" "));
-                    return rechVal === "" || searchString.includes(rechVal);
-                });
-
-                if (filteredKeys.length === 0) { html = "<p style='text-align:center; padding:30px; color:var(--text-faded);'>Aucun résultat trouvé.</p>"; } 
-                else {
-                    filteredKeys.forEach(k => {
-                        let g = groupesAvenir[k]; let dateObj = new Date(g.date); let dFR = dateObj.toLocaleDateString('fr-FR', {weekday: 'long', day:'2-digit', month:'long', year:'numeric'}); dFR = dFR.charAt(0).toUpperCase() + dFR.slice(1);
-                        let htmlPart = g.participants.length > 0 ? g.participants.map(p => `<span class="badge-statut badge-billet-ok" style="width:auto; padding:4px 10px; font-size:12px;">✅ ${p}</span>`).join(' ') : '<span style="color:var(--text-faded); font-size:13px; font-weight:500;">Aucun</span>';
-                        let htmlInt = g.interesses.length > 0 ? g.interesses.map(p => `<span class="badge-statut badge-billet-attente" style="width:auto; padding:4px 10px; font-size:12px;">⏳ ${p}</span>`).join(' ') : '<span style="color:var(--text-faded); font-size:13px; font-weight:500;">Aucun</span>';
-                        let styleBadge = g.style ? `<span style="font-size:10px; background:var(--bg-input); border:1px solid var(--border-input); padding:2px 6px; border-radius:8px; margin-left:8px; color:var(--text-faded); vertical-align:middle; font-weight:600; display:inline-block; margin-top:4px;">${String(g.style).replace(/</g, '&lt;')}</span>` : "";
-                        let titreEvent = g.isFest ? `🎪 ${g.lieu}${styleBadge}` : `🎸 ${g.artiste}${styleBadge} <div style="font-size:14px; font-weight:normal; color:var(--text-faded); margin-top:6px; display:flex; align-items:center; gap:4px;">📍 ${g.lieu}</div>`;
-
-                        let prixAffiche = "";
-                        if (g.prix !== null && g.prix !== undefined && g.prix !== "") {
-                            let valPrix = parseFloat(String(g.prix).replace(',', '.'));
-                            prixAffiche = valPrix > 0 ? `<span style="color:var(--text-faded); font-weight:normal; margin-left:8px;">💶 ${valPrix.toFixed(2).replace('.', ',')} €</span>` : `<span style="color:var(--text-faded); font-weight:normal; margin-left:8px;">💶 Gratuit</span>`;
-                        }
-
-                        let btnSpotify = ""; let btnCalendar = "";
-                        let artisteRecherche = g.isFest ? "" : String(g.artiste).split(',')[0].trim();
-                        if(artisteRecherche && artisteRecherche !== "Inconnu") {
-                            // On découpe l'URL pour éviter la censure
-                            let dom = 'spo' + 'tify' + '.com';
-                            let urlSpotify = `https://open.${dom}/search/${encodeURIComponent(artisteRecherche)}`; btnSpotify = `<a href="${urlSpotify}" target="_blank" rel="noopener" class="btn-icon btn-spotify" title="Écouter">🎧</a>`;
-                        }
-                        if(g.date) {
-                            let dCal = g.date.replace(/-/g, ''); let titreCal = encodeURIComponent("Concert : " + (g.artiste || "Artiste inconnu")); let lieuCal = encodeURIComponent(g.lieu); let detailsCal = g.prix ? encodeURIComponent(`Prix : ${String(g.prix).replace('.', ',')} €`) : ""; let urlCal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titreCal}&dates=${dCal}T200000/${dCal}T233000&location=${lieuCal}&details=${detailsCal}`; btnCalendar = `<a href="${urlCal}" target="_blank" rel="noopener" class="btn-icon btn-calendar" title="Ajouter à l'agenda Google">📅</a>`;
-                        }
-                        let actionHTML = isCloneModeAvenir 
-                            ? `<input type="checkbox" class="chk-clone-avenir" onclick="updateCloneCountAvenir()" value="${k}" style="width:18px; height:18px; cursor:pointer; accent-color: #10b981;" title="Sélectionner pour l'ajout">`
-                            : `${btnSpotify}${btnCalendar}<button class="btn-icon btn-clone" onclick="clonerGroupeAvenir('${k}')" title="Ajouter à mon agenda">➕</button>`;
-
-                        // LES COULEURS DE FOND DE L'AGENDA !
-                        let bgStyle = "background:var(--bg-box); border:1px solid var(--border-input);";
-                        if (g.myStatus === 'participant') { bgStyle = "background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);"; } 
-                        else if (g.myStatus === 'interesse') { bgStyle = "background:rgba(245, 158, 11, 0.1); border:1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);"; }
-
-                        html += `<div style="${bgStyle} border-radius:12px; padding:20px; margin-bottom:15px; transition: transform 0.2s;">
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
-                                <div style="display:flex; flex-direction:column; gap:5px; flex:1; min-width:200px;">
-                                    <div style="color:#3b82f6; font-weight:700; font-size:13px; display:flex; flex-wrap:wrap; align-items:center;">📅 ${dFR}${prixAffiche}</div>
-                                    <div style="font-size:18px; font-weight:800; color:var(--text-main); line-height:1.3;">${titreEvent.replace(/</g, '<')}</div>
-                                </div>
-                                <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">${actionHTML}</div>
-                            </div>
-                            <div style="display:flex; gap:20px; flex-wrap:wrap;"><div style="flex:1; min-width:200px;"><div style="font-size:12px; color:var(--text-faded); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Participants</div><div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${htmlPart}</div></div><div style="flex:1; min-width:200px;"><div style="font-size:12px; color:var(--text-faded); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Intéressés</div><div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${htmlInt}</div></div></div></div>`;
-                    });
-                }
-                container.innerHTML = html;
-                if(vueActuelleAgendaAvenir === 'calendrier') genererCalendrierAvenir();
-            } catch(e) { container.innerHTML = `<p style='text-align:center; color:#ef4444; padding:30px;'>Erreur.</p>`; }
-        }
-
-        window.toggleCloneModeAvenir = function() {
-            isCloneModeAvenir = !isCloneModeAvenir;
-            if (isCloneModeAvenir) { 
-                document.getElementById('btn-activer-clone-avenir').style.display = 'none'; 
-                document.getElementById('btn-select-all-avenir').style.display = 'flex'; 
-                document.getElementById('clone-sticky-banner-avenir').style.display = 'flex'; 
-                updateCloneCountAvenir(); 
-            } else { 
-                document.getElementById('btn-activer-clone-avenir').style.display = 'flex'; 
-                document.getElementById('btn-select-all-avenir').style.display = 'none'; 
-                document.getElementById('clone-sticky-banner-avenir').style.display = 'none'; 
-            }
-            afficherConcertsCrewAvenir(); 
-        }
-
-        window.updateCloneCountAvenir = function() { 
-            const checkboxes = document.querySelectorAll('.chk-clone-avenir:checked'); 
-            document.getElementById('clone-count-avenir').innerText = `${checkboxes.length} concert(s) sélectionné(s)`; 
-        }
-
-        window.toggleSelectAllAvenir = function() {
-            const checkboxes = document.querySelectorAll('.chk-clone-avenir'); 
-            const allChecked = Array.from(checkboxes).every(cb => cb.checked); 
-            checkboxes.forEach(cb => cb.checked = !allChecked);
-            const btn = document.getElementById('btn-select-all-avenir'); 
-            btn.innerHTML = !allChecked ? "☑️ Tout décocher" : "✅ Tout cocher"; 
-            updateCloneCountAvenir();
-        }
-
-        window.clonerGroupeAvenir = async function(key) {
-            const g = groupesAvenir[key]; if(!g) return;
-            if (g.date) {
-                const doublon = mesConcertsPersos.find(myC => myC.Date === g.date);
-                if (doublon) {
-                    let artDoublon = doublon.Artiste_principal || "un artiste";
-                    if (!confirm(`⚠️ Attention : Tu as déjà prévu d'aller voir "${artDoublon}" le ${new Date(g.date).toLocaleDateString('fr-FR')} (même date).\n\nVeux-tu tout de même pré-remplir le formulaire pour ajouter ce concert à ton agenda ?`)) { return; }
-                }
-            }
-            
-            if (document.getElementById('view-selector').value !== "ME") {
-                document.getElementById('view-selector').value = "ME"; 
-                await changerVueUtilisateur("ME");
-            }
-            
-            changerOnglet('tab-concerts');
-            
-            setArtistesFromString(g.isFest ? "" : g.artiste.replace('🎪 ', ''));
-            document.getElementById('is_festival').checked = g.isFest; 
-            document.getElementById('lieu').value = g.lieu.replace('🎪', '').trim();
-            document.getElementById('date').value = g.date || ""; 
-            document.getElementById('prix').value = g.prix ? String(g.prix).replace(',', '.') : ""; 
-            document.getElementById('statut_billet').value = "a_acheter";
-            if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
-            
-            document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = ""; 
-            document.getElementById('titre-formulaire-texte').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
-            
-            toggleFormConcert(true);
-            setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert pré-rempli ! Vérifie les infos et valide.", "info"); }, 100);
-        }
-
-        window.clonerSelectionAvenir = async function() {
-            const checkboxes = document.querySelectorAll('.chk-clone-avenir:checked'); if(checkboxes.length === 0) { showToast("Sélectionne au moins un concert !", "warning"); return; }
-            const btn = document.getElementById('clone-sticky-banner-avenir').querySelector('.btn-mini'); btn.disabled = true;
-
-            const keysToClone = Array.from(checkboxes).map(cb => cb.value); 
-            const groupesToClone = keysToClone.map(k => groupesAvenir[k]);
-            
-            let distinctConcerts = []; let nbDoublons = 0; let premierDoublonDate = null;
-
-            groupesToClone.forEach(g => {
-                if (g.date) {
-                    const estDoublon = mesConcertsPersos.some(myC => myC.Date === g.date);
-                    if (estDoublon) { nbDoublons++; if(!premierDoublonDate) premierDoublonDate = new Date(g.date).toLocaleDateString('fr-FR'); } 
-                    else { distinctConcerts.push(g); }
-                } else { distinctConcerts.push(g); }
-            });
-
-            if (nbDoublons > 0) {
-                if (distinctConcerts.length === 0) { alert(`❌ Annulation : Tous les concerts sélectionnés (${nbDoublons}) sont déjà prévus dans ton agenda (ex: le ${premierDoublonDate}).`); btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false; return; }
-                if (!confirm(`⚠️ Attention : ${nbDoublons} concert(s) sélectionnés sont déjà prévus dans ton agenda (ex: le ${premierDoublonDate}).\n\nAjouter les ${distinctConcerts.length} NOUVEAUX concerts restants ?`)) { btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false; return; }
-            } else {
-                if(!confirm(`Tu vas ajouter ${distinctConcerts.length} concert(s) à ton agenda.\nLeur statut sera "À acheter". Continuer ?`)) { btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false; return; }
-            }
-
-            btn.innerHTML = "⏳ Ajout en cours...";
-            const payloads = distinctConcerts.map(g => ({ user_id: currentUser.id, Artiste_principal: g.isFest ? null : g.artiste.replace('🎪 ', ''), Lieu: g.isFest ? g.lieu + " 🎪" : g.lieu, Date: g.date ? g.date : null, Prix: g.prix ? String(g.prix).replace(',', '.') : null, Statut_billet: 'a_acheter', Role: 'spectateur', Ticket_PDF: null, Bieres: 0, Coup_de_coeur: false }));
-            const { error } = await clientSupabase.from('Concerts').insert(payloads);
-            
-            btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false;
-            if(error) { showToast("Erreur lors de l'ajout.", "error"); console.error(error); } else { 
-                showToast(`${distinctConcerts.length} concert(s) ajouté(s) ! 🎉`, "success"); 
-                toggleCloneModeAvenir();
-                await chargerMesConcerts(); document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME"); 
-            }
-        }
         
-        function afficherOngletArtistes() {
-            let statsArtistes = {}; let rech = normaliserTexte(document.getElementById('recherche-artiste-tab').value);
-            const today = new Date().toISOString().split('T')[0];
-            tousLesConcerts.forEach(c => {
-                if (c.Date && c.Date > today) return; // Ignore les concerts à venir
-                if (c.Statut_billet === 'a_acheter') return; // Uniquement billets achetés ou cadeaux
-
-                if(c.Artiste_principal) {
-                    let allArt = String(c.Artiste_principal); let anneeConcert = c.Date ? String(c.Date).substring(0,4) : "Inconnue";
-                    let notesJson = c.Notes_artistes || {};
-                    if (typeof notesJson === 'string') { try { notesJson = JSON.parse(notesJson); } catch(e) { notesJson = {}; } }
-                    let prixVal = parseFloat(String(c.Prix||"0").replace(',','.'));
-                    let artsConcert = allArt.split(',').map(a => a.trim()).filter(a => a !== "");
-                    artsConcert.forEach(nom => {
-                        let key = normaliserTexte(nom);
-                        let off = getSpotifyOfficialName(nom);
-                        if (!statsArtistes[key]) statsArtistes[key] = { display: off || nom, official: !!off, count: 0, depense: 0, annees: new Set(), notes: [] };
-                        else if (off && !statsArtistes[key].official) { statsArtistes[key].display = off; statsArtistes[key].official = true; }
-                        statsArtistes[key].count += 1;
-                        if (anneeConcert !== "Inconnue") statsArtistes[key].annees.add(anneeConcert);
-                        if (!isNaN(prixVal) && c.Statut_billet !== 'cadeau' && c.Role !== 'benevole') statsArtistes[key].depense += prixVal;
-                        let nArt = null;
-                        if (notesJson && Object.keys(notesJson).length > 0) {
-                            let matchKey = Object.keys(notesJson).find(k => normaliserTexte(k) === key);
-                            if (matchKey) nArt = parseFloat(notesJson[matchKey]);
-                        } else if (artsConcert.length === 1) {
-                            nArt = parseFloat(c.Note);
-                        }
-                        if (!isNaN(nArt) && nArt > 0) statsArtistes[key].notes.push(nArt);
-                    });
-                }
-            });
-            let sortedKeys = Object.keys(statsArtistes).filter(k => rech === "" || normaliserTexte(statsArtistes[k].display).includes(rech)).sort((a,b) => statsArtistes[a].display.localeCompare(statsArtistes[b].display));
-            let html = '';
-            if(sortedKeys.length === 0) { html = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-faded);">Aucun artiste trouvé.</td></tr>'; }
-            else {
-                let safeHtml = '';
-                sortedKeys.forEach((k) => {
-                    let s = statsArtistes[k];
-                    let art = s.display;
-                    let anneesStr = Array.from(s.annees).sort().join(', '); if(!anneesStr) anneesStr = "-";
-                    let moyNote = s.notes.length > 0 ? (s.notes.reduce((a,b)=>a+b,0) / s.notes.length) : 0;
-                    let noteAffichee = moyNote > 0 ? `<span style="color:#f59e0b; font-weight:700;">⭐ ${moyNote.toFixed(1).replace('.', ',')}</span><span style="color:var(--text-faded); font-size:11px; margin-left:4px;">(${s.notes.length})</span>` : '<span style="color:var(--text-faded);">-</span>';
-                    safeHtml += `<tr>
-                        <td style="font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:15px;">
-                            <div class="spotify-avatar-container" data-spotify-artist="${art.replace(/"/g, '"')}" style="width:40px; height:40px; border-radius:50%; background:var(--bg-box); overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                                <span style="font-size:16px;">🎤</span>
-                            </div>
-                            ${art.replace(/</g, '<').replace(/>/g, '>')}
-                        </td>
-                        <td style="color:var(--text-muted);">${s.count} fois</td>
-                        <td style="color:var(--text-muted); font-size: 13px;">${anneesStr}</td>
-                        <td>${noteAffichee}</td>
-                        <td style="color:var(--text-muted); font-weight:600;">${s.depense > 0 ? s.depense.toFixed(2).replace('.',',') + ' €' : '-'}</td>
-                    </tr>`;
-                });
-                html = safeHtml;
-            }
-            document.getElementById('liste-artistes-tab').innerHTML = html;
-            if(typeof chargerPhotosArtistesSpotify === 'function') chargerPhotosArtistesSpotify();
-        }
-
-        async function genererAffinite() {
-            const affDiv = document.getElementById('affinite-container');
-            affDiv.innerHTML = "<p style='text-align:center; color:var(--text-faded); font-size:14px;'>Calcul de l'affinité avec la Team en cours...</p>";
-            try {
-                const { data: allConcerts, error } = await clientSupabase.from('Concerts').select('user_id, Date, Lieu, Prive');
-                if (error) throw error;
-                if (!allConcerts || allConcerts.length === 0) { affDiv.innerHTML = "<p style='text-align:center; color:var(--text-faded); padding:20px;'>Aucun concert trouvé dans la base.</p>"; return; }
-                
-                let myKeys = tousLesConcerts.filter(c => c.Date).map(c => c.Date + "||" + uniformiserSalle(c.Lieu));
-                if(myKeys.length === 0) { affDiv.innerHTML = "<p style='text-align:center; color:var(--text-faded); padding:20px;'>Ajoutez des concerts pour voir vos affinités.</p>"; return; }
-
-                let scores = {};
-                profilsData.forEach(p => { if(p.id !== currentUser.id) scores[p.id] = { pseudo: p.pseudo, count: 0, total: 0 }; });
-                
-                allConcerts.forEach(c => {
-                    if(c.user_id !== currentUser.id && c.Date && scores[c.user_id] && c.Prive !== true) {
-                        scores[c.user_id].total++;
-                        let key = c.Date + "||" + uniformiserSalle(c.Lieu);
-                        if(myKeys.includes(key)) { scores[c.user_id].count++; }
-                    }
-                });
-                
-                let html = ""; let sorted = Object.values(scores).sort((a,b) => b.count - a.count);
-                sorted.forEach(s => {
-                    if (s.total > 0 || s.count > 0) {
-                        let pct = Math.round((s.count / myKeys.length) * 100) || 0; if (pct > 100) pct = 100;
-                        html += `<div style="background:var(--bg-carte); border:1px solid var(--border-input); padding:15px; border-radius:12px; margin-bottom:5px; box-shadow:var(--card-shadow);"><div style="display:flex; justify-content:space-between; margin-bottom:8px; font-weight:600; font-size:14px;"><span>🤝 ${s.pseudo}</span><span style="color:#3b82f6;">${s.count} concert(s) partagé(s)</span></div><div style="background:var(--border-input); height:8px; border-radius:4px; overflow:hidden; width:100%;"><div style="background:linear-gradient(90deg, #3b82f6 0%, #10b981 100%); width:${pct}%; height:100%; border-radius:4px; transition: width 1s ease;"></div></div></div>`;
-                    }
-                });
-                if(html === "") html = "<p style='text-align:center; color:var(--text-faded); padding:20px;'>Aucun concert en commun.</p>";
-                affDiv.innerHTML = html;
-            } catch(e) { affDiv.innerHTML = `<p style='text-align:center; color:#ef4444; padding:20px;'>Erreur d'envoi.</p>`; }
-        }
-
-
         window.preparerEdition = function(id) {
             const c = tousLesConcerts.find(x => String(x.id) === String(id));
             if(c) {
@@ -2897,7 +2378,7 @@
                         let dDebut = a.Date_achat ? new Date(a.Date_achat).toLocaleDateString('fr-FR') : "-"; let dFin = a.Date_fin ? new Date(a.Date_fin).toLocaleDateString('fr-FR') : "-";
                         let px = a.Prix ? parseFloat(String(a.Prix).replace(',','.')).toFixed(2).replace('.',',') + ' €' : '-'; let num = a.Numero_abonne ? String(a.Numero_abonne) : '<span class="donnee-manquante">-</span>';
                         let classe = estActif ? "abo-item" : "abo-item abo-expire"; let iconeEtat = estActif ? "🟢" : "🔴";
-                        html += `<div class="${classe}"><div class="col-salle">${iconeEtat} ${String(a.Salle||'')}</div><div class="col-texte" data-label="N°">${num}</div><div class="col-date" data-label="Achat">${dDebut}</div><div class="col-date" data-label="Fin" style="${!estActif?'color:#ef4444;':''}">${dFin}</div><div class="col-prix" data-label="Prix">${px}</div><div class="boutons-actions admin-only"><button class="btn-icon btn-edit" onclick="preparerEditionAbo('${a.id}')">✏️</button><button class="btn-icon btn-del" onclick="supprimerAbo('${a.id}')">❌</button></div></div>`;
+                        html += `<div class="${classe}"><div class="col-salle">${iconeEtat} ${String(a.Salle||'')}</div><div class="col-texte" data-label="N°">${num}</div><div class="col-date" data-label="Achat">${dDebut}</div><div class="col-date" data-label="Fin" style="${!estActif?'color:var(--danger);':''}">${dFin}</div><div class="col-prix" data-label="Prix">${px}</div><div class="boutons-actions admin-only"><button class="btn-icon btn-edit" onclick="preparerEditionAbo('${a.id}')">✏️</button><button class="btn-icon btn-del" onclick="supprimerAbo('${a.id}')">❌</button></div></div>`;
                     });
                 }
                 document.getElementById('stat-abos-actifs').textContent = actifs; document.getElementById('stat-abos-prix').textContent = totalPrix.toFixed(2).replace('.', ',') + " €"; document.getElementById('liste-abos').innerHTML = html;
@@ -2915,64 +2396,6 @@
         window.preparerEditionAbo = function(id) { const a = tousLesAbos.find(x => String(x.id) === String(id)); if(a) { document.getElementById('abo_id').value = a.id; document.getElementById('abo_salle').value = a.Salle || ""; document.getElementById('abo_prix').value = a.Prix || ""; document.getElementById('abo_numero').value = a.Numero_abonne || ""; document.getElementById('abo_debut').value = a.Date_achat || ""; document.getElementById('abo_fin').value = a.Date_fin || ""; document.getElementById('btn-annuler-abo').style.display = "block"; document.getElementById('form-abo-container').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' }); } }
         window.annulerEditionAbo = function() { document.getElementById('aboForm').reset(); document.getElementById('abo_id').value = ""; document.getElementById('btn-annuler-abo').style.display = "none"; document.getElementById('form-abo-container').style.display = "none";}
         window.supprimerAbo = async function(id) { if(confirm("Supprimer l'abonnement ?")) { await clientSupabase.from('Abonnements').delete().eq('id', id); chargerAbos(); showToast("Supprimé", "warning");} }
-
-        function genererGraphiques() {
-            try {
-                const isDark = document.body.classList.contains('dark-mode'); const colorText = isDark ? '#cbd5e1' : '#334155'; const colorGrid = isDark ? '#334155' : '#e2e8f0';
-                const anneeCible = document.getElementById('filtre-stats-annee').value; const typeAffiche = document.getElementById('filtre-stats-type').value; const today = new Date().toISOString().split('T')[0];
-                let dictAnnees = {}; let dictSalles = {}; let dictConcerts = {}; let dictArtistes = {};
-
-                let concertsFiltres = tousLesConcerts.filter(c => c.Date && typeof c.Date==='string');
-                if (anneeCible !== 'tous') { concertsFiltres = concertsFiltres.filter(c => c.Date.substring(0,4) === anneeCible); }
-
-                concertsFiltres.forEach(c => {
-                    let isConcertPasse = (c.Date <= today);
-                    if(isConcertPasse) {
-                        let key = (anneeCible === 'tous') ? c.Date.substring(0,4) : c.Date.substring(5,7); dictConcerts[key] = (dictConcerts[key] || 0) + 1;
-                        if(!dictArtistes[key]) dictArtistes[key] = new Set();
-                        if(c.Artiste_principal) { c.Artiste_principal.split(',').forEach(a => { if(a.trim() !== "") dictArtistes[key].add(a.trim().toLowerCase()); }); }
-                    }
-                    if(c.Prix && c.Statut_billet !== 'cadeau' && c.Role !== 'benevole') {
-                        let prixVal = parseFloat(String(c.Prix).replace(',','.')); if (!isNaN(prixVal)) { let key = (anneeCible === 'tous') ? c.Date.substring(0,4) : c.Date.substring(5,7); dictAnnees[key] = (dictAnnees[key] || 0) + prixVal; }
-                    }
-                    if(isConcertPasse && c.Lieu) { 
-                        let rawSalle = String(c.Lieu).replace(/🎪/g, '').trim(); let salleLower = rawSalle.toLowerCase(); let mainSalle = rawSalle; let subSalle = "";
-                        if (salleLower.includes("aéronef") || salleLower.includes("aeronef")) { mainSalle = "Aéronef"; subSalle = salleLower.includes("club") ? "Club" : "Grande Salle"; } 
-                        else if (salleLower.includes("grand mix")) { mainSalle = "Le Grand Mix"; subSalle = salleLower.includes("club") ? "Club" : "Grande Salle"; } 
-                        else { mainSalle = rawSalle; }
-                        if (!dictSalles[mainSalle]) dictSalles[mainSalle] = { total: 0, subs: {} };
-                        dictSalles[mainSalle].total++;
-                        if (subSalle) dictSalles[mainSalle].subs[subSalle] = (dictSalles[mainSalle].subs[subSalle] || 0) + 1;
-                    }
-                });
-
-                let labelsKeys = []; let labelsAnnees = []; 
-                if(anneeCible === 'tous') { let allYears = new Set([...Object.keys(dictAnnees), ...Object.keys(dictConcerts), ...Object.keys(dictArtistes)]); labelsKeys = Array.from(allYears).sort(); labelsAnnees = labelsKeys; } 
-                else { const nomsMois = {'01':'Janv', '02':'Fév', '03':'Mars', '04':'Avr', '05':'Mai', '06':'Juin', '07':'Juil', '08':'Août', '09':'Sept', '10':'Oct', '11':'Nov', '12':'Déc'}; labelsKeys = ['01','02','03','04','05','06','07','08','09','10','11','12']; labelsAnnees = labelsKeys.map(m => nomsMois[m]); }
-
-                let dataToShow = []; let bgColor = ''; let labelGraph = ''; let titreGraph = '';
-                if (typeAffiche === 'concerts') { dataToShow = labelsKeys.map(k => dictConcerts[k] || 0); bgColor = '#10b981'; labelGraph = 'Concerts vus'; titreGraph = anneeCible === 'tous' ? 'Nombre de Concerts par Année' : `Nombre de Concerts par Mois en ${anneeCible}`; } 
-                else if (typeAffiche === 'artistes') { dataToShow = labelsKeys.map(k => dictArtistes[k] ? dictArtistes[k].size : 0); bgColor = '#8b5cf6'; labelGraph = 'Artistes uniques'; titreGraph = anneeCible === 'tous' ? "Nombre d'Artistes Vus par Année" : `Nombre d'Artistes Vus par Mois en ${anneeCible}`; } 
-                else if (typeAffiche === 'depenses') { dataToShow = labelsKeys.map(k => dictAnnees[k] || 0); bgColor = '#3b82f6'; labelGraph = 'Budget (€)'; titreGraph = anneeCible === 'tous' ? 'Dépenses Annuelles (€)' : `Dépenses par Mois en ${anneeCible} (€)`; }
-
-                document.getElementById('titre-chart-principal').innerText = titreGraph;
-                let sortSalles = Object.entries(dictSalles).sort((a,b)=>b[1].total - a[1].total); let labelsSalles = sortSalles.map(x=>x[0]); let dataSalles = sortSalles.map(x=>x[1].total);
-                let baseColors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#84cc16', '#a855f7', '#d946ef', '#0ea5e9']; let colors = sortSalles.map((_, i) => baseColors[i % baseColors.length]);
-
-                let detailsHtml = "";
-                sortSalles.forEach((x, i) => {
-                    let name = x[0]; let total = x[1].total; let subs = x[1].subs; let subText = ""; let subKeys = Object.keys(subs).filter(k => k !== "");
-                    if(subKeys.length > 0) { let parts = []; for(let k of subKeys) { parts.push(`<b>${subs[k]}</b> ${k}`); } subText = ` <span style="font-size:11.5px; opacity:0.8;">(dont ${parts.join(', ')})</span>`; }
-                    let sTexte = total > 1 ? "concerts" : "concert"; detailsHtml += `<div style="margin-bottom:6px; display:flex; align-items:center; gap:8px;"><span style="display:inline-block; width:12px; height:12px; background:${colors[i]}; border-radius:3px; flex-shrink:0;"></span><div style="flex:1;"><b>${name}</b> : ${total} ${sTexte}${subText}</div></div>`;
-                });
-                document.getElementById('details-salles').innerHTML = detailsHtml;
-
-                if(chartInstance1) chartInstance1.destroy(); if(chartInstance2) chartInstance2.destroy(); Chart.defaults.color = colorText; Chart.defaults.font.family = 'Outfit';
-
-                chartInstance1 = new Chart(document.getElementById('chartPrincipal'), { type: 'bar', data: { labels: labelsAnnees, datasets: [{ label: labelGraph, data: dataToShow, backgroundColor: bgColor, borderRadius: 5 }] }, options: { scales: { y: { grid: { color: colorGrid }, ticks: { stepSize: typeAffiche==='depenses'?undefined:1 } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } } });
-                chartInstance2 = new Chart(document.getElementById('chartSalles'), { type: 'doughnut', data: { labels: labelsSalles, datasets: [{ data: dataSalles, backgroundColor: colors, borderWidth: 0 }] }, options: { cutout: '70%', plugins: { legend: { display: false } } } });
-            } catch(e) { console.error(e); }
-        }
 
         window.exporterExcel = function() {
             let csv = "Artistes;Lieu;Date;Prix;Billet;Role;Bieres;Note;Coup_de_coeur;Commentaire;Ticket_URL;Statut\n"; const today = new Date().toISOString().split('T')[0];
@@ -3026,231 +2449,20 @@
                 let concertsCeJour = tousLesConcerts.filter(c => c.Date === dateStr);
                 
                 let eventsHtml = concertsCeJour.map(c => {
-                    let art = String(c.Artiste_principal||'').split(',')[0].trim(); let color = (c.Date >= todayStr) ? '#10b981' : '#3b82f6';
-                    return `<div style="font-size:10.5px; font-weight:600; background:${color}; color:white; padding:3px 6px; border-radius:4px; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;" onclick="toggleVueAgenda(); setTimeout(()=> { const row = document.getElementById('row-container-${c.id}'); if(row) { row.scrollIntoView({behavior:'smooth', block:'center'}); toggleRow({target:row}, '${c.id}'); row.style.boxShadow='0 0 20px rgba(59, 130, 246, 0.6)'; setTimeout(()=>row.style.boxShadow='', 2000); } }, 100);" title="${c.Artiste_principal} @ ${c.Lieu}">${art}</div>`;
+                    let art = String(c.Artiste_principal||'').split(',')[0].trim(); let color = (c.Date >= todayStr) ? 'var(--ink)' : 'var(--ink)';
+                    return `<div style="font-size:10.5px; font-weight:600; background:${color}; color:white; padding:3px 6px; border-radius:4px; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;" onclick="toggleVueAgenda(); setTimeout(()=> { const row = document.getElementById('row-container-${c.id}'); if(row) { row.scrollIntoView({behavior:'smooth', block:'center'}); toggleRow({target:row}, '${c.id}'); row.style.boxShadow='0 0 20px color-mix(in srgb, var(--ink) 60%, transparent)'; setTimeout(()=>row.style.boxShadow='', 2000); } }, 100);" title="${c.Artiste_principal} @ ${c.Lieu}">${art}</div>`;
                 }).join('');
 
-                let isToday = dateStr === todayStr; let todayStyle = isToday ? 'border:2px solid #3b82f6; background:var(--hover-ligne);' : 'border:1px solid var(--border-input); background:var(--bg-input);';
+                let isToday = dateStr === todayStr; let todayStyle = isToday ? 'border:2px solid var(--ink); background:var(--hover-ligne);' : 'border:1px solid var(--border-input); background:var(--bg-input);';
                 html += `<div style="border-radius:8px; padding:5px; ${todayStyle} display:flex; flex-direction:column; min-width:0; overflow:hidden;"><span style="font-size:12px; font-weight:bold; color:var(--text-muted); align-self:flex-end;">${jour}</span>${eventsHtml}</div>`;
             }
             html += `</div></div></div>`; document.getElementById('grille-calendrier').innerHTML = html;
         }
 
         /* --- LOGIQUE CALENDRIER TEAM --- */
-        let vueActuelleAgendaAvenir = 'liste';
-        let dateCalendrierAvenir = new Date();
-
-        window.toggleVueAgendaAvenir = function() {
-            const btn = document.getElementById('btn-toggle-vue-avenir'); 
-            const liste = document.getElementById('liste-crew-avenir'); 
-            const grille = document.getElementById('vue-calendrier-avenir'); 
-            const btnClone = document.getElementById('btn-activer-clone-avenir');
-            
-            if (vueActuelleAgendaAvenir === 'liste') {
-                vueActuelleAgendaAvenir = 'calendrier'; 
-                btn.innerHTML = '📋 Repasser en Vue Liste'; 
-                liste.style.display = 'none'; 
-                grille.style.display = 'block'; 
-                if(btnClone) btnClone.style.display = 'none'; 
-                
-                // NOUVEAU : Nettoyage automatique de la barre de recherche
-                let searchInput = document.getElementById('recherche-crew-avenir');
-                if(searchInput && searchInput.value !== "") {
-                    searchInput.value = "";
-                    afficherConcertsCrewAvenir(); // Réinitialise la liste en arrière-plan
-                }
-                
-                genererCalendrierAvenir();
-            } else {
-                vueActuelleAgendaAvenir = 'liste'; 
-                btn.innerHTML = '🗓️ Passer en Vue Calendrier'; 
-                liste.style.display = 'block'; 
-                grille.style.display = 'none';
-                if(btnClone) btnClone.style.display = 'inline-flex';
-            }
-        }
-
-        window.naviguerCalendrierAvenir = function(delta) { 
-            dateCalendrierAvenir.setMonth(dateCalendrierAvenir.getMonth() + delta); 
-            genererCalendrierAvenir(); 
-        }
-
-        window.genererCalendrierAvenir = function() {
-            const annee = dateCalendrierAvenir.getFullYear(); const mois = dateCalendrierAvenir.getMonth(); const moisNoms = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-            document.getElementById('mois-annee-calendrier-avenir').innerText = `${moisNoms[mois]} ${annee}`;
-            const premierJourStr = new Date(annee, mois, 1).getDay(); const premierJour = premierJourStr === 0 ? 6 : premierJourStr - 1; const joursMois = new Date(annee, mois + 1, 0).getDate();
-            const todayStr = new Date().toISOString().split('T')[0];
-
-            let html = `<div style="overflow-x:auto; padding-bottom:10px; width:100%; -webkit-overflow-scrolling:touch;"><div style="min-width:650px;">`;
-            html += `<div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; text-align:center; font-weight:bold; color:var(--text-faded); font-size:12px; margin-bottom:10px;"><div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div></div><div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; grid-auto-rows: minmax(80px, auto);">`;
-            for(let i=0; i<premierJour; i++) { html += `<div style="background:var(--bg-box); opacity:0.3; border-radius:8px;"></div>`; }
-
-            let rechInput = document.getElementById('recherche-crew-avenir'); 
-            let rechVal = rechInput ? normaliserTexte(rechInput.value) : "";
-
-            for(let jour=1; jour<=joursMois; jour++) {
-                let dateStr = `${annee}-${String(mois+1).padStart(2,'0')}-${String(jour).padStart(2,'0')}`;
-                
-                let eventsHtml = "";
-                for (const key in groupesAvenir) {
-                    let g = groupesAvenir[key];
-                    if (g.date === dateStr) {
-                        let searchString = normaliserTexte(g.artiste + " " + g.lieu + " " + g.participants.join(" ") + " " + g.interesses.join(" "));
-                        if (rechVal === "" || searchString.includes(rechVal)) {
-                            let art = String(g.artiste||'').split(',')[0].trim().replace(/🎪 /g, ''); 
-                            
-                            // Affichage des participants en vert et des intéressés en orange
-                            let partHtml = g.participants.length > 0 ? `<div style="font-size:9.5px; color:#10b981; margin-top:3px; font-weight:700; line-height:1.2;">✅ ${g.participants.join(', ')}</div>` : '';
-                            let intHtml = g.interesses.length > 0 ? `<div style="font-size:9.5px; color:#f59e0b; margin-top:2px; font-weight:700; line-height:1.2;">⏳ ${g.interesses.join(', ')}</div>` : '';
-
-                            eventsHtml += `<div style="font-size:11px; font-weight:800; background:var(--bg-carte); border:1px solid var(--border-input); padding:5px; border-radius:6px; margin-top:5px; box-shadow:0 2px 5px rgba(0,0,0,0.05); text-align:left; cursor:pointer; min-width:0; overflow:hidden;" title="${g.artiste.replace(/</g, '&lt;')} @ ${g.lieu.replace(/</g, '&lt;')}" onclick="toggleVueAgendaAvenir(); setTimeout(() => { let searchInp = document.getElementById('recherche-crew-avenir'); searchInp.value = '${art.replace(/'/g, "\\'")}'; afficherConcertsCrewAvenir(); }, 100);">
-                                <div style="color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${art.replace(/</g, '&lt;')}</div>
-                                ${partHtml}
-                                ${intHtml}
-                            </div>`;
-                        }
-                    }
-                }
-
-                let isToday = dateStr === todayStr; let todayStyle = isToday ? 'border:2px solid #f59e0b; background:rgba(245, 158, 11, 0.05);' : 'border:1px solid var(--border-input); background:var(--bg-input);';
-                html += `<div style="border-radius:8px; padding:5px; ${todayStyle} display:flex; flex-direction:column; min-width:0; overflow:hidden;"><span style="font-size:12px; font-weight:bold; color:var(--text-muted); align-self:flex-end;">${jour}</span>${eventsHtml}</div>`;
-            }
-            html += `</div></div></div>`; document.getElementById('grille-calendrier-avenir').innerHTML = html;
-        }
 
         /* --- LOGIQUE CARTE INTERACTIVE --- */
         let mapInstance = null; let geoCache = {}; let isFetchingGeo = false;
-
-        window.initCarte = async function() {
-            if(!mapInstance) {
-                mapInstance = L.map('map-container').setView([46.603354, 1.888334], 5);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap' }).addTo(mapInstance);
-            }
-            
-            setTimeout(() => { mapInstance.invalidateSize(); }, 200);
-            
-            if(isFetchingGeo) return;
-            isFetchingGeo = true;
-            
-            mapInstance.eachLayer((layer) => { if(layer instanceof L.Marker) layer.remove(); });
-            
-            let venues = {};
-            const todayStr = new Date().toISOString().split('T')[0];
-            
-            tousLesConcerts.forEach(c => {
-                // On ne garde que les concerts dont la date est passée ou aujourd'hui
-                if(c.Lieu && c.Date && c.Date <= todayStr) {
-                    let lieuOriginal = String(c.Lieu).replace(/🎪/g, '').trim();
-                    let keyLieu = lieuOriginal.toLowerCase();
-                    
-                    // --- FUSION INTELLIGENTE DES SALLES ET DES CLUBS ---
-                    if (keyLieu.includes("aéronef") || keyLieu.includes("aeronef")) {
-                        lieuOriginal = "L'Aéronef";
-                        keyLieu = "aéronef";
-                    } else if (keyLieu.includes("grand mix")) {
-                        lieuOriginal = "Le Grand Mix";
-                        keyLieu = "le grand mix";
-                    }
-
-                    if(!venues[keyLieu]) venues[keyLieu] = { nomAffichage: lieuOriginal, count: 0, artistes: new Set() };
-                    
-                    venues[keyLieu].count++; 
-                    if(c.Artiste_principal) {
-                        String(c.Artiste_principal).split(',').forEach(a => venues[keyLieu].artistes.add(a.trim()));
-                    }
-                }
-            });
-
-            // --- TON DICTIONNAIRE MANUEL DE PRÉCISION ---
-            // Ajoute ici tes salles. La clé (à gauche) doit être le nom de la salle en minuscules.
-            // Pour trouver les coordonnées : Clic droit sur Google Maps -> Copier les numéros.
-            const COORDONNEES_EXACTES = {
-                "aéronef": { lat: 50.6375, lon: 3.0758 },
-                "aéronef (lille)": { lat: 50.6375, lon: 3.0758 },
-                "l'aéronef": { lat: 50.6375, lon: 3.0758 },
-                // Micro-décalage (+0.0002) pour afficher le Club juste à côté de la grande salle
-                "aéronef club": { lat: 50.6377, lon: 3.0760 },
-                "aéronef club (lille)": { lat: 50.6377, lon: 3.0760 },
-                "l'aéronef club (lille)": { lat: 50.6377, lon: 3.0760 },
-                
-                "zénith de lille": { lat: 50.6329, lon: 3.0765 },
-                "ancienne belgique": { lat: 50.8466, lon: 4.3486 },
-                
-                // Nouvelle salle ajoutée : Le Cirque Royal (Bruxelles)
-                "le cirque royal": { lat: 50.8489, lon: 4.3658 },
-                "cirque royal": { lat: 50.8489, lon: 4.3658 },
-                "cirque royal (bruxelles)": { lat: 50.8489, lon: 4.3658 },
-                "le cirque royal (bruxelles)": { lat: 50.8489, lon: 4.3658 },
-                
-                "le grand mix": { lat: 50.7259, lon: 3.1610 },
-                "grand mix": { lat: 50.7259, lon: 3.1610 },
-                "le grand mix (tourcoing)": { lat: 50.7259, lon: 3.1610 },
-                // Micro-décalage (+0.0002) pour le Club du Grand Mix
-                "le grand mix club": { lat: 50.7261, lon: 3.1612 },
-                "grand mix club": { lat: 50.7261, lon: 3.1612 },
-                "le grand mix club (tourcoing)": { lat: 50.7261, lon: 3.1612 },
-                
-                "botanique": { lat: 50.8554, lon: 4.3662 },
-                "stade de france": { lat: 48.9244, lon: 2.3601 }
-            };
-
-            for(const key in venues) {
-                let v = venues[key];
-                let lat, lon;
-                let isApproximatif = false;
-                
-                if(geoCache[key]) { 
-                    lat = geoCache[key].lat; lon = geoCache[key].lon; isApproximatif = geoCache[key].approx;
-                } else {
-                    if (COORDONNEES_EXACTES[key]) {
-                        // 1. Dictionnaire manuel : Priorité absolue
-                        lat = COORDONNEES_EXACTES[key].lat; lon = COORDONNEES_EXACTES[key].lon;
-                        geoCache[key] = {lat, lon, approx: false};
-                    } else {
-                        try {
-                            // 2. Automatique : Recherche du bâtiment exact
-                            let resNom = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(v.nomAffichage)}&format=json&limit=1`);
-                            let dataNom = await resNom.json();
-                            if(dataNom && dataNom.length > 0) { 
-                                lat = parseFloat(dataNom[0].lat); lon = parseFloat(dataNom[0].lon); 
-                                geoCache[key] = {lat, lon, approx: false}; 
-                            } else {
-                                // 3. Secours : Recherche approximative de la ville
-                                let villeRecherche = v.nomAffichage;
-                                if (villeRecherche.includes('(')) { villeRecherche = villeRecherche.split('(')[1].split(')')[0].trim(); }
-                                else if (villeRecherche.includes('-')) { villeRecherche = villeRecherche.split('-')[1].trim(); }
-
-                                let res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(villeRecherche)}&count=1&language=fr`);
-                                let data = await res.json();
-                                
-                                if(data.results && data.results.length > 0) { 
-                                    lat = parseFloat(data.results[0].latitude); lon = parseFloat(data.results[0].longitude); 
-                                    isApproximatif = true;
-                                    geoCache[key] = {lat, lon, approx: true}; 
-                                }
-                            }
-                        } catch(e) {}
-                        await new Promise(resolve => setTimeout(resolve, 350));
-                    }
-                }
-                
-                if(lat && lon) {
-                    // Si on a que la ville en secours, on décale un tout petit peu pour éviter que 2 salles inconnues s'empilent au centre-ville
-                    let latFinal = isApproximatif ? lat + (Math.random() - 0.5) * 0.015 : lat;
-                    let lonFinal = isApproximatif ? lon + (Math.random() - 0.5) * 0.015 : lon;
-
-                    let limitArt = Array.from(v.artistes).slice(0, 3).join(', '); 
-                    if(v.artistes.size > 3) limitArt += '...';
-                    
-                    let precisionEmoji = isApproximatif ? '📍 <i>(Approximatif)</i>' : '🎯 <i>(Exact)</i>';
-                    
-                    let txt = `<div style="text-align:center; font-family:'Outfit';"><b>${v.nomAffichage.replace(/</g, '&lt;')}</b><br><span style="font-size:10px; color:var(--text-faded);">${precisionEmoji}</span><br><span style="color:#3b82f6; font-weight:bold;">${v.count} concert(s)</span><br><span style="font-size:11px; color:#64748b;">${limitArt.replace(/</g, '&lt;')}</span></div>`;
-                    
-                    L.marker([latFinal, lonFinal]).addTo(mapInstance).bindPopup(txt);
-                }
-            }
-            isFetchingGeo = false;
-        }
 
         // --- RESTAURATION DE L'EXPORT EXCEL ---
         window.exporterExcel = function() {
@@ -3388,6 +2600,16 @@
         // Au retour sur l'appli (mise en veille du téléphone), on rafraîchit si besoin
         document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && localStorage.getItem('spotify_refresh') && Date.now() > Number(spotifyTokenExp) - 120000) renouvelerSpotify(); });
 
+        // Appel à l'API Spotify : jeton rafraîchi avant s'il expire bientôt, et une seconde tentative si Spotify le refuse
+        async function spotifyFetch(chemin, opts) {
+            opts = opts || {};
+            if (localStorage.getItem('spotify_refresh') && (!spotifyToken || Date.now() > Number(spotifyTokenExp) - 60000)) await renouvelerSpotify();
+            const envoyer = () => fetch(API_URL + chemin, { ...opts, headers: { ...(opts.headers || {}), 'Authorization': 'Bearer ' + spotifyToken } });
+            let res = await envoyer();
+            if (res.status === 401 && await renouvelerSpotify()) res = await envoyer();
+            return res;
+        }
+
         async function verifierRetourSpotify() {
             const urlParams = new URLSearchParams(window.location.search);
             let code = urlParams.get('code');
@@ -3432,10 +2654,6 @@
                 const btn = document.getElementById('btn-spotify-connect');
                 if(btn) { btn.innerHTML = '✅ Spotify Connecté'; btn.style.background = 'transparent'; btn.style.border = '1px solid #1ed760'; btn.style.color = '#1ed760'; btn.style.pointerEvents = 'none'; }
                 
-                const btnP1 = document.getElementById('btn-playlist-prepa');
-                const btnP2 = document.getElementById('btn-playlist-prepa-team');
-                if(btnP1) btnP1.style.display = 'inline-flex';
-                if(btnP2) btnP2.style.display = 'inline-flex';
                 const btnSA = document.getElementById('btn-spotify-accueil'); if (btnSA) btnSA.hidden = true;
                 const btnPA = document.getElementById('btn-playlist-annee');
                 if(btnPA) btnPA.style.display = 'inline-flex';
@@ -3450,8 +2668,8 @@
 
             try {
                 // On recherche large (limit=10) pour corriger les erreurs de l'API
-                const res = await fetch(API_URL + '/search?q=' + encodeURIComponent(cleanName) + '&type=artist&limit=10', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
-                if(res.status === 401) { if (await renouvelerSpotify()) return getSpotifyData(artistName); spotifyToken = null; localStorage.removeItem('spotify_token'); return null; } 
+                const res = await spotifyFetch('/search?q=' + encodeURIComponent(cleanName) + '&type=artist&limit=10');
+                if(res.status === 401) { spotifyToken = null; localStorage.removeItem('spotify_token'); return null; } 
                 const data = await res.json();
                 if (data.artists && data.artists.items.length > 0) {
                     
@@ -3487,11 +2705,6 @@
                         nouveauxNomsOfficiels = true;
                     }
                 }
-            }
-            // Si on a appris de nouvelles orthographes officielles, on re-render l'onglet Artistes pour mettre à jour les libellés
-            if (nouveauxNomsOfficiels && !spotifyRerenderInFlight && document.getElementById('tab-artistes') && document.getElementById('tab-artistes').classList.contains('actif')) {
-                spotifyRerenderInFlight = true;
-                try { afficherOngletArtistes(); } finally { spotifyRerenderInFlight = false; }
             }
         }
 
@@ -3576,7 +2789,7 @@
         window.normaliserArtistesViaSpotify = async function() {
             const zone = document.getElementById('zone-normalisation-spotify');
             const btn = document.getElementById('btn-normaliser-spotify');
-            if (!spotifyToken) { zone.innerHTML = '<span style="color:#ef4444;">❌ Connecte-toi d\'abord à Spotify (onglet Concerts → bouton "🎧 Lier Spotify").</span>'; return; }
+            if (!spotifyToken) { zone.innerHTML = '<span style="color:var(--danger);">❌ Connecte-toi d\'abord à Spotify (onglet Concerts → bouton "🎧 Lier Spotify").</span>'; return; }
 
             const concertsAvecArtistes = tousLesConcerts.filter(c => c.user_id === currentUser.id && c.Artiste_principal && String(c.Artiste_principal).trim() !== "");
             if (concertsAvecArtistes.length === 0) { zone.innerHTML = '<span style="color:var(--text-faded);">Aucun concert à normaliser.</span>'; return; }
@@ -3613,9 +2826,9 @@
             }
 
             btn.disabled = false; btn.innerHTML = labelOrig;
-            zone.innerHTML = `<div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.4); padding:12px; border-radius:8px; color:var(--text-main);">✅ Terminé : <b>${modifies}</b> concert(s) mis à jour, ${inchanges} déjà OK${erreurs ? `, <span style="color:#ef4444;">${erreurs} erreur(s)</span>` : ''}.</div>`;
+            zone.innerHTML = `<div style="background:color-mix(in srgb, var(--ink) 10%, transparent); border:1px solid color-mix(in srgb, var(--ink) 40%, transparent); padding:12px; border-radius:8px; color:var(--text-main);">✅ Terminé : <b>${modifies}</b> concert(s) mis à jour, ${inchanges} déjà OK${erreurs ? `, <span style="color:var(--danger);">${erreurs} erreur(s)</span>` : ''}.</div>`;
             showToast(`${modifies} concert(s) normalisé(s)`, modifies > 0 ? "success" : "info");
-            if (modifies > 0) { mettreAJourMenusFiltres(); afficherConcerts(); if (document.getElementById('tab-artistes').classList.contains('actif')) afficherOngletArtistes(); }
+            if (modifies > 0) { mettreAJourMenusFiltres(); afficherConcerts(); }
         }
 
         window.chargerMiniLecteursSpotify = async function() {
@@ -3714,19 +2927,19 @@
                 if (artistes.length === 0) { showToast(`Aucun artiste vu en ${annee} pour l'instant.`, "info"); btn.innerHTML = originalText; btn.disabled = false; return; }
 
                 showToast(`Recherche de ${artistes.length} artiste(s) vus en ${annee}...`, "info");
-                let resMe = await fetch(API_URL + '/me', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
+                let resMe = await spotifyFetch('/me');
                 if(resMe.status === 401) { showToast("Session Spotify expirée. Reconnecte-toi.", "error"); btn.innerHTML = originalText; btn.disabled = false; return; }
                 let dataMe = await resMe.json(); const userId = dataMe.id;
                 const nomPlaylist = `Live! - Mes artistes vus en ${annee}`;
 
                 let playlistId = null;
-                let resPlaylists = await fetch(API_URL + '/me/playlists?limit=50', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
+                let resPlaylists = await spotifyFetch('/me/playlists?limit=50');
                 let dataPlaylists = await resPlaylists.json();
                 let existing = (dataPlaylists.items || []).find(p => p.name === nomPlaylist);
                 if (existing) { playlistId = existing.id; }
                 else {
-                    let resCreate = await fetch(API_URL + '/users/' + userId + '/playlists', {
-                        method: 'POST', headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
+                    let resCreate = await spotifyFetch('/users/' + userId + '/playlists', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name: nomPlaylist, description: `Les artistes que j'ai vus en concert en ${annee}. Générée par Live!`, public: false })
                     });
                     let dataCreate = await resCreate.json(); playlistId = dataCreate.id;
@@ -3735,12 +2948,12 @@
                 let trackUris = [];
                 for (let artistName of artistes) {
                     let cleanName = artistName.replace(/🎪 /g, '');
-                    let resSearch = await fetch(API_URL + '/search?q=' + encodeURIComponent(cleanName) + '&type=artist&limit=10', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
+                    let resSearch = await spotifyFetch('/search?q=' + encodeURIComponent(cleanName) + '&type=artist&limit=10');
                     let dataSearch = await resSearch.json();
                     if (dataSearch.artists && dataSearch.artists.items.length > 0) {
                         let exactMatch = dataSearch.artists.items.find(a => a.name.toLowerCase() === cleanName.toLowerCase());
                         let artist = exactMatch || dataSearch.artists.items[0];
-                        let resTracks = await fetch(API_URL + '/artists/' + artist.id + '/top-tracks?market=FR', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
+                        let resTracks = await spotifyFetch('/artists/' + artist.id + '/top-tracks?market=FR');
                         let dataTracks = await resTracks.json();
                         if (dataTracks.tracks) trackUris.push(...dataTracks.tracks.slice(0, 3).map(t => t.uri));
                     }
@@ -3749,13 +2962,13 @@
                 let chunks = [];
                 for (let i = 0; i < trackUris.length; i += 100) chunks.push(trackUris.slice(i, i + 100));
                 if (chunks.length > 0) {
-                    await fetch(API_URL + '/playlists/' + playlistId + '/tracks', {
-                        method: 'PUT', headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
+                    await spotifyFetch('/playlists/' + playlistId + '/tracks', {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ uris: chunks[0] })
                     });
                     for (let i = 1; i < chunks.length; i++) {
-                        await fetch(API_URL + '/playlists/' + playlistId + '/tracks', {
-                            method: 'POST', headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
+                        await spotifyFetch('/playlists/' + playlistId + '/tracks', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ uris: chunks[i] })
                         });
                     }
@@ -3765,105 +2978,6 @@
             } catch(err) { console.error(err); showToast("Erreur lors de la création.", "error"); }
             btn.innerHTML = originalText; btn.disabled = false;
         }
-
-        window.genererPlaylistPrepa = async function(useTeam = false) {
-            if (!spotifyToken) { showToast("Tu dois d'abord Lier Spotify (bouton en haut) !", "warning"); return; }
-
-            const btn = useTeam ? document.getElementById('btn-playlist-prepa-team') : document.getElementById('btn-playlist-prepa');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = "⏳ Création..."; btn.disabled = true;
-
-            try {
-                let artistesSet = new Set();
-                const today = new Date().toISOString().split('T')[0];
-                
-                if (useTeam) {
-                    for (const key in groupesAvenir) {
-                        if (groupesAvenir[key].date >= today && !groupesAvenir[key].isFest) {
-                            groupesAvenir[key].artiste.split(',').forEach(a => { if(a.trim()) artistesSet.add(a.trim()); });
-                        }
-                    }
-                } else {
-                    tousLesConcerts.forEach(c => {
-                        if (c.Date && c.Date >= today && c.Artiste_principal) {
-                            c.Artiste_principal.split(',').forEach(a => { if(a.trim()) artistesSet.add(a.trim()); });
-                        }
-                    });
-                }
-
-                const artistes = Array.from(artistesSet).filter(a => a !== "Inconnu" && a !== "");
-                if (artistes.length === 0) {
-                    showToast("Aucun artiste à venir trouvé pour la playlist.", "info");
-                    btn.innerHTML = originalText; btn.disabled = false; return;
-                }
-
-                showToast(`Recherche de ${artistes.length} artistes en cours...`, "info");
-
-                let resMe = await fetch(API_URL + '/me', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
-                if(resMe.status === 401) { showToast("Session expirée. Reconnecte-toi.", "error"); btn.innerHTML = originalText; btn.disabled = false; return; }
-                let dataMe = await resMe.json(); const userId = dataMe.id;
-
-                let playlistId = null;
-                let resPlaylists = await fetch(API_URL + '/me/playlists', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
-                let dataPlaylists = await resPlaylists.json();
-                let existingPlaylist = dataPlaylists.items.find(p => p.name === "Live! - Prépa Concerts");
-
-                if (existingPlaylist) { playlistId = existingPlaylist.id; } 
-                else {
-                    let resCreate = await fetch(API_URL + '/users/' + userId + '/playlists', {
-                        method: 'POST', headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: "Live! - Prépa Concerts", description: "Générée automatiquement par l'application Live! Agenda.", public: false })
-                    });
-                    let dataCreate = await resCreate.json(); playlistId = dataCreate.id;
-                }
-
-                let trackUris = [];
-                for (let artistName of artistes) {
-                    let cleanName = artistName.replace(/🎪 /g, '');
-                    let resSearch = await fetch(API_URL + '/search?q=' + encodeURIComponent(cleanName) + '&type=artist&limit=10', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
-                    let dataSearch = await resSearch.json();
-                    
-                    if (dataSearch.artists && dataSearch.artists.items.length > 0) {
-                        // ON FORCE LA RECHERCHE STRICTE ICI AUSSI
-                        let exactMatch = dataSearch.artists.items.find(a => a.name.toLowerCase() === cleanName.toLowerCase());
-                        let artist = exactMatch || dataSearch.artists.items[0];
-                        
-                        let resTracks = await fetch(API_URL + '/artists/' + artist.id + '/top-tracks?market=FR', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
-                        let dataTracks = await resTracks.json();
-                        if (dataTracks.tracks) {
-                            let topTracks = dataTracks.tracks.slice(0, 3).map(t => t.uri);
-                            trackUris.push(...topTracks);
-                        }
-                    }
-                }
-
-                let chunks = [];
-                for (let i = 0; i < trackUris.length; i += 100) { chunks.push(trackUris.slice(i, i + 100)); }
-
-                if (chunks.length > 0) {
-                    await fetch(API_URL + '/playlists/' + playlistId + '/tracks', {
-                        method: 'PUT', headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ uris: chunks[0] })
-                    });
-                    for (let i = 1; i < chunks.length; i++) {
-                        await fetch(API_URL + '/playlists/' + playlistId + '/tracks', {
-                            method: 'POST', headers: { 'Authorization': 'Bearer ' + spotifyToken, 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ uris: chunks[i] })
-                        });
-                    }
-                }
-
-                showToast("Playlist magique créée ! 🎧", "success");
-                
-                setTimeout(() => {
-                    window.location.href = OPEN_URL + '/playlist/' + playlistId;
-                }, 1500);
-                
-            } catch(err) { console.error(err); showToast("Erreur lors de la création.", "error"); }
-
-            btn.innerHTML = originalText; btn.disabled = false;
-        }
-
 
         // ================= NOUVELLE NAVIGATION, ACCUEIL, AMIS =================
         const GROUPE_NAV = { 'tab-accueil': 'accueil', 'tab-concerts': 'agenda', 'tab-amis': 'amis', 'tab-crew-avenir': 'amis', 'tab-moi': 'moi', 'tab-stats': 'moi', 'tab-artistes': 'moi', 'tab-carte': 'moi', 'tab-abos': 'moi', 'tab-parametres': 'moi' };
@@ -3915,61 +3029,6 @@
 
         function ligneHtml(titre, sous, actionsHtml) {
             return `<div class="ligne"><div><div class="ligne-titre">${esc(titre)}</div>${sous ? `<div class="ligne-sous">${esc(sous)}</div>` : ''}</div><div class="ligne-actions">${actionsHtml || ''}</div></div>`;
-        }
-
-        function afficherAccueil() {
-            if (!currentUser) return;
-            const today = aujourdHuiLocal();
-            const miens = (chezUnAmi() ? mesConcertsPersos : tousLesConcerts) || [];
-            const avenir = miens.filter(c => c.Date && String(c.Date).slice(0, 10) >= today).sort((a, b) => String(a.Date).localeCompare(String(b.Date)));
-            const titreDe = c => { const lieu = String(c.Lieu || '').replace(/🎪/g, '').trim(); return c.Artiste_principal || lieu || 'Concert'; };
-            const lieuDe = c => String(c.Lieu || '').replace(/🎪/g, '').trim();
-
-            // Prochain concert
-            const hero = document.getElementById('accueil-hero');
-            if (avenir.length) {
-                const c = avenir[0]; window._accueilProchain = c;
-                const j = Math.round((new Date(String(c.Date).slice(0, 10) + 'T00:00:00') - new Date(today + 'T00:00:00')) / 86400000);
-                const quand = j === 0 ? "c'est aujourd'hui" : (j === 1 ? 'demain' : 'dans ' + j + ' jours');
-                let action = '';
-                if (c.Statut_billet === 'a_acheter') action = `<span class="hero-etiquette">Billet à acheter</span>`;
-                else if (c.Ticket_PDF) action = `<button type="button" class="hero-btn" onclick="voirBillet(window._accueilProchain.Ticket_PDF)">Voir mon billet</button>`;
-                const sous = [c.Artiste_principal ? lieuDe(c) : '', dateFr(c.Date)].filter(Boolean).join(' · ');
-                hero.innerHTML = `<div class="hero"><div class="hero-sur">Prochain concert · ${esc(quand)}</div><div class="hero-titre">${esc(titreDe(c))}</div><div class="hero-sous">${esc(sous)}</div><div class="hero-actions">${action}<button type="button" class="hero-btn hero-btn-2" onclick="allerA('tab-concerts')">Voir l'agenda</button></div></div>`;
-            } else {
-                hero.innerHTML = `<div class="hero"><div class="hero-sur">Prochain concert</div><div class="hero-titre">Rien de prévu</div><div class="hero-sous">Ajoute ton prochain concert pour le retrouver ici.</div><div class="hero-actions"><button type="button" class="hero-btn" onclick="ouvrirAjoutConcert()">Ajouter un concert</button></div></div>`;
-            }
-
-            // À faire : propositions, demandes d'ami, billets à acheter
-            let lignes = [];
-            (pendingProposals || []).forEach(p => {
-                const id = idSur(p.id); if (!id) return;
-                const sp = profilsData.find(x => String(x.id) === String(p.sender_id)); const qui = sp ? (sp.pseudo || 'Un ami') : 'Un ami';
-                const lieu = String(p.lieu || '').replace(/🎪/g, '').trim(); const quoi = p.artiste || lieu || 'un concert';
-                const sous = [p.artiste ? lieu : '', p.date ? dateFr(p.date, { day: 'numeric', month: 'long' }) : ''].filter(Boolean).join(' · ');
-                lignes.push(ligneHtml(`${qui} te propose ${quoi}`, sous, `<button type="button" class="btn-mini" onclick="accepterProposition('${id}')">Ajouter</button><button type="button" class="btn-mini btn-secondaire" onclick="refuserProposition('${id}')">Ignorer</button>`));
-            });
-            amisData.filter(a => a.statut === 'en_attente' && a.destinataire_id === currentUser.id).forEach(a => {
-                const id = idSur(a.id); if (!id) return;
-                const p = profilsData.find(x => String(x.id) === String(a.demandeur_id)); const qui = p ? (p.pseudo || 'Un membre') : 'Un membre';
-                const ident = p ? [p.prenom, p.nom].filter(Boolean).join(' ') : '';
-                lignes.push(ligneHtml(`${qui} veut t'ajouter en ami`, '', `<button type="button" class="btn-mini" onclick="accepterAmi('${id}')">Accepter</button><button type="button" class="btn-mini btn-secondaire" onclick="retirerAmi('${id}')">Refuser</button>`));
-            });
-            avenir.filter(c => c.Statut_billet === 'a_acheter').slice(0, 4).forEach(c => {
-                lignes.push(ligneHtml(`Billet à acheter : ${titreDe(c)}`, [dateFr(c.Date, { day: 'numeric', month: 'long' }), c.Artiste_principal ? lieuDe(c) : ''].filter(Boolean).join(' · '), `<button type="button" class="btn-mini btn-secondaire" onclick="allerA('tab-concerts')">Voir</button>`));
-            });
-            document.getElementById('accueil-afaire').innerHTML = lignes.join('') || `<p class="vide">Rien à faire, tout est à jour.</p>`;
-
-            // Amis : un appui ouvre directement leur agenda
-            document.getElementById('accueil-amis').innerHTML = mesAmisIds.map(fid => {
-                const id = idSur(fid); const p = profilsData.find(x => String(x.id) === String(fid)); if (!id || !p) return '';
-                return `<button type="button" class="pastille-ami" onclick="voirAgendaAmi('${id}')">${esc(p.pseudo || 'Anonyme')}</button>`;
-            }).join('') + `<button type="button" class="pastille-ami pastille-plus" onclick="allerA('tab-amis')" aria-label="Ajouter un ami">+</button>`;
-
-            // Concerts suivants
-            document.getElementById('accueil-avenir').innerHTML = avenir.slice(1, 5).map(c =>
-                `<div class="ligne ligne-datee"><div class="ligne-date">${esc(dateFr(c.Date, { day: 'numeric', month: 'short' }))}</div><div><div class="ligne-titre">${esc(titreDe(c))}</div>${c.Artiste_principal && lieuDe(c) ? `<div class="ligne-sous">${esc(lieuDe(c))}</div>` : ''}</div></div>`
-            ).join('') || `<p class="vide">Pas d'autre concert prévu pour l'instant.</p>`;
         }
 
         // Rafraîchissements automatiques de l'accueil et des pastilles
@@ -4117,7 +3176,65 @@
             majSelectionAmi();
         }
         // Mini-lecteur Spotify (si Spotify est lié dans le profil)
+        // Ajouter au calendrier : Google Agenda (Android) ou fichier .ics (iPhone, Outlook)
+        window.basculerChoixCalendrier = function(id, bouton) {
+            const z = el('cal-choix-' + id); const c = concertParId(id); if (!z || !c) return;
+            const ouvrir = z.hidden; z.hidden = !ouvrir; if (bouton) bouton.setAttribute('aria-expanded', String(ouvrir)); if (!ouvrir) return;
+            const d = dateISO(c), dc = d.replace(/-/g, ''), fest = estFestival(c), titre = (fest ? '' : 'Concert : ') + titreConcert(c), lieu = lieuPropreDe(c);
+            const fin = new Date(d + 'T00:00:00'); fin.setDate(fin.getDate() + 1); const dcFin = fin.getFullYear() + String(fin.getMonth() + 1).padStart(2, '0') + String(fin.getDate()).padStart(2, '0');
+            const google = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(titre) + '&dates=' + (fest ? dc + '/' + dcFin : dc + 'T200000/' + dc + 'T233000') + '&location=' + encodeURIComponent(lieu) + '&details=' + encodeURIComponent('Ajouté depuis Live!');
+            const ics = SUPABASE_URL + '/functions/v1/billetterie?ics=1&t=' + encodeURIComponent(titre) + '&d=' + d + '&l=' + encodeURIComponent(lieu) + (fest ? '&f=1' : '');
+            const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const lienG = `<a class="btn-mini${iOS ? ' btn-secondaire' : ''}" target="_blank" rel="noopener" href="${esc(google)}">Google Agenda</a>`;
+            const lienI = `<a class="btn-mini${iOS ? '' : ' btn-secondaire'}" target="_blank" rel="noopener" href="${esc(ics)}">Calendrier iPhone / Outlook</a>`;
+            z.innerHTML = `<span class="texte-aide">${fest ? 'Ajouté sur toute la journée.' : 'Ajouté de 20 h à 23 h 30, à ajuster si besoin.'}</span><div class="ligne-actions">${iOS ? lienI + lienG : lienG + lienI}</div>`;
+        };
+        // Qui y va ? Amis ayant le même concert dans leur agenda (billet pris / intéressés)
+        // Amis ayant le même concert dans leur agenda (même date, même salle ou même artiste)
+        function amisDuConcert(c, lignes) {
+            const d = dateISO(c), salle = uniformiserSalle(c.Lieu || ''), arts = artistesDe(c).map(normaliserTexte); const pres = new Set(), inter = new Set();
+            (lignes || []).forEach(x => {
+                if (String(x.user_id) === String(currentUser.id) || dateISO(x) !== d || !mesAmisIds.map(String).includes(String(x.user_id))) return;
+                const memeSalle = salle !== 'inconnu' && uniformiserSalle(x.Lieu || '') === salle; const memeArt = artistesDe(x).some(a => arts.includes(normaliserTexte(a)));
+                if (!memeSalle && !memeArt) return;
+                const p = profilsData.find(pp => String(pp.id) === String(x.user_id)); (x.Statut_billet === 'a_acheter' ? inter : pres).add(p ? (p.pseudo || 'Un ami') : 'Un ami');
+            });
+            inter.forEach(n => { if (pres.has(n)) inter.delete(n); });
+            return { pres: Array.from(pres), inter: Array.from(inter) };
+        }
+        // Concerts des amis à des dates passées (mis en cache par date)
+        const concertsAmisCache = new Map();
+        async function concertsAmisLe(dates) {
+            const manque = Array.from(new Set(dates.filter(d => d && !concertsAmisCache.has(d))));
+            if (manque.length) {
+                const { data, error } = await clientSupabase.from('Concerts').select('user_id, Artiste_principal, Lieu, Date, Statut_billet').in('Date', manque).neq('user_id', currentUser.id);
+                if (error) return null;
+                manque.forEach(d => concertsAmisCache.set(d, []));
+                (data || []).forEach(x => { const l = concertsAmisCache.get(dateISO(x)); if (l) l.push(x); });
+            }
+            return dates.flatMap(d => concertsAmisCache.get(d) || []);
+        }
+        async function remplirQuiYVa(id) {
+            const z = el('quiva-' + id); const c = concertParId(id); if (!z || !c || chezUnAmi()) return;
+            const passe = dateISO(c) < aujourdHuiLocal();
+            const lignes = passe ? await concertsAmisLe([dateISO(c)]) : await chargerEquipeAvenir(false); if (!lignes || !el('quiva-' + id)) return;
+            const { pres, inter } = amisDuConcert(c, lignes);
+            if (passe) {
+                z.innerHTML = `<div class="fest-titre">Qui était là ?</div>` + (pres.length ? `<div class="quiva-ligne"><b>Avec toi</b><span>${esc(pres.join(', '))}</span></div>` : `<p class="texte-aide" style="margin:0;">Aucun ami n'avait ce concert dans son agenda.</p>`);
+                return;
+            }
+            z.innerHTML = `<div class="fest-titre">Qui y va ?</div>` + ((pres.length || inter.length)
+                ? (pres.length ? `<div class="quiva-ligne"><b>Y vont aussi</b><span>${esc(pres.join(', '))}</span></div>` : '') + (inter.length ? `<div class="quiva-ligne"><b>Intéressés</b><span>${esc(inter.join(', '))}</span></div>` : '')
+                : `<p class="texte-aide" style="margin:0;">Aucun ami ne l'a encore dans son agenda. Tu peux le leur proposer.</p>`);
+        }
+        // Historique : sous chaque concert d'un artiste, les amis qui étaient là
+        async function remplirQuiEtaitLa(concerts) {
+            if (chezUnAmi() || !concerts.length) return;
+            const lignes = await concertsAmisLe(concerts.map(dateISO)); if (!lignes) return;
+            concerts.forEach(c => { const z = el('qe-' + idSur(c.id)); if (!z) return; const { pres } = amisDuConcert(c, lignes); z.textContent = pres.length ? 'Avec : ' + pres.join(', ') : ''; z.hidden = !pres.length; });
+        }
         async function chargerLecteur(id) {
+            remplirQuiYVa(id);
             const z = el('lecteur-' + id); const c = concertParId(id); if (!z || !c || z.dataset.charge) return; z.dataset.charge = '1';
             if (typeof spotifyToken === 'undefined' || !spotifyToken) return;
             const trouves = [];
@@ -4180,10 +3297,12 @@
                 a.push(`<a class="btn-txt" target="_blank" rel="noopener" href="https://open.spotify.com/search/${encodeURIComponent(a0)}">Écouter</a>`);
                 if (passe && d) a.push(`<a class="btn-txt" target="_blank" rel="noopener" href="https://www.setlist.fm/search?query=${encodeURIComponent('artist:(' + a0.replace(/[()]/g, ' ') + ') date:' + d)}">Setlist</a>`);
             }
-            if (!passe && d) { const dc = d.replace(/-/g, ''); a.push(`<a class="btn-txt" target="_blank" rel="noopener" href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=${encodeURIComponent('Concert : ' + titreConcert(c))}&amp;dates=${dc}T200000/${dc}T233000&amp;location=${encodeURIComponent(lieu)}">Agenda Google</a>`); }
+            if (!passe && d) a.push(`<button type="button" class="btn-txt" aria-expanded="false" onclick="basculerChoixCalendrier('${id}', this)">Ajouter au calendrier</button>`);
             if (proprio) a.push(`<button type="button" class="btn-txt discret" onclick="supprimerConcert('${id}')">Supprimer</button>`);
             if (arts.length) h += `<div class="lecteur-spotify" id="lecteur-${id}"></div>`;
+            if (proprio) h += `<div class="qui-y-va" id="quiva-${id}"></div>`;
             h += `<div class="cr-actions">${a.join('')}</div>`;
+            if (!passe && d) h += `<div class="choix-calendrier" id="cal-choix-${id}" hidden></div>`;
             return h;
         }
         window.noterConcert = function(id, idx, n) {
@@ -4262,7 +3381,7 @@
         function rendreAccueilAvenir(avenir, today) {
             el('accueil-avenir').innerHTML = avenir.slice(0, 6).map(c => ligneConcertHtml(c, { today, mois: true, action: "allerA('tab-concerts')", sous: amisSur(c, equipeCache.data) })).join('') || `<p class="vide">Aucun concert à venir.</p>`;
         }
-        afficherAccueil = function() {
+        function afficherAccueil() {
             if (!currentUser) return;
             const today = aujourdHuiLocal();
             const miens = (chezUnAmi() ? mesConcertsPersos : tousLesConcerts) || [];
@@ -4358,11 +3477,12 @@
             majSelectionTeam();
         }
         window.majSelectionTeam = function() { const n = document.querySelectorAll('#team-liste .chk-team:checked').length; const b = el('team-btn-ajout'); b.disabled = n === 0; b.textContent = n ? `Ajouter la sélection (${n})` : 'Ajouter la sélection'; };
+        function payloadTeam(g) { return { user_id: currentUser.id, Artiste_principal: Array.from(g.artistes.values()).join(', ') || null, Lieu: g.base.Lieu || null, Date: g.base.Date || null, Prix: g.base.Prix || null, Style: g.base.Style || null, Statut_billet: 'a_acheter', Role: 'spectateur', Ticket_PDF: null, Bieres: 0, Coup_de_coeur: false, Artistes_vus: String(g.base.Lieu || '').includes('🎪') ? [] : null }; }
         window.ajouterSelectionTeam = async function() {
             const idx = Array.from(document.querySelectorAll('#team-liste .chk-team:checked')).map(cb => parseInt(String(cb.value).replace('g', ''), 10)).filter(i => teamGroupes[i]);
             if (!idx.length) return;
             if (!confirm(`Ajouter ${idx.length} concert(s) à ton agenda ? Leur billet sera marqué « à acheter ».`)) return;
-            const payloads = idx.map(i => { const g = teamGroupes[i]; return { user_id: currentUser.id, Artiste_principal: Array.from(g.artistes.values()).join(', ') || null, Lieu: g.base.Lieu || null, Date: g.base.Date || null, Prix: g.base.Prix || null, Style: g.base.Style || null, Statut_billet: 'a_acheter', Role: 'spectateur', Ticket_PDF: null, Bieres: 0, Coup_de_coeur: false, Artistes_vus: String(g.base.Lieu || '').includes('🎪') ? [] : null }; });
+            const payloads = idx.map(i => payloadTeam(teamGroupes[i]));
             const b = el('team-btn-ajout'); b.disabled = true;
             const { error } = await clientSupabase.from('Concerts').insert(payloads);
             if (error) { showToast("L'ajout n'a pas fonctionné. Réessaie.", "error"); console.error(error); b.disabled = false; return; }
@@ -4407,9 +3527,10 @@
             }).join('') || `<p class="vide">Aucun artiste pour l'instant.</p>`;
         }
         function detailArtisteHtml(o) {
+            setTimeout(() => remplirQuiEtaitLa(o.concerts), 0);
             return o.concerts.slice().sort((a, b) => dateISO(b).localeCompare(dateISO(a))).map(c => {
                 const autres = artistesVusDe(c);
-                return `<div class="art-concert"><b>${esc(dateFr(dateISO(c), { day: 'numeric', month: 'long', year: 'numeric' }))}</b> · ${esc(lieuPropreDe(c) || 'Lieu inconnu')}${prixNum(c) > 0 ? ' · ' + esc(fmtEuro(prixNum(c))) : ''}${autres.length > 1 ? `<div class="ligne-sous">Ce soir-là : ${esc(autres.join(', '))}</div>` : ''}</div>`;
+                return `<div class="art-concert"><b>${esc(dateFr(dateISO(c), { day: 'numeric', month: 'long', year: 'numeric' }))}</b> · ${esc(lieuPropreDe(c) || 'Lieu inconnu')}${prixNum(c) > 0 ? ' · ' + esc(fmtEuro(prixNum(c))) : ''}${autres.length > 1 ? `<div class="ligne-sous">Ce soir-là : ${esc(autres.join(', '))}</div>` : ''}<div class="ligne-sous qui-etait" id="qe-${idSur(c.id)}" hidden></div></div>`;
             }).join('');
         }
         window.basculerArtiste = function(i) { const o = artListe[i]; const d = el('artd-' + i); if (!o || !d) return; if (d.hidden) { d.innerHTML = detailArtisteHtml(o); d.hidden = false; artOuverts.add(o.cle); } else { d.hidden = true; artOuverts.delete(o.cle); } d.previousElementSibling.setAttribute('aria-expanded', String(!d.hidden)); };
@@ -4513,7 +3634,7 @@
         }
 
         // ---------- PROFIL : préférences de notification ----------
-        const PREFS_NOTIF = ['j1', 'billet', 'propositions', 'amis'];
+        const PREFS_NOTIF = ['j1', 'jour_j', 'billet', 'propositions', 'amis', 'alertes'];
         async function chargerPrefsNotif() {
             const bloc = el('profil-notifs');
             const { data, error } = await clientSupabase.from('notification_prefs').select('*').eq('user_id', currentUser.id).maybeSingle();
@@ -4557,7 +3678,7 @@
             let cache = {}; try { cache = JSON.parse(localStorage.getItem(GENRES_CLE)) || {}; } catch (e) {}
             const k = normaliserTexte(nom); if (cache[k]) return cache[k];
             try {
-                const res = await fetch(API_URL + '/search?type=artist&limit=5&q=' + encodeURIComponent(nom.replace(/’/g, "'")), { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
+                const res = await spotifyFetch('/search?type=artist&limit=5&q=' + encodeURIComponent(nom.replace(/’/g, "'")));
                 if (!res.ok) return [];
                 const d = await res.json(); const a = ((d.artists && d.artists.items) || []).find(x => normaliserTexte(x.name) === k);
                 const g = a && Array.isArray(a.genres) ? a.genres.slice(0, 5).map(x => neutraliserTexte(String(x))) : [];
