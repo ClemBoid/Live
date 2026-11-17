@@ -520,6 +520,10 @@
             .ligne-ami-nom { white-space: normal; overflow-wrap: anywhere; }
             .ligne-ami-actions { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
         }
+        @keyframes glisseG { from { transform: translateX(28px); opacity: .4; } to { transform: none; opacity: 1; } }
+        @keyframes glisseD { from { transform: translateX(-28px); opacity: .4; } to { transform: none; opacity: 1; } }
+        .glisse-gauche { animation: glisseG .22s ease-out; } .glisse-droite { animation: glisseD .22s ease-out; }
+        @media (prefers-reduced-motion: reduce) { .glisse-gauche, .glisse-droite { animation: none; } }
     </style>
 </head>
 <body> 
@@ -4766,6 +4770,41 @@
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').then(reg => console.log('PWA prête !')).catch(err => console.error('Erreur PWA :', err)); }); }
 
+    </script>
+<script>
+    // Mobile : balayer à gauche / à droite pour passer d'un onglet du menu du bas au suivant
+    (function() {
+        const ORDRE = ['tab-accueil', 'tab-concerts', 'tab-team', 'tab-amis', 'tab-historique', 'tab-profil'];
+        const IGNORER = 'input, textarea, select, canvas, .leaflet-container, .pastilles, .choix-tarifs, #nav-live, [data-sans-balayage]';
+        let x0 = 0, y0 = 0, t0 = 0, actif = false;
+        function defileHorizontalement(n) {
+            for (; n && n !== document.body; n = n.parentElement) { const st = getComputedStyle(n); if (/(auto|scroll)/.test(st.overflowX) && n.scrollWidth > n.clientWidth + 4) return true; }
+            return false;
+        }
+        document.addEventListener('touchstart', e => {
+            actif = false;
+            if (e.touches.length !== 1 || window.innerWidth > 900) return;
+            const t = e.touches[0];
+            if (t.clientX < 24 || t.clientX > window.innerWidth - 24) return;  // laisse le geste « retour » d'Android
+            if (e.target.closest(IGNORER) || defileHorizontalement(e.target)) return;
+            const m = document.getElementById('modal-propose'); if (m && getComputedStyle(m).display !== 'none') return;
+            if (!ORDRE.includes(ongletActifId())) return;
+            x0 = t.clientX; y0 = t.clientY; t0 = Date.now(); actif = true;
+        }, { passive: true });
+        document.addEventListener('touchend', e => {
+            if (!actif) return; actif = false;
+            const t = e.changedTouches[0]; const dx = t.clientX - x0, dy = t.clientY - y0;
+            if (Date.now() - t0 > 700 || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.8) return;
+            if (window.getSelection && String(window.getSelection())) return;
+            const i = ORDRE.indexOf(ongletActifId()); const j = i + (dx < 0 ? 1 : -1);
+            if (i < 0 || j < 0 || j >= ORDRE.length) return;
+            allerA(ORDRE[j]).then(() => {
+                const v = document.getElementById(ORDRE[j]); if (!v) return;
+                v.classList.remove('glisse-gauche', 'glisse-droite'); void v.offsetWidth;
+                v.classList.add(dx < 0 ? 'glisse-gauche' : 'glisse-droite');
+            });
+        }, { passive: true });
+    })();
     </script>
 </body>
 </html>
