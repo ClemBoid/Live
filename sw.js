@@ -1,5 +1,5 @@
-const CACHE_NAME = 'live-v6';
-const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE_NAME = 'live-v7';
+const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './badge-96.png'];
 
 self.addEventListener('install', (event) => {
     event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL)));
@@ -20,7 +20,7 @@ self.addEventListener('push', (event) => {
     const options = {
         body: payload.body || '',
         icon: './icon-192.png',
-        badge: './icon-192.png',
+        badge: './badge-96.png',
         tag: payload.tag || 'live-reminder',
         data: { url: payload.url || './' },
         vibrate: [120, 60, 120]
@@ -30,10 +30,18 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
-    const url = (event.notification.data && event.notification.data.url) || './';
+    const brut = (event.notification.data && event.notification.data.url) || './';
+    const url = new URL(brut, self.registration.scope).href;
+    const avecLien = url !== new URL('./', self.registration.scope).href;
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-            for (const c of list) { if ('focus' in c) return c.focus(); }
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async list => {
+            for (const c of list) {
+                if (!('focus' in c)) continue;
+                const fenetre = await c.focus();
+                // Ouvre la fiche ou l'écran visé par la notification
+                if (avecLien && fenetre && 'navigate' in fenetre) { try { await fenetre.navigate(url); } catch (e) {} }
+                return;
+            }
             if (clients.openWindow) return clients.openWindow(url);
         })
     );
