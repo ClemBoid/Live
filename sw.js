@@ -1,4 +1,4 @@
-const CACHE_NAME = 'live-v3';
+const CACHE_NAME = 'live-v4';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -48,7 +48,17 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(fetch(req).catch(() => caches.match(req)));
         return;
     }
-    // App shell : cache-first avec mise à jour en arrière-plan
+    // Pages HTML : réseau d'abord (pour toujours avoir la dernière version), cache en secours hors ligne
+    if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
+        event.respondWith(
+            fetch(req).then(resp => {
+                if (resp && resp.status === 200 && url.origin === self.location.origin) { const clone = resp.clone(); caches.open(CACHE_NAME).then(c => c.put(req, clone)); }
+                return resp;
+            }).catch(() => caches.match(req).then(r => r || caches.match('./index.html')))
+        );
+        return;
+    }
+    // Autres fichiers de l'appli : cache-first avec mise à jour en arrière-plan
     event.respondWith(
         caches.match(req).then(cached => {
             const fetchPromise = fetch(req).then(resp => {
