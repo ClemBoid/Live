@@ -404,6 +404,8 @@
         .cr-lieu { display: block; font-size: 14px; color: var(--text-faded); margin-top: 3px; overflow-wrap: anywhere; }
         .pill { display: inline-flex; align-items: center; min-height: 30px; padding: 0 10px; font-weight: 700; font-size: 13px; white-space: nowrap; border: 2px solid var(--ink); }
         .pill-plein { background: var(--ink); color: var(--ground); }
+        .pill-action { cursor: pointer; font-family: inherit; flex: 0 0 auto; border-style: dashed; }
+        .pill-action:hover, .pill-action:focus-visible { background: var(--ink); color: var(--ground); border-style: solid; }
         .pill-clair { background: var(--paper); color: var(--ink); }
         .cr-detail { padding: 2px 0 18px 72px; display: flex; flex-direction: column; gap: 12px; }
         @media (max-width: 600px) { .cr-detail { padding-left: 0; } .cr-titre { font-size: 18px; } .cr-tete { gap: 10px; grid-template-columns: 50px minmax(0, 1fr) auto; } .cr-jour { font-size: 30px; } }
@@ -1245,6 +1247,54 @@
 
         let listeSallesCommunaute = [];
         
+        // ---------- Mise en forme des noms proposés ----------
+        // Artistes : majuscule au début de chaque mot (« the black keys » → « The Black Keys »).
+        // Un nom tout en capitales est remis en minuscules d'abord, sauf les sigles courts (MGMT, AC/DC, IDLES).
+        function majusculeInitiale(m) { return m.replace(/^([«"“(\[]*)(\p{L})/u, (x, p, l) => p + l.toLocaleUpperCase('fr-FR')); }
+        function formaterArtiste(nom) {
+            let t = String(nom || '').replace(/\s+/g, ' ').trim(); if (!t) return t;
+            const lettres = t.replace(/[^\p{L}]/gu, '');
+            if (lettres && lettres === lettres.toLocaleUpperCase('fr-FR') && (t.includes(' ') || lettres.length >= 6)) t = t.toLocaleLowerCase('fr-FR');
+            t = t.split(' ').map(w => w.split('-').map(majusculeInitiale).join('-')).join(' ');
+            return t.replace(/(^|[\s-])([LlDd])(['’])(\p{L})/gu, (x, a, l, ap, c) => a + l.toLocaleUpperCase('fr-FR') + ap + c.toLocaleUpperCase('fr-FR'));
+        }
+        function formaterArtistes(liste) { return String(liste || '').split(/\s*,\s*/).filter(Boolean).map(formaterArtiste).join(', '); }
+        // Salles : « Nom de la salle (Ville) ». Petits mots en minuscules au milieu du nom.
+        const PETITS_MOTS_SALLE = new Set(['de', 'du', 'des', 'aux', 'au', 'à', 'et', 'en', 'sur', 'sous', 'la', 'le', 'les', 'pour', 'par']);
+        function formaterNomSalle(nom) {
+            const mots = String(nom || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+            const lettres = mots.join('').replace(/[^\p{L}]/gu, ''); const toutCaps = lettres.length > 3 && lettres === lettres.toLocaleUpperCase('fr-FR');
+            return mots.map((w, i) => {
+                if (toutCaps) w = w.toLocaleLowerCase('fr-FR');
+                const bas = w.toLocaleLowerCase('fr-FR');
+                if (i > 0 && PETITS_MOTS_SALLE.has(bas)) return bas;
+                if (i > 0 && /^[ld]['’]/i.test(w)) return bas.slice(0, 2) + majusculeInitiale(w.slice(2));
+                return w.split('-').map(majusculeInitiale).join('-').replace(/^([LlDd])(['’])(\p{L})/u, (x, l, ap, c) => l.toUpperCase() + ap + c.toLocaleUpperCase('fr-FR'));
+            }).join(' ');
+        }
+        function decouperSalle(lieu) {
+            const t = String(lieu || '').replace(/🎪/g, '').replace(/\s+/g, ' ').trim();
+            let m = /^(.*?)\s*\(([^()]+)\)\s*$/.exec(t); if (m) return { nom: m[1], ville: m[2] };
+            m = /^(.*?)\s*(?:,|\s[-–]\s)\s*([^,\d]{2,40})$/.exec(t); if (m && m[2].trim().split(' ').length <= 3) return { nom: m[1], ville: m[2] };
+            return { nom: t, ville: '' };
+        }
+        function formaterSalle(lieu) {
+            let { nom, ville } = decouperSalle(lieu); if (!nom) return String(lieu || '').trim();
+            let connue = null; try { const n = normaliserTexte(nom); connue = SALLES_SUIVIES.find(x => n.includes(x.motif)); } catch (e) {}
+            if (connue) { nom = majusculeInitiale(connue.nom); if (!ville) ville = connue.ville; } else nom = formaterNomSalle(nom);
+            ville = ville ? formaterNomSalle(ville) : '';
+            return ville ? `${nom} (${ville})` : nom;
+        }
+        // Liste de salles sans doublons, en gardant la version qui indique la ville
+        function sallesFormatees(lieux) {
+            const meilleures = new Map();
+            lieux.forEach(l => {
+                const f = formaterSalle(l); if (!f) return;
+                const k = uniformiserSalle(decouperSalle(f).nom); const avecVille = /\)$/.test(f);
+                const deja = meilleures.get(k); if (!deja || (avecVille && !/\)$/.test(deja))) meilleures.set(k, f);
+            });
+            return Array.from(meilleures.values()).sort((a, b) => a.localeCompare(b, 'fr'));
+        }
         async function chargerSallesCommunaute() {
             const { data, error } = await clientSupabase.from('Concerts').select('Lieu');
             if (!error && data) {
@@ -1253,7 +1303,7 @@
                     let lieuPropre = c.Lieu ? String(c.Lieu).replace(/🎪/g, '').trim() : "";
                     if(lieuPropre) setSa.add(lieuPropre);
                 });
-                listeSallesCommunaute = Array.from(setSa).sort((a,b) => a.localeCompare(b));
+                listeSallesCommunaute = sallesFormatees(Array.from(setSa));
             }
         }
 
@@ -1928,7 +1978,7 @@
                 });
                 return Object.values(best).map(o => o.display).sort((a,b) => a.localeCompare(b));
             };
-            listeArtistesGlobale = dedupeCI(setArt, true);
+            listeArtistesGlobale = Array.from(new Map(dedupeCI(setArt, true).map(a => [normaliserTexte(a), formaterArtiste(a)])).values()).sort((a, b) => a.localeCompare(b, 'fr'));
             listeStylesGlobale = dedupeCI(setStyle, false);
             listeSallesGlobale = dedupeCI(setSa, false);
             const selAn = Array.from(document.querySelectorAll('.chk-annee:checked')).map(cb => cb.value); const selSa = Array.from(document.querySelectorAll('.chk-salle:checked')).map(cb => cb.value);
@@ -3089,6 +3139,17 @@
         function nomAmiCourant() { const p = profilsData.find(x => String(x.id) === String(viewingUserId)); return p ? (p.pseudo || 'Anonyme') : 'un ami'; }
         function marquerSegments(conteneurId, attr, valeur) { document.querySelectorAll('#' + conteneurId + ' button').forEach(b => b.classList.toggle('actif', b.dataset[attr] === valeur)); }
 
+        // Un appui sur « À acheter » passe le billet à « acheté »
+        window.marquerAchete = async function(id, bouton) {
+            const c = concertParId(id); if (!c || c.Statut_billet !== 'a_acheter') return;
+            if (bouton) { bouton.disabled = true; bouton.textContent = '…'; }
+            const { error } = await clientSupabase.from('Concerts').update({ Statut_billet: 'achete' }).eq('id', id).eq('user_id', currentUser.id);
+            if (error) { showToast("Le statut n'a pas pu être modifié. Réessaie.", "error"); if (bouton) { bouton.disabled = false; bouton.textContent = 'À acheter'; } return; }
+            [tousLesConcerts, mesConcertsPersos].forEach(L => (L || []).forEach(x => { if (String(x.id) === String(id)) x.Statut_billet = 'achete'; }));
+            if (equipeCache && equipeCache.data) equipeCache.data.forEach(x => { if (String(x.id) === String(id)) x.Statut_billet = 'achete'; });
+            showToast("Billet marqué comme acheté.", "success");
+            rafraichirVues();
+        };
         function pillStatut(c, today) {
             const d = dateISO(c); const passe = d && d < today;
             const st = c.Statut_billet === 'a_acheter' ? `<span class="pill pill-clair">${passe ? 'Non acheté' : 'À acheter'}</span>` : (c.Statut_billet === 'cadeau' ? `<span class="pill pill-plein">Offert</span>` : `<span class="pill pill-plein">Acheté</span>`);
@@ -3105,10 +3166,13 @@
             let sousLieu = artistesDe(c).length ? lieuPropreDe(c) : '';
             if (!estFestival(c) && listeVus(c) && artistesVusDe(c).length < artistesDe(c).length && artistesDe(c).length) { sousLieu = [sousLieu, artistesVusDe(c).length + ' artiste' + (artistesVusDe(c).length > 1 ? 's vus' : ' vu') + ' sur ' + artistesDe(c).length].filter(Boolean).join(' · '); }
             if (estFestival(c) && artistesDe(c).length) { const nA = artistesDe(c).length; const commence = d && d <= (o.today || aujourdHuiLocal()); sousLieu = nA + (nA > 1 ? ' artistes à l’affiche' : ' artiste à l’affiche') + (commence && listeVus(c) ? ' · ' + artistesVusDe(c).length + ' vu' + (artistesVusDe(c).length > 1 ? 's' : '') : ''); }
-            const corps = `<span class="cr-date"><span class="cr-jour">${esc(jour)}</span><span class="cr-sem">${esc(sem)}</span></span><span class="cr-corps">${etiquettes ? `<span class="cr-style">${esc(etiquettes)}</span>` : ''}<span class="cr-titre">${esc(titreConcert(c))}${coeur}</span>${sousLieu ? `<span class="cr-lieu">${esc(sousLieu)}</span>` : ''}${o.sous ? `<span class="cr-lieu">${esc(o.sous)}</span>` : ''}</span>${o.droite !== undefined ? o.droite : pillStatut(c, o.today || aujourdHuiLocal())}`;
+            // Mon concert à venir, billet « à acheter » : la pastille devient un bouton pour passer à « acheté »
+            const achetable = o.droite === undefined && c.Statut_billet === 'a_acheter' && !!d && d >= (o.today || aujourdHuiLocal()) && !!currentUser && String(c.user_id) === String(currentUser.id) && !chezUnAmi() && /^\d+$/.test(String(c.id));
+            const corps = `<span class="cr-date"><span class="cr-jour">${esc(jour)}</span><span class="cr-sem">${esc(sem)}</span></span><span class="cr-corps">${etiquettes ? `<span class="cr-style">${esc(etiquettes)}</span>` : ''}<span class="cr-titre">${esc(titreConcert(c))}${coeur}</span>${sousLieu ? `<span class="cr-lieu">${esc(sousLieu)}</span>` : ''}${o.sous ? `<span class="cr-lieu">${esc(o.sous)}</span>` : ''}</span>${o.droite !== undefined ? o.droite : (achetable ? '' : pillStatut(c, o.today || aujourdHuiLocal()))}`;
             const check = o.check ? `<input type="checkbox" class="${o.checkClass}" value="${id}" aria-label="Sélectionner ${esc(titreConcert(c))}" onchange="${o.onCheck}">` : (o.marque || '');
             const tete = o.action ? `<button type="button" class="cr-tete" onclick="${o.action}"${o.expand ? ` aria-expanded="${o.ouvert ? 'true' : 'false'}"` : ''}>${corps}</button>` : `<div class="cr-tete">${corps}</div>`;
-            return `<div class="cr"><div class="cr-ligne">${check}${tete}</div>${o.detail || ''}</div>`;
+            const boutonAchat = achetable ? `<button type="button" class="pill pill-clair pill-action" onclick="marquerAchete('${id}', this)" title="Marquer le billet comme acheté" aria-label="Billet à acheter : marquer comme acheté">À acheter</button>` : '';
+            return `<div class="cr"><div class="cr-ligne">${check}${tete}${boutonAchat}</div>${o.detail || ''}</div>`;
         }
 
         // ---------- AGENDA PERSO ----------
@@ -3814,7 +3878,7 @@
                 if (!L.length) return;
                 html += `<h3 class="mois-titre">${esc(titres[g])}</h3>`;
                 L.forEach(({ it, i }) => {
-                    const faux = { id: 'r' + i, Artiste_principal: it.titre, Lieu: [it.salle, it.ville].filter(Boolean).join(', '), Date: it.date };
+                    const faux = { id: 'r' + i, Artiste_principal: String(it.titre || '').split(/\s*(\+|,)\s*/).map(x => (x === '+' || x === ',') ? (x === '+' ? ' + ' : ', ') : formaterArtiste(x)).join(''), Lieu: formaterSalle(it.ville && !normaliserTexte(it.salle || '').includes(normaliserTexte(it.ville)) ? `${it.salle || ''} (${it.ville})` : (it.salle || it.ville || '')), Date: it.date };
                     const sous = [it.raison, it.prix || ''].filter(Boolean).join(' · ');
                     const lien = (it.url && it.url.startsWith('https://')) ? `<a class="btn-txt" target="_blank" rel="noopener" href="${esc(it.url)}">Billets et infos</a>` : '';
                     html += ligneConcertHtml(faux, { today, mois: true, sous, droite: '', detail: `<div class="cr-detail" style="padding-top:0;"><div class="cr-actions">${lien}<button type="button" class="btn-txt" onclick="ajouterReco(${i})">Ajouter à mon agenda</button></div></div>` });
@@ -3836,8 +3900,8 @@
             const it = recoItems[i]; if (!it) return;
             await ouvrirAjoutConcert();
             const titrePropre = String(it.titre || '').replace(/\s*[|｜]\s*.*$/, '').replace(/\s*(?:\+|,|&| et | x | w\/ | avec )\s*/gi, ', ');
-            setArtistesFromString(titrePropre);
-            el('lieu').value = it.salle ? (it.ville && !normaliserTexte(it.salle).includes(normaliserTexte(it.ville)) ? `${it.salle} (${it.ville})` : it.salle) : (it.ville || '');
+            setArtistesFromString(formaterArtistes(titrePropre));
+            el('lieu').value = formaterSalle(it.salle ? (it.ville && !normaliserTexte(it.salle).includes(normaliserTexte(it.ville)) ? `${it.salle} (${it.ville})` : it.salle) : (it.ville || ''));
             el('is_festival').checked = false; el('date').value = it.date || ''; el('statut_billet').value = 'a_acheter';
             if (el('style_musique') && it.style) el('style_musique').value = it.style.charAt(0).toUpperCase() + it.style.slice(1);
             const px = parseFloat((/(\d+(?:[.,]\d{1,2})?)/.exec(String(it.prix || '')) || [])[1]?.replace(',', '.'));
