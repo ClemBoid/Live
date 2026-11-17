@@ -1281,7 +1281,13 @@
         function formaterSalle(lieu) {
             let { nom, ville } = decouperSalle(lieu); if (!nom) return String(lieu || '').trim();
             let connue = null; try { const n = normaliserTexte(nom); connue = SALLES_SUIVIES.find(x => n.includes(x.motif)); } catch (e) {}
-            if (connue) { nom = majusculeInitiale(connue.nom); if (!ville) ville = connue.ville; } else nom = formaterNomSalle(nom);
+            if (connue) {
+                // On garde ce qui distingue une autre salle du même lieu (« Club », « Petite salle »…)
+                const motsMotif = new Set([...connue.motif.split(' '), ...normaliserTexte(connue.nom).replace(/^l['’]/, '').split(/\s+/), ...normaliserTexte(connue.ville).split(/\s+/), ...normaliserTexte(ville || '').split(/\s+/)].filter(Boolean)); const articles = new Set(['le', 'la', 'les', "l'", 'l’']);
+                const reste = nom.replace(/^(l['’])/i, '$1 ').split(/\s+/).filter(w => { const n = normaliserTexte(w); return n && !motsMotif.has(n) && !articles.has(n) && !/^l['’]$/.test(n); });
+                nom = majusculeInitiale(connue.nom) + (reste.length ? ' ' + formaterNomSalle(reste.join(' ')).replace(/^\p{Ll}/u, c => c.toLocaleUpperCase('fr-FR')) : '');
+                if (!ville) ville = connue.ville;
+            } else nom = formaterNomSalle(nom);
             ville = ville ? formaterNomSalle(ville) : '';
             return ville ? `${nom} (${ville})` : nom;
         }
