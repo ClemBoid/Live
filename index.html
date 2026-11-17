@@ -503,6 +503,23 @@
         #tab-accueil .accueil-grille .entete-bloc .lien-bloc { grid-column: 3; justify-self: end; }
         /* Historique : la pastille « N fois » alignée à droite */
         .art-tete { width: 100%; }
+        .ligne-ami { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 12px; background: var(--paper); border: 2px solid var(--ink); }
+        .ligne-ami-nom { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+        .ligne-ami-etat { display: block; font-weight: 400; font-size: 13px; color: var(--text-faded); overflow: hidden; text-overflow: ellipsis; }
+        .ligne-ami-actions { display: flex; gap: 8px; }
+        .ligne-ami-statut { font-size: 13px; color: var(--text-faded); white-space: nowrap; }
+        .carte-ami { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+        .carte-ami-tete { min-width: 0; }
+        .carte-ami .ami-nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .carte-ami-actions { display: flex; gap: 8px; }
+        @media (max-width: 640px) {
+            .carte-ami { grid-template-columns: 1fr; }
+            .carte-ami-actions { display: grid; grid-template-columns: 1fr 1fr; }
+            .carte-ami-actions .btn-mini, .ligne-ami-actions .btn-mini { width: 100%; justify-content: center; }
+            .ligne-ami { grid-template-columns: 1fr; }
+            .ligne-ami-nom { white-space: normal; overflow-wrap: anywhere; }
+            .ligne-ami-actions { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+        }
     </style>
 </head>
 <body> 
@@ -1288,7 +1305,7 @@
                     const { data, error } = await clientSupabase.auth.signUp({ email, password, options: { data: { pseudo, prenom, nom, est_benevole: isBenevole }, emailRedirectTo: window.location.origin + window.location.pathname } });
                     if (error) { let msg = error.message; if(msg.includes("already registered")) msg = "Cette adresse email est déjà utilisée."; if(msg.includes("Password should be")) msg = "Le mot de passe doit faire au moins 8 caractères."; showToast("Erreur : " + msg, "error"); }
                     else if (data.user && !data.session) { showToast("Compte créé. Clique sur le lien reçu par email pour le confirmer, puis connecte-toi.", "success"); setAuthMode('login'); }
-                    else if (data.user) { await clientSupabase.from('Profils').upsert({ id: data.user.id, pseudo: pseudo, prenom: prenom, nom: nom, est_benevole: isBenevole }); showToast("Compte créé avec succès ! Bienvenue 🤘", "success"); currentUser = data.user; viewingUserId = currentUser.id; afficherApplication(); }
+                    else if (data.user) { if (data.session) await clientSupabase.rpc('enregistrer_profil', { p_pseudo: pseudo, p_prenom: prenom, p_nom: nom, p_benevole: isBenevole }); showToast("Compte créé avec succès ! Bienvenue 🤘", "success"); currentUser = data.user; viewingUserId = currentUser.id; afficherApplication(); }
                 } else if (authMode === 'forgot') {
                     const { error } = await clientSupabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
                     if (error) showToast("Erreur : " + error.message, "error"); else showToast("Vérifiez votre boîte mail (et vos spams) !", "success");
@@ -1298,7 +1315,7 @@
                     const { error } = await clientSupabase.auth.updateUser({ password: password });
                     if (error) { showToast("Erreur : " + error.message, "error"); } else {
                         const userActuel = (await clientSupabase.auth.getUser()).data.user;
-                        if (userActuel) { await clientSupabase.from('Profils').upsert({ id: userActuel.id, pseudo: pseudo, prenom: prenom, nom: nom, est_benevole: isBenevole }); }
+                        if (userActuel) { await clientSupabase.rpc('enregistrer_profil', { p_pseudo: pseudo, p_prenom: prenom, p_nom: nom, p_benevole: isBenevole }); }
                         showToast("Compte finalisé avec succès ! Bienvenue 🤘", "success"); setAuthMode('login'); window.location.hash = ''; afficherApplication(); 
                     }
                 }
@@ -1310,7 +1327,7 @@
             // On retire l'abonnement push de CET appareil et les données gardées en cache, puis on ferme la session
             try { if ('serviceWorker' in navigator) { const reg = await navigator.serviceWorker.getRegistration(); const sub = reg ? await reg.pushManager.getSubscription() : null; if (sub) { await clientSupabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint); await sub.unsubscribe(); } } } catch (e) {}
             try { indexedDB.deleteDatabase('live-cache'); } catch (e) {}
-            ['spotify_token', 'spotify_token_exp', 'code_verifier', 'live_decouverte_v1'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+            ['spotify_token', 'spotify_token_exp', 'spotify_refresh', 'code_verifier', 'live_decouverte_v1'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
             await clientSupabase.auth.signOut(); location.reload();
         }
 
@@ -1339,12 +1356,19 @@
                 const { data } = await clientSupabase.from('Profils').select('id').eq('id', currentUser.id).maybeSingle();
                 if (data) return;
                 const m = currentUser.user_metadata || {}; const t = (v, n) => (typeof v === 'string' && v.trim()) ? v.trim().replace(/[<>]/g, '').slice(0, n) : null;
-                await clientSupabase.from('Profils').upsert({ id: currentUser.id, pseudo: t(m.pseudo, 40), prenom: t(m.prenom, 60), nom: t(m.nom, 60), est_benevole: m.est_benevole === true });
+                await clientSupabase.rpc('enregistrer_profil', { p_pseudo: t(m.pseudo, 40), p_prenom: t(m.prenom, 60), p_nom: t(m.nom, 60), p_benevole: m.est_benevole === true });
             } catch (e) { console.error(e); }
         }
         async function chargerProfils() {
-            const { data, error } = await clientSupabase.from('Profils').select('*');
-            if (!error && data) { profilsData = data; }
+            // Pseudos pour tout le monde ; prénom et nom seulement pour moi et mes amis (fonction protégée côté base)
+            const [{ data, error }, noms] = await Promise.all([
+                clientSupabase.from('Profils').select('id, pseudo, est_benevole'),
+                clientSupabase.rpc('noms_visibles').then(r => r.data || [], () => [])
+            ]);
+            if (!error && data) {
+                const parId = new Map((noms || []).map(n => [String(n.id), n]));
+                profilsData = data.map(p => { const n = parId.get(String(p.id)); return { ...p, prenom: n ? n.prenom : null, nom: n ? n.nom : null }; });
+            }
         }
 
         // Charge les liens d'amitié me concernant et reconstruit la liste déroulante (amis acceptés uniquement)
@@ -1419,7 +1443,7 @@
             let isFest = (c.Lieu || "").includes('🎪'); let lieuPropre = (c.Lieu || "").replace(/🎪/g, '').trim(); let dFR = c.Date ? new Date(c.Date).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'}) : "";
             let txt = isFest ? `🎪 ${lieuPropre}` : `🎸 ${c.Artiste_principal} @ ${lieuPropre}`; if(dFR) txt += ` le ${dFR}`; document.getElementById('propose-concert-details').innerHTML = txt;
             let friendsHTML = '';
-            mesAmisIds.forEach(fid => { let p = profilsData.find(pr => String(pr.id) === String(fid)); if(p) { friendsHTML += `<label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px; background:var(--bg-box); border-radius:8px;"><input type="checkbox" class="chk-friend-propose" value="${p.id}" style="width:18px; height:18px; cursor:pointer;"><span style="color:var(--text-main); font-weight:600;">${p.pseudo || 'Anonyme'}</span></label>`; } });
+            mesAmisIds.forEach(fid => { let p = profilsData.find(pr => String(pr.id) === String(fid)); if(p) { friendsHTML += `<label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px; background:var(--bg-box); border-radius:8px;"><input type="checkbox" class="chk-friend-propose" value="${p.id}" style="width:18px; height:18px; cursor:pointer;"><span style="color:var(--text-main); font-weight:600;">${esc(p.pseudo || 'Anonyme')}</span></label>`; } });
             document.getElementById('propose-friends-list').innerHTML = friendsHTML || "<p style='color:var(--text-faded);'>Aucun ami pour l'instant. Ajoute des amis dans l'onglet 👥 Amis.</p>";
             document.getElementById('modal-propose').style.display = 'flex';
         }
@@ -1442,7 +1466,7 @@
             let htmlRecues = recues.map(a => {
                 let p = profilsData.find(pr => String(pr.id) === String(a.demandeur_id));
                 let pseudo = p ? (p.pseudo || 'Anonyme') : 'Un membre';
-                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-box); border-radius:8px;"><span style="font-weight:600;">👤 ${pseudo}</span><div style="display:flex; gap:8px;"><button class="btn-mini" style="background:#10b981; color:white; border:none;" onclick="accepterAmi('${a.id}')">✅ Accepter</button><button class="btn-mini" style="background:transparent; border:1px solid var(--border-input); color:var(--text-faded);" onclick="retirerAmi('${a.id}')">✖ Refuser</button></div></div>`;
+                return `<div class="ligne-ami"><span class="ligne-ami-nom">${esc(pseudo)}</span><div class="ligne-ami-actions"><button type="button" class="btn-mini" onclick="accepterAmi('${idSur(a.id)}')">Accepter</button><button type="button" class="btn-mini btn-secondaire" onclick="retirerAmi('${idSur(a.id)}')">Refuser</button></div></div>`;
             }).join('');
             document.getElementById('demandes-recues').innerHTML = htmlRecues || "<p style='color:var(--text-faded); margin:0;'>Aucune demande reçue.</p>";
 
@@ -1451,7 +1475,7 @@
             let htmlEnvoyees = envoyees.map(a => {
                 let p = profilsData.find(pr => String(pr.id) === String(a.destinataire_id));
                 let pseudo = p ? (p.pseudo || 'Anonyme') : 'Un membre';
-                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-box); border-radius:8px;"><span style="font-weight:600;">👤 ${pseudo} <span style="color:var(--text-faded); font-weight:normal; font-size:13px;">— en attente…</span></span><button class="btn-mini" style="background:transparent; border:1px solid var(--border-input); color:var(--text-faded);" onclick="retirerAmi('${a.id}')">Annuler</button></div>`;
+                return `<div class="ligne-ami"><span class="ligne-ami-nom">${esc(pseudo)}<span class="ligne-ami-etat">en attente</span></span><div class="ligne-ami-actions"><button type="button" class="btn-mini btn-secondaire" onclick="retirerAmi('${idSur(a.id)}')">Annuler</button></div></div>`;
             }).join('');
             document.getElementById('demandes-envoyees').innerHTML = htmlEnvoyees || "<p style='color:var(--text-faded); margin:0;'>Aucune demande en attente.</p>";
 
@@ -1475,12 +1499,12 @@
             zone.innerHTML = resultats.map(p => {
                 let st = statutAmitie(p.id);
                 let action = '';
-                if (st.statut === 'accepte') action = `<span style="color:#10b981; font-weight:600;">✅ Ami</span>`;
-                else if (st.statut === 'envoyee') action = `<span style="color:var(--text-faded);">⏳ Demande envoyée</span>`;
-                else if (st.statut === 'recue') action = `<button class="btn-mini" style="background:#10b981; color:white; border:none;" onclick="accepterAmi('${st.lien.id}')">✅ Accepter</button>`;
-                else action = `<button class="btn-mini" style="background:#6366f1; color:white; border:none;" onclick="envoyerDemandeAmi('${p.id}')">➕ Ajouter</button>`;
-                let identite = (st.statut === 'accepte' && (p.prenom || p.nom)) ? ` <span style="color:var(--text-faded); font-weight:normal; font-size:13px;">(${[p.prenom, p.nom].filter(Boolean).join(' ')})</span>` : '';
-                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-box); border-radius:8px;"><span style="font-weight:600;">👤 ${p.pseudo || 'Anonyme'}${identite}</span>${action}</div>`;
+                if (st.statut === 'accepte') action = `<span class="ligne-ami-statut">Déjà ami</span>`;
+                else if (st.statut === 'envoyee') action = `<span class="ligne-ami-statut">Demande envoyée</span>`;
+                else if (st.statut === 'recue') action = `<button type="button" class="btn-mini" onclick="accepterAmi('${idSur(st.lien.id)}')">Accepter</button>`;
+                else action = `<button type="button" class="btn-mini" onclick="envoyerDemandeAmi('${idSur(p.id)}')">Ajouter</button>`;
+                let identite = (st.statut === 'accepte' && (p.prenom || p.nom)) ? `<span class="ligne-ami-etat">${esc([p.prenom, p.nom].filter(Boolean).join(' '))}</span>` : '';
+                return `<div class="ligne-ami"><span class="ligne-ami-nom">${esc(p.pseudo || 'Anonyme')}${identite}</span><div class="ligne-ami-actions">${action}</div></div>`;
             }).join('');
         }
 
@@ -1767,7 +1791,7 @@
             const nom = document.getElementById('param-nom').value || null;
             const isBenevole = document.getElementById('param-benevole').checked;
 
-            const { error } = await clientSupabase.from('Profils').upsert({ id: currentUser.id, pseudo: pseudo, prenom: prenom, nom: nom, est_benevole: isBenevole });
+            const { error } = await clientSupabase.rpc('enregistrer_profil', { p_pseudo: pseudo, p_prenom: prenom, p_nom: nom, p_benevole: isBenevole });
             if(error) { showToast("Erreur lors de l'enregistrement", "error"); }
             else { 
                 showToast("Profil mis à jour !", "success");
@@ -3333,6 +3357,33 @@
             window.location.href = authUrl.toString();
         }
 
+        // Renouvelle le jeton Spotify (valable 1 h) sans redemander la connexion
+        let renouvellementSpotifyEnCours = null, minuteurSpotify = null;
+        function programmerRenouvellementSpotify() {
+            clearTimeout(minuteurSpotify);
+            const dans = Number(spotifyTokenExp) - Date.now() - 120000;
+            if (localStorage.getItem('spotify_refresh') && isFinite(dans)) minuteurSpotify = setTimeout(renouvelerSpotify, Math.max(dans, 5000));
+        }
+        function renouvelerSpotify() {
+            if (renouvellementSpotifyEnCours) return renouvellementSpotifyEnCours;
+            const rt = localStorage.getItem('spotify_refresh'); if (!rt) return Promise.resolve(false);
+            renouvellementSpotifyEnCours = (async () => {
+                try {
+                    const r = await fetch(AUTH_URL + "/api/token", { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: rt, client_id: SPOTIFY_CLIENT_ID }) });
+                    const d = await r.json().catch(() => ({}));
+                    if (!r.ok || !d.access_token) { if (d && d.error === 'invalid_grant') localStorage.removeItem('spotify_refresh'); return false; }
+                    spotifyToken = d.access_token; spotifyTokenExp = Date.now() + (d.expires_in || 3600) * 1000;
+                    localStorage.setItem('spotify_token', spotifyToken); localStorage.setItem('spotify_token_exp', spotifyTokenExp);
+                    if (d.refresh_token) localStorage.setItem('spotify_refresh', d.refresh_token);
+                    programmerRenouvellementSpotify();
+                    return true;
+                } catch (e) { return false; } finally { renouvellementSpotifyEnCours = null; }
+            })();
+            return renouvellementSpotifyEnCours;
+        }
+        // Au retour sur l'appli (mise en veille du téléphone), on rafraîchit si besoin
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && localStorage.getItem('spotify_refresh') && Date.now() > Number(spotifyTokenExp) - 120000) renouvelerSpotify(); });
+
         async function verifierRetourSpotify() {
             const urlParams = new URLSearchParams(window.location.search);
             let code = urlParams.get('code');
@@ -3358,6 +3409,8 @@
                         spotifyTokenExp = Date.now() + (data.expires_in * 1000);
                         localStorage.setItem('spotify_token', spotifyToken);
                         localStorage.setItem('spotify_token_exp', spotifyTokenExp);
+                        if (data.refresh_token) localStorage.setItem('spotify_refresh', data.refresh_token);
+                        programmerRenouvellementSpotify();
                         
                         window.history.replaceState({}, document.title, window.location.pathname);
                         showToast("Spotify connecté ! 🎧", "success");
@@ -3367,9 +3420,9 @@
                 } catch(e) { console.error(e); }
             }
 
-            if (spotifyToken && Date.now() > spotifyTokenExp) {
-                spotifyToken = null; localStorage.removeItem('spotify_token');
-            }
+            if (!spotifyToken || Date.now() > Number(spotifyTokenExp) - 60000) {
+                if (!(await renouvelerSpotify())) { spotifyToken = null; localStorage.removeItem('spotify_token'); }
+            } else programmerRenouvellementSpotify();
             { const b = document.getElementById('btn-spotify-accueil'); if (b) b.hidden = !!spotifyToken; }
             if (spotifyToken) {
                 const btn = document.getElementById('btn-spotify-connect');
@@ -3394,7 +3447,7 @@
             try {
                 // On recherche large (limit=10) pour corriger les erreurs de l'API
                 const res = await fetch(API_URL + '/search?q=' + encodeURIComponent(cleanName) + '&type=artist&limit=10', { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
-                if(res.status === 401) { spotifyToken = null; localStorage.removeItem('spotify_token'); return null; } 
+                if(res.status === 401) { if (await renouvelerSpotify()) return getSpotifyData(artistName); spotifyToken = null; localStorage.removeItem('spotify_token'); return null; } 
                 const data = await res.json();
                 if (data.artists && data.artists.items.length > 0) {
                     
@@ -3934,7 +3987,7 @@
                 const p = profilsData.find(x => String(x.id) === String(fid)); const nom = p ? (p.pseudo || 'Anonyme') : 'Un membre';
                 const ident = p ? [p.prenom, p.nom].filter(Boolean).join(' ') : '';
                 const lien = amisData.find(a => a.statut === 'accepte' && (a.demandeur_id === fid || a.destinataire_id === fid)); const lid = lien ? idSur(lien.id) : '';
-                return `<div class="carte-ami"><div><div class="ami-nom">${esc(nom)}</div>${ident ? `<div class="ligne-sous">${esc(ident)}</div>` : ''}</div><div class="ligne-actions"><button type="button" class="btn-mini" onclick="voirAgendaAmi('${id}')">Voir son agenda</button><button type="button" class="btn-mini btn-secondaire" onclick="confirmerRetraitAmi('${lid}')">Retirer</button></div></div>`;
+                return `<div class="carte-ami"><div class="carte-ami-tete"><div class="ami-nom">${esc(nom)}</div>${ident ? `<div class="ligne-sous">${esc(ident)}</div>` : ''}</div><div class="carte-ami-actions"><button type="button" class="btn-mini" onclick="voirAgendaAmi('${id}')">Voir son agenda</button><button type="button" class="btn-mini btn-secondaire" onclick="confirmerRetraitAmi('${lid}')">Retirer</button></div></div>`;
             }).join('');
             document.getElementById('liste-amis').innerHTML = html || `<p class="vide">Pas encore d'amis. Cherche un pseudo ci-dessous pour en ajouter.</p>`;
             document.getElementById('bloc-demandes-recues').hidden = !amisData.some(a => a.statut === 'en_attente' && a.destinataire_id === currentUser.id);

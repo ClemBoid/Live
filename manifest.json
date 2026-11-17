@@ -3,8 +3,8 @@
   "short_name": "Live!",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#3b82f6",
+  "background_color": "#C9D5C3",
+  "theme_color": "#1F3327",
   "orientation": "portrait",
   "icons": [
     {
