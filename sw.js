@@ -1,4 +1,4 @@
-const CACHE_NAME = 'live-v7';
+const CACHE_NAME = 'live-v8';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './badge-96.png'];
 
 self.addEventListener('install', (event) => {
