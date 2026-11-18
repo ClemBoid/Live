@@ -530,6 +530,7 @@
         .quiva-ligne { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px; padding: 4px 0; }
         .choix-calendrier { margin-top: 10px; padding: 12px; border: 2px solid var(--ink); background: var(--bg-box); display: grid; gap: 8px; }
         @media (max-width: 640px) { .quiva-ligne { grid-template-columns: 1fr; gap: 0; } }
+        .art-total { padding: 8px 0 10px; border-bottom: 2px solid var(--ink); margin-bottom: 4px; }
         .centre-notifs { margin-bottom: 26px; }
         .notifs-tete { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; min-height: 24px; }
         #btn-notifs-accueil .notif-compte { min-width: 22px; height: 22px; font-size: 12px; margin-left: 8px; vertical-align: 0; background: var(--ink); color: var(--ground); }
@@ -1173,16 +1174,19 @@
         function normaliserTexte(t) { return t ? String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : ""; }
         function uniformiserArtistes(artistesStr) { if (!artistesStr) return "inconnu"; return artistesStr.split(',').map(a => normaliserTexte(a).trim()).filter(a => a !== "").sort().join(','); }
         function uniformiserSalle(salleStr) { if (!salleStr) return "inconnu"; let s = normaliserTexte(String(salleStr)); s = s.replace(/🎪/g, '').trim(); s = s.replace(/^(le |la |les |l'|l’)/, ''); s = s.replace(/\(.*?\)/g, '').trim(); s = s.split(/[,-]/)[0].trim(); return s || "inconnu"; }
+        // Clé d'un artiste : sans accents, majuscules, espaces ni ponctuation (« St. Python » = « ST.PYTHON » = « St Python »)
+        function cleArtiste(a) { const n = normaliserTexte(String(a || '')); return n.replace(/[^\p{L}\p{N}]/gu, '') || n; }
         function getSpotifyOfficialName(artistName) {
             if (!artistName) return null;
             let cleanName = String(artistName).split(',')[0].trim().replace(/🎪 /g, '');
             try {
                 let cache = (typeof spotifyCache !== 'undefined' && spotifyCache) ? spotifyCache : (JSON.parse(localStorage.getItem('spotify_artist_cache')) || {});
+                const ok = n => n && cleArtiste(n) === cleArtiste(cleanName);
                 let entry = cache[cleanName];
-                if (entry && entry.name) return entry.name;
+                if (entry && ok(entry.name)) return entry.name;
                 // Fallback : recherche case-insensitive dans le cache (les clés sont les noms saisis bruts)
                 let nk = normaliserTexte(cleanName);
-                for (let k in cache) { if (normaliserTexte(k) === nk && cache[k] && cache[k].name) return cache[k].name; }
+                for (let k in cache) { if (normaliserTexte(k) === nk && cache[k] && ok(cache[k].name)) return cache[k].name; }
             } catch(e) {}
             return null;
         }
@@ -3655,27 +3659,28 @@
             concertsVus().forEach(c => {
                 const arts = artistesVusDe(c); let notes = c.Notes_artistes || {}; if (typeof notes === 'string') { try { notes = JSON.parse(notes); } catch (e) { notes = {}; } }
                 arts.forEach(a => {
-                    const k = normaliserTexte(a); if (!m.has(k)) m.set(k, { cle: k, nom: getSpotifyOfficialName(a) || a, concerts: [], notes: [], prix: [] });
-                    const o = m.get(k); o.concerts.push(c);
+                    const k = cleArtiste(a); if (!m.has(k)) m.set(k, { cle: k, nom: getSpotifyOfficialName(a) || a, concerts: [], notes: [], prix: [] });
+                    const o = m.get(k); if (o.concerts.includes(c)) return; o.concerts.push(c);
                     const n = parseFloat(notes[a]) || (arts.length === 1 ? parseFloat(c.Note) || 0 : 0); if (n > 0) o.notes.push(n);
                     if (prixNum(c) > 0) o.prix.push(prixNum(c));
                 });
             });
             let L = Array.from(m.values()).map(o => ({ ...o, n: o.concerts.length, note: o.notes.length ? o.notes.reduce((a, b) => a + b, 0) / o.notes.length : 0, tarif: o.prix.reduce((a, b) => a + b, 0), dernier: o.concerts.map(dateISO).sort().pop() }));
-            const q = normaliserTexte(el('art-recherche').value.trim()); if (q) L = L.filter(o => o.cle.includes(q));
+            const q = cleArtiste(el('art-recherche').value.trim()); if (q) L = L.filter(o => o.cle.includes(q));
             const tri = el('art-tri').value;
             L.sort((a, b) => tri === 'nom' ? a.nom.localeCompare(b.nom) : tri === 'note' ? (b.note - a.note || b.n - a.n) : tri === 'recent' ? b.dernier.localeCompare(a.dernier) : tri === 'tarif' ? (b.tarif - a.tarif) : (b.n - a.n || a.nom.localeCompare(b.nom)));
             artListe = L;
             el('art-compte').textContent = L.length + (L.length > 1 ? ' artistes vus' : ' artiste vu');
             el('art-liste').innerHTML = L.map((o, i) => {
-                const sous = [o.n + (o.n > 1 ? ' concerts' : ' concert'), 'dernier : ' + dateFr(o.dernier, { day: 'numeric', month: 'long', year: 'numeric' }), o.tarif > 0 ? fmtEuro(o.tarif) + ' au total' : ''].filter(Boolean).join(' · ');
+                const sous = '';
                 const ouvert = artOuverts.has(o.cle);
-                return `<div class="cr"><button type="button" class="cr-tete art-tete" aria-expanded="${ouvert}" onclick="basculerArtiste(${i})"><span class="cr-corps"><span class="cr-titre">${esc(o.nom)}</span><span class="cr-lieu">${esc(sous)}</span></span><span style="display:flex; gap:6px; justify-content:flex-end;">${o.note > 0 ? `<span class="pill pill-clair">★ ${esc((Math.round(o.note * 10) / 10).toString().replace('.', ','))}</span>` : ''}<span class="pill pill-plein">${o.n} fois</span></span></button><div class="cr-detail" style="padding-left:0;" id="artd-${i}"${ouvert ? '' : ' hidden'}>${ouvert ? detailArtisteHtml(o) : ''}</div></div>`;
+                return `<div class="cr"><button type="button" class="cr-tete art-tete" aria-expanded="${ouvert}" onclick="basculerArtiste(${i})"><span class="cr-corps"><span class="cr-titre">${esc(o.nom)}</span>${sous ? `<span class="cr-lieu">${esc(sous)}</span>` : ''}</span><span style="display:flex; gap:6px; justify-content:flex-end;">${o.note > 0 ? `<span class="pill pill-clair">★ ${esc((Math.round(o.note * 10) / 10).toString().replace('.', ','))}</span>` : ''}<span class="pill pill-plein">${o.n} fois</span></span></button><div class="cr-detail" style="padding-left:0;" id="artd-${i}"${ouvert ? '' : ' hidden'}>${ouvert ? detailArtisteHtml(o) : ''}</div></div>`;
             }).join('') || `<p class="vide">Aucun artiste pour l'instant.</p>`;
         }
         function detailArtisteHtml(o) {
             setTimeout(() => remplirQuiEtaitLa(o.concerts), 0);
-            return o.concerts.slice().sort((a, b) => dateISO(b).localeCompare(dateISO(a))).map(c => {
+            const total = o.tarif > 0 ? `<div class="art-total">Total dépensé : <b>${esc(fmtEuro(o.tarif))}</b>${o.n > 1 ? ` sur ${o.n} concerts` : ''}</div>` : '';
+            return total + o.concerts.slice().sort((a, b) => dateISO(b).localeCompare(dateISO(a))).map(c => {
                 const autres = artistesVusDe(c);
                 return `<div class="art-concert"><b>${esc(dateFr(dateISO(c), { day: 'numeric', month: 'long', year: 'numeric' }))}</b> · ${esc(lieuPropreDe(c) || 'Lieu inconnu')}${prixNum(c) > 0 ? ' · ' + esc(fmtEuro(prixNum(c))) : ''}${autres.length > 1 ? `<div class="ligne-sous">Ce soir-là : ${esc(autres.join(', '))}</div>` : ''}<div class="ligne-sous qui-etait" id="qe-${idSur(c.id)}" hidden></div></div>`;
             }).join('');
@@ -3691,7 +3696,7 @@
             const corps = `<span class="barre-lib">${esc(lib)}</span><span class="barre-piste"><span class="barre" style="display:block; width:${pct}%;"></span></span><span class="barre-val">${esc(valTxt)}</span>`;
             return action ? `<button type="button" class="barre-ligne${large ? ' large' : ''}" onclick="${action}">${corps}</button>` : `<div class="barre-ligne${large ? ' large' : ''}">${corps}</div>`;
         }
-        function mesure(L) { return statsMetrique === 'concerts' ? L.length : statsMetrique === 'artistes' ? new Set(L.flatMap(c => artistesVusDe(c).map(normaliserTexte))).size : L.reduce((s, c) => s + prixNum(c), 0); }
+        function mesure(L) { return statsMetrique === 'concerts' ? L.length : statsMetrique === 'artistes' ? new Set(L.flatMap(c => artistesVusDe(c).map(cleArtiste))).size : L.reduce((s, c) => s + prixNum(c), 0); }
         function rendreStats() {
             const vus = concertsVus();
             const annees = Array.from(new Set(vus.map(c => dateISO(c).slice(0, 4)))).filter(a => /^\d{4}$/.test(a)).sort().reverse();
@@ -3699,7 +3704,7 @@
             if (statsAnnee === null || (statsAnnee !== 'tout' && !annees.includes(statsAnnee))) statsAnnee = annees.includes(cetteAnnee) ? cetteAnnee : 'tout';
             el('stats-annees').innerHTML = `<button type="button" class="${statsAnnee === 'tout' ? 'actif' : ''}" onclick="choisirAnnee('tout')">Tout</button>` + annees.map(a => `<button type="button" class="${statsAnnee === a ? 'actif' : ''}" onclick="choisirAnnee('${a}')">${a}</button>`).join('');
             const L = statsAnnee === 'tout' ? vus : vus.filter(c => dateISO(c).slice(0, 4) === statsAnnee);
-            const nbArt = new Set(L.flatMap(c => artistesVusDe(c).map(normaliserTexte))).size; const depense = L.reduce((s, c) => s + prixNum(c), 0); const nbSalles = new Set(L.map(c => uniformiserSalle(c.Lieu || '')).filter(x => x !== 'inconnu')).size;
+            const nbArt = new Set(L.flatMap(c => artistesVusDe(c).map(cleArtiste))).size; const depense = L.reduce((s, c) => s + prixNum(c), 0); const nbSalles = new Set(L.map(c => uniformiserSalle(c.Lieu || '')).filter(x => x !== 'inconnu')).size;
             el('stats-kpi').innerHTML = `<div><b>${L.length}</b><span>Concerts</span></div><div><b>${nbArt}</b><span>Artistes</span></div><div><b>${esc(fmtEuro(Math.round(depense)))}</b><span>Dépensé</span></div><div><b>${nbSalles}</b><span>Salles</span></div>`;
             marquerSegments('stats-metriques', 'm', statsMetrique);
             const noms = { concerts: 'Concerts', artistes: 'Artistes', depenses: 'Dépenses' };
