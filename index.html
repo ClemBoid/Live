@@ -530,6 +530,16 @@
         .quiva-ligne { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px; padding: 4px 0; }
         .choix-calendrier { margin-top: 10px; padding: 12px; border: 2px solid var(--ink); background: var(--bg-box); display: grid; gap: 8px; }
         @media (max-width: 640px) { .quiva-ligne { grid-template-columns: 1fr; gap: 0; } }
+        .centre-notifs { margin-bottom: 26px; }
+        .notifs-tete { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; min-height: 24px; }
+        #btn-notifs-accueil .notif-compte { min-width: 22px; height: 22px; font-size: 12px; margin-left: 8px; vertical-align: 0; background: var(--ink); color: var(--ground); }
+        #btn-notifs-accueil .notif-compte[hidden] { display: none; }
+        .centre-notifs .ligne.notif { align-items: center; }
+        .notif-type { font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-faded); }
+        .notif-compte { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 6px; margin-left: 6px; background: var(--ink); color: var(--ground); font-size: 14px; letter-spacing: 0; vertical-align: 3px; }
+        .notif-vide { margin: 4px 0 0; }
+        .notif-plus { margin-top: 8px; }
+        #accueil-bandeaux #propositions-container { display: none !important; }
         /* Style affiche : coins carrés partout, sauf les ronds voulus */
         [style*="border-radius"]:not([style*="50%"]) { border-radius: 0 !important; }
         input[type="checkbox"] { accent-color: var(--ink); }
@@ -637,6 +647,11 @@
                     <div id="accueil-billets"></div>
                 </section>
             </div>
+        </div>
+
+        <div id="tab-notifs" class="vue-onglet">
+            <div class="entete-bloc"><h2 class="titre-page">Notifications</h2><button type="button" class="lien-bloc" onclick="allerA('tab-accueil')">Retour à l'accueil</button></div>
+            <div id="notifs-centre"></div>
         </div>
 
         <div id="tab-reco" class="vue-onglet">
@@ -1315,7 +1330,7 @@
 
         async function afficherApplication() {
             document.getElementById('auth-section').style.display = 'none'; document.getElementById('app-section').style.display = 'block';
-            await assurerProfil(); await chargerProfils(); await chargerAmis(); await chargerSallesCommunaute(); await verifierPropositions(); await changerVueUtilisateur("ME");
+            await assurerProfil(); await chargerProfils(); await chargerAmis(); await chargerSallesCommunaute(); await verifierPropositions(); await chargerNotifs(); await changerVueUtilisateur("ME");
             ouvrirLienNotification();
         }
         // Une notification peut ouvrir directement la fiche d'un concert ou les recommandations
@@ -3089,13 +3104,13 @@
 
         // Rafraîchissements automatiques de l'accueil et des pastilles
         const _chargerAmisBase = chargerAmis;
-        chargerAmis = async function() { await _chargerAmisBase(); majBadgesAmis(); if (ongletActifId() === 'tab-accueil') afficherAccueil(); };
+        chargerAmis = async function() { await _chargerAmisBase(); majBadgesAmis(); majBadgeAccueil(); if (ongletActifId() === 'tab-accueil') afficherAccueil(); if (ongletActifId() === 'tab-notifs') rendreCentreNotifs(); };
         const _verifierPropositionsBase = verifierPropositions;
-        verifierPropositions = async function() { await _verifierPropositionsBase(); if (ongletActifId() === 'tab-accueil') afficherAccueil(); };
+        verifierPropositions = async function() { await _verifierPropositionsBase(); majBadgeAccueil(); if (ongletActifId() === 'tab-accueil') afficherAccueil(); if (ongletActifId() === 'tab-notifs') rendreCentreNotifs(); };
         const _refuserPropositionBase = window.refuserProposition;
-        window.refuserProposition = async function(propId) { await _refuserPropositionBase(propId); pendingProposals = pendingProposals.filter(x => x.id !== propId); if (ongletActifId() === 'tab-accueil') afficherAccueil(); };
+        window.refuserProposition = async function(propId) { await _refuserPropositionBase(propId); pendingProposals = pendingProposals.filter(x => x.id !== propId); majBadgeAccueil(); if (ongletActifId() === 'tab-notifs') rendreCentreNotifs(); if (ongletActifId() === 'tab-accueil') afficherAccueil(); };
         const _accepterPropositionBase = window.accepterProposition;
-        window.accepterProposition = async function(propId) { await _accepterPropositionBase(propId); pendingProposals = pendingProposals.filter(x => x.id !== propId); };
+        window.accepterProposition = async function(propId) { await _accepterPropositionBase(propId); pendingProposals = pendingProposals.filter(x => x.id !== propId); majBadgeAccueil(); };
 
         // Onglet Amis : la liste met en avant « Voir son agenda »
         const _rafraichirOngletAmisBase = rafraichirOngletAmis;
@@ -3119,7 +3134,7 @@
 
         // ================= V3 : NOUVELLE ORGANISATION =================
         Object.keys(GROUPE_NAV).forEach(k => delete GROUPE_NAV[k]);
-        Object.assign(GROUPE_NAV, { 'tab-accueil': 'accueil', 'tab-reco': 'accueil', 'tab-concerts': 'agenda', 'tab-team': 'team', 'tab-amis': 'amis', 'tab-historique': 'historique', 'tab-profil': 'profil' });
+        Object.assign(GROUPE_NAV, { 'tab-accueil': 'accueil', 'tab-reco': 'accueil', 'tab-notifs': 'accueil', 'tab-concerts': 'agenda', 'tab-team': 'team', 'tab-amis': 'amis', 'tab-historique': 'historique', 'tab-profil': 'profil' });
         const el = id => document.getElementById(id);
         function prixNum(c) { const v = parseFloat(String(c.Prix == null ? '' : c.Prix).replace(',', '.')); return isFinite(v) ? v : 0; }
         function fmtEuro(n) { return (Math.round(n * 100) / 100).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' €'; }
@@ -3458,7 +3473,7 @@
             const avenir = miens.filter(c => dateISO(c) && dateISO(c) >= today).sort((a, b) => dateISO(a).localeCompare(dateISO(b)));
             const hero = el('accueil-hero');
             const boutonsHero = '';
-            const actionsSous = `<div class="accueil-actions-haut"><button type="button" class="btn-mini" onclick="ouvrirAjoutConcert()">+ Ajouter un concert</button><button type="button" class="btn-mini btn-secondaire" onclick="allerA('tab-reco')">Recommandations</button></div>`;
+            const actionsSous = `<div class="accueil-actions-haut"><button type="button" class="btn-mini" onclick="ouvrirAjoutConcert()">+ Ajouter un concert</button><button type="button" class="btn-mini btn-secondaire" onclick="allerA('tab-reco')">Recommandations</button><button type="button" class="btn-mini btn-secondaire" id="btn-notifs-accueil" onclick="allerA('tab-notifs')">Notifications<span class="notif-compte" id="compte-notifs-accueil" hidden></span></button></div>`;
             if (avenir.length) {
                 const c = avenir[0]; window._accueilProchain = c;
                 const j = Math.round((new Date(dateISO(c) + 'T00:00:00') - new Date(today + 'T00:00:00')) / 86400000);
@@ -3471,16 +3486,78 @@
             } else {
                 hero.innerHTML = `<div class="hero"><div class="hero-sur">Prochain concert</div><div class="hero-titre">Rien de prévu</div><div class="hero-sous">Ajoute ton prochain concert pour le retrouver ici.</div></div>` + actionsSous;
             }
-            const demandes = amisData.filter(a => a.statut === 'en_attente' && a.destinataire_id === currentUser.id).map(a => {
-                const id = idSur(a.id); if (!id) return '';
-                const p = profilsData.find(x => String(x.id) === String(a.demandeur_id)); const qui = p ? (p.pseudo || 'Un membre') : 'Un membre';
-                return ligneHtml(`${qui} veut t'ajouter en ami`, '', `<button type="button" class="btn-mini" onclick="accepterAmi('${id}')">Accepter</button><button type="button" class="btn-mini btn-secondaire" onclick="retirerAmi('${id}')">Refuser</button>`);
-            }).join('');
-            el('accueil-atraiter').innerHTML = demandes ? `<div style="margin-bottom:22px;">${demandes}</div>` : '';
+            el('accueil-atraiter').innerHTML = ''; majBadgeAccueil();
+            if (Date.now() - notifsEtat.ts > 60000) chargerNotifs();
             rendreAccueilAvenir(avenir, today);
             if (Date.now() - equipeCache.ts >= 60000) chargerEquipeAvenir().then(d => { if (d && ongletActifId() === 'tab-accueil') rendreAccueilAvenir(avenir, today); });
             const aAcheter = avenir.filter(c => c.Statut_billet === 'a_acheter');
             el('accueil-billets').innerHTML = aAcheter.slice(0, 6).map(c => ligneConcertHtml(c, { today, mois: true, droite: `<button type="button" class="btn-txt" onclick="trouverBillets('${idSur(c.id)}')">Trouver des billets</button>` })).join('') || `<p class="vide">Aucun billet à acheter, tout est en ordre.</p>`;
+        };
+
+        // ---------- CENTRE DE NOTIFICATIONS (accueil) ----------
+        let notifsEtat = { ts: 0, alertes: [], lues: new Set() }; let notifsTout = false; let notifsCles = [];
+        async function chargerNotifs() {
+            if (!currentUser) return;
+            const depuis = new Date(Date.now() - 30 * 864e5).toISOString();
+            const [al, lu] = await Promise.all([
+                clientSupabase.from('alertes_envoyees').select('cle, date_concert, artiste, salle, envoye_le').eq('user_id', currentUser.id).gte('envoye_le', depuis).gte('date_concert', aujourdHuiLocal()).order('envoye_le', { ascending: false }).limit(30),
+                clientSupabase.from('notifications_lues').select('cle').eq('user_id', currentUser.id)
+            ]);
+            notifsEtat = { ts: Date.now(), alertes: al.error ? [] : (al.data || []), lues: new Set(lu.error ? [] : (lu.data || []).map(x => x.cle)) };
+            majBadgeAccueil();
+        }
+        function elementsNotifs() {
+            const nomDe = uid => { const p = profilsData.find(x => String(x.id) === String(uid)); return p ? (p.pseudo || 'Un membre') : 'Un membre'; };
+            const items = []; const il_y_a30 = Date.now() - 30 * 864e5; notifsCles = [];
+            // Demandes d'ami reçues
+            amisData.filter(a => a.statut === 'en_attente' && a.destinataire_id === currentUser.id).forEach(a => {
+                const id = idSur(a.id); if (!id) return;
+                items.push({ quand: a.created_at, type: 'Ami', titre: `${nomDe(a.demandeur_id)} veut t'ajouter en ami`, actions: `<button type="button" class="btn-mini" onclick="accepterAmi('${id}')">Accepter</button><button type="button" class="btn-mini btn-secondaire" onclick="retirerAmi('${id}')">Refuser</button>` });
+            });
+            // Concerts proposés par des amis
+            (pendingProposals || []).forEach(p => {
+                const id = idSur(p.id); if (!id) return;
+                const fest = String(p.lieu || '').includes('🎪'); const lieu = formaterSalle(p.lieu || '');
+                const quoi = (fest ? lieu : [p.artiste ? formaterArtistes(p.artiste) : '', lieu].filter(Boolean).join(' à ')).replace(/ à Le /, ' au ').replace(/ à Les /, ' aux ');
+                items.push({ quand: p.created_at, type: 'Proposition', titre: `${nomDe(p.sender_id)} te propose ${quoi || 'un concert'}`, sous: p.date ? dateFr(p.date, { weekday: 'long', day: 'numeric', month: 'long' }) : '', actions: `<button type="button" class="btn-mini" onclick="accepterProposition('${id}')">Ajouter</button><button type="button" class="btn-mini btn-secondaire" onclick="refuserProposition('${id}')">Ignorer</button>` });
+            });
+            // Mes demandes d'ami acceptées (30 derniers jours)
+            amisData.filter(a => a.statut === 'accepte' && a.demandeur_id === currentUser.id && a.accepte_le && Date.parse(a.accepte_le) > il_y_a30 && !notifsEtat.lues.has('ami:' + a.id)).forEach(a => {
+                const id = idSur(a.id), fid = idSur(a.destinataire_id); if (!id || !fid) return;
+                items.push({ quand: a.accepte_le, type: 'Ami', lu: 'ami:' + id, titre: `${nomDe(a.destinataire_id)} a accepté ta demande d'ami`, actions: `<button type="button" class="btn-mini" onclick="marquerNotifsLues(['ami:${id}']); voirAgendaAmi('${fid}')">Voir son agenda</button><button type="button" class="btn-mini btn-secondaire" onclick="marquerNotifsLues(['ami:${id}'])">OK</button>` });
+            });
+            // Nouvelles dates d'artistes déjà vus
+            notifsEtat.alertes.filter(x => !notifsEtat.lues.has('alerte:' + x.cle)).forEach(x => {
+                const cle = 'alerte:' + x.cle; const k = 'notifsCles[' + (notifsCles.push(cle) - 1) + ']';
+                const artiste = formaterArtiste(x.artiste || String(x.cle).split('|')[1] || 'Un artiste que tu as vu');
+                items.push({ quand: x.envoye_le, type: 'Nouvelle date', lu: cle, titre: `Nouvelle date : ${artiste}`, sous: [x.salle ? formaterSalle(x.salle) : '', x.date_concert ? dateFr(x.date_concert, { day: 'numeric', month: 'long', year: 'numeric' }) : ''].filter(Boolean).join(' · '), actions: `<button type="button" class="btn-mini" onclick="marquerNotifsLues([${k}]); allerA('tab-reco')">Voir</button><button type="button" class="btn-mini btn-secondaire" onclick="marquerNotifsLues([${k}])">OK</button>` });
+            });
+            return items.sort((a, b) => String(b.quand || '').localeCompare(String(a.quand || '')));
+        }
+        function majBadgeAccueil() {
+            const nav = document.querySelector('.nav-item[data-nav="accueil"]'); if (!nav || !currentUser) return;
+            let b = document.getElementById('nav-badge-accueil');
+            if (!b) { nav.style.position = 'relative'; nav.insertAdjacentHTML('beforeend', '<span id="nav-badge-accueil" class="nav-badge" hidden></span>'); b = document.getElementById('nav-badge-accueil'); }
+            const n = chezUnAmi() ? 0 : elementsNotifs().length; b.hidden = n === 0; b.textContent = n ? String(n) : '';
+            const c = document.getElementById('compte-notifs-accueil'); if (c) { c.hidden = n === 0; c.textContent = n ? String(n) : ''; }
+        }
+        function rendreCentreNotifs() {
+            const z = el('notifs-centre'); if (!z) return; majBadgeAccueil();
+            if (chezUnAmi()) { z.innerHTML = `<p class="vide">Reviens à ton agenda pour voir tes notifications.</p>`; return; }
+            const items = elementsNotifs(); const visibles = items;
+            const aLire = items.filter(i => i.lu).map(i => i.lu);
+            const tete = `<div class="notifs-tete"><span class="texte-aide" style="margin:0;">${items.length ? items.length + (items.length > 1 ? ' notifications non lues' : ' notification non lue') : ''}</span>${aLire.length > 1 ? `<button type="button" class="lien-bloc" onclick="marquerToutesNotifs()">Tout marquer comme lu</button>` : ''}</div>`;
+            const corps = items.length
+                ? visibles.map(i => `<div class="ligne notif"><div><div class="notif-type">${esc(i.type)}</div><div class="ligne-titre">${esc(i.titre)}</div>${i.sous ? `<div class="ligne-sous">${esc(i.sous)}</div>` : ''}</div><div class="ligne-actions">${i.actions}</div></div>`).join('')
+                : `<p class="vide notif-vide">Rien de nouveau pour l'instant.</p>`;
+            z.innerHTML = `<section class="centre-notifs">${tete}${corps}</section>`;
+        }
+        window.marquerToutesNotifs = function() { marquerNotifsLues(elementsNotifs().filter(i => i.lu).map(i => i.lu)); };
+        window.marquerNotifsLues = async function(cles) {
+            cles = (cles || []).filter(c => typeof c === 'string' && c.length <= 200); if (!cles.length) return;
+            cles.forEach(c => notifsEtat.lues.add(c)); rendreCentreNotifs(); if (ongletActifId() === 'tab-accueil') majBadgeAccueil();
+            const { error } = await clientSupabase.from('notifications_lues').upsert(cles.map(cle => ({ user_id: currentUser.id, cle })), { onConflict: 'user_id,cle', ignoreDuplicates: true });
+            if (error) console.error(error);
         };
 
         // ---------- AGENDA DE LA TEAM ----------
@@ -3947,6 +4024,7 @@
             if (idTab === 'tab-concerts') rendreAgenda();
             if (idTab === 'tab-team') chargerTeam();
             if (idTab === 'tab-historique') rendreHistorique();
+            if (idTab === 'tab-notifs') { rendreCentreNotifs(); chargerNotifs().then(rendreCentreNotifs); }
             if (idTab === 'tab-reco') initReco();
             if (idTab === 'tab-profil') { chargerParametres(); rafraichirStatutPush(); majBoutonTheme(); chargerPrefsNotif(); }
         };
