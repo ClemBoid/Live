@@ -2,13 +2,15 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Live!</title>
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://vrjmvhmcizgrozjwkcoy.supabase.co wss://vrjmvhmcizgrozjwkcoy.supabase.co https://api.spotify.com https://accounts.spotify.com https://geocoding-api.open-meteo.com https://api.open-meteo.com https://nominatim.openstreetmap.org https://public.opendatasoft.com https://theblacklab.fr; frame-src https://open.spotify.com; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self'; manifest-src 'self'">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1F3327">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="apple-touch-icon" href="icon-192.png">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.min.js" integrity="sha384-gnyZit14c5lnGcarmA166QQjjJXpucw25ogZXuwH3HxxY904zHkBqmxVpelsPorb" crossorigin="anonymous"></script>
@@ -541,6 +543,28 @@
         .notif-vide { margin: 4px 0 0; }
         .notif-plus { margin-top: 8px; }
         #accueil-bandeaux #propositions-container { display: none !important; }
+        /* Couleurs au choix (Profil > Appli) — « sauge » reste la palette par défaut */
+        body[data-palette="sable"] { --ink: #5A2A1E; --ground: #E9DCC6; --paper: #FFFAF2; --bg-body: #E9DCC6; --bg-carte: #FFFAF2; --border-carte: #5A2A1E; --text-main: #5A2A1E; --text-muted: #5A2A1E; --text-faded: #7A4A3C; --bg-input: #FFFAF2; --border-input: #5A2A1E; --bg-box: #F3E8D6; --border-ligne: color-mix(in srgb, #5A2A1E 25%, transparent); --hover-ligne: color-mix(in srgb, #5A2A1E 7%, transparent); --zebra-bg: color-mix(in srgb, #5A2A1E 3%, transparent); --accent: #8A6418; --danger: #A8321E; }
+        body.dark-mode[data-palette="sable"] { --ink: #F1E3CC; --ground: #3A2420; --paper: #4A2E28; --bg-body: #3A2420; --bg-carte: #4A2E28; --border-carte: #F1E3CC; --text-main: #F1E3CC; --text-muted: #F1E3CC; --text-faded: #D9C2A8; --bg-input: #3A2420; --border-input: #F1E3CC; --bg-box: #432A25; --border-ligne: color-mix(in srgb, #F1E3CC 25%, transparent); --hover-ligne: color-mix(in srgb, #F1E3CC 7%, transparent); --zebra-bg: color-mix(in srgb, #F1E3CC 3%, transparent); --accent: #E3B862; --danger: #F08A72; }
+        body[data-palette="ardoise"] { --ink: #22303C; --ground: #DDE2E6; --paper: #FFFFFF; --bg-body: #DDE2E6; --bg-carte: #FFFFFF; --border-carte: #22303C; --text-main: #22303C; --text-muted: #22303C; --text-faded: #4A5966; --bg-input: #FFFFFF; --border-input: #22303C; --bg-box: #ECEFF1; --border-ligne: color-mix(in srgb, #22303C 25%, transparent); --hover-ligne: color-mix(in srgb, #22303C 7%, transparent); --zebra-bg: color-mix(in srgb, #22303C 3%, transparent); --accent: #9C6F00; --danger: #A8352A; }
+        body.dark-mode[data-palette="ardoise"] { --ink: #E8ECEF; --ground: #1C2630; --paper: #26323D; --bg-body: #1C2630; --bg-carte: #26323D; --border-carte: #E8ECEF; --text-main: #E8ECEF; --text-muted: #E8ECEF; --text-faded: #B8C2CA; --bg-input: #1C2630; --border-input: #E8ECEF; --bg-box: #22303A; --border-ligne: color-mix(in srgb, #E8ECEF 25%, transparent); --hover-ligne: color-mix(in srgb, #E8ECEF 7%, transparent); --zebra-bg: color-mix(in srgb, #E8ECEF 3%, transparent); --accent: #E9C15A; --danger: #EE8B7E; }
+        body[data-palette="ocean"] { --ink: #12355B; --ground: #D6E4EE; --paper: #FFFFFF; --bg-body: #D6E4EE; --bg-carte: #FFFFFF; --border-carte: #12355B; --text-main: #12355B; --text-muted: #12355B; --text-faded: #3D5A75; --bg-input: #FFFFFF; --border-input: #12355B; --bg-box: #E6EFF5; --border-ligne: color-mix(in srgb, #12355B 25%, transparent); --hover-ligne: color-mix(in srgb, #12355B 7%, transparent); --zebra-bg: color-mix(in srgb, #12355B 3%, transparent); --accent: #8C6A1C; --danger: #A8352A; }
+        body.dark-mode[data-palette="ocean"] { --ink: #E3EEF6; --ground: #0F2236; --paper: #193049; --bg-body: #0F2236; --bg-carte: #193049; --border-carte: #E3EEF6; --text-main: #E3EEF6; --text-muted: #E3EEF6; --text-faded: #B3C7D8; --bg-input: #0F2236; --border-input: #E3EEF6; --bg-box: #152A40; --border-ligne: color-mix(in srgb, #E3EEF6 25%, transparent); --hover-ligne: color-mix(in srgb, #E3EEF6 7%, transparent); --zebra-bg: color-mix(in srgb, #E3EEF6 3%, transparent); --accent: #E2BE6A; --danger: #EE8B7E; }
+        body[data-palette="prune"] { --ink: #3B2346; --ground: #E2D9EA; --paper: #FFFFFF; --bg-body: #E2D9EA; --bg-carte: #FFFFFF; --border-carte: #3B2346; --text-main: #3B2346; --text-muted: #3B2346; --text-faded: #5E4A69; --bg-input: #FFFFFF; --border-input: #3B2346; --bg-box: #EEE8F3; --border-ligne: color-mix(in srgb, #3B2346 25%, transparent); --hover-ligne: color-mix(in srgb, #3B2346 7%, transparent); --zebra-bg: color-mix(in srgb, #3B2346 3%, transparent); --accent: #8C6418; --danger: #A8352A; }
+        body.dark-mode[data-palette="prune"] { --ink: #EFE4F5; --ground: #2A1B33; --paper: #3A2746; --bg-body: #2A1B33; --bg-carte: #3A2746; --border-carte: #EFE4F5; --text-main: #EFE4F5; --text-muted: #EFE4F5; --text-faded: #CDBAD8; --bg-input: #2A1B33; --border-input: #EFE4F5; --bg-box: #33213E; --border-ligne: color-mix(in srgb, #EFE4F5 25%, transparent); --hover-ligne: color-mix(in srgb, #EFE4F5 7%, transparent); --zebra-bg: color-mix(in srgb, #EFE4F5 3%, transparent); --accent: #E2BE6A; --danger: #EE8B7E; }
+        body[data-palette="encre"] { --ink: #151515; --ground: #EDE9E0; --paper: #FFFFFF; --bg-body: #EDE9E0; --bg-carte: #FFFFFF; --border-carte: #151515; --text-main: #151515; --text-muted: #151515; --text-faded: #4A4A4A; --bg-input: #FFFFFF; --border-input: #151515; --bg-box: #F4F1EA; --border-ligne: color-mix(in srgb, #151515 25%, transparent); --hover-ligne: color-mix(in srgb, #151515 7%, transparent); --zebra-bg: color-mix(in srgb, #151515 3%, transparent); --accent: #8A6418; --danger: #A8321E; }
+        body.dark-mode[data-palette="encre"] { --ink: #F2EFE8; --ground: #141414; --paper: #202020; --bg-body: #141414; --bg-carte: #202020; --border-carte: #F2EFE8; --text-main: #F2EFE8; --text-muted: #F2EFE8; --text-faded: #BDBDBD; --bg-input: #141414; --border-input: #F2EFE8; --bg-box: #1A1A1A; --border-ligne: color-mix(in srgb, #F2EFE8 25%, transparent); --hover-ligne: color-mix(in srgb, #F2EFE8 7%, transparent); --zebra-bg: color-mix(in srgb, #F2EFE8 3%, transparent); --accent: #E3B862; --danger: #F08A72; }
+        .palettes { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 12px; }
+        .palette { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--paper); color: var(--ink); border: 2px solid var(--border-ligne); font: inherit; font-weight: 700; font-size: 13px; text-align: left; cursor: pointer; }
+        .palette.actif { border: 3px solid var(--ink); }
+        .palette-ech { display: inline-flex; flex: 0 0 auto; border: 2px solid var(--ink); }
+        .palette-ech i { display: block; width: 16px; height: 28px; }
+        .pill-annule { background: var(--paper); color: var(--danger); border-color: var(--danger); }
+        .cr-titre.annule { text-decoration: line-through; opacity: .65; }
+        .bandeau-annule { padding: 10px 12px; margin-bottom: 12px; border: 2px solid var(--danger); color: var(--danger); font-weight: 700; }
+        body { padding-top: env(safe-area-inset-top); }
+        #nav-live { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+        @media (max-width: 899px) { #app-section { padding-bottom: calc(96px + env(safe-area-inset-bottom)); } #toast-container { bottom: calc(96px + env(safe-area-inset-bottom)); } }
         /* Style affiche : coins carrés partout, sauf les ronds voulus */
         [style*="border-radius"]:not([style*="50%"]) { border-radius: 0 !important; }
         input[type="checkbox"] { accent-color: var(--ink); }
@@ -709,6 +733,7 @@
                     <button type="button" data-m="concerts" onclick="choisirMetrique('concerts')">Concerts</button>
                     <button type="button" data-m="artistes" onclick="choisirMetrique('artistes')">Artistes</button>
                     <button type="button" data-m="depenses" onclick="choisirMetrique('depenses')">Dépenses</button>
+                    <button type="button" data-m="bieres" onclick="choisirMetrique('bieres')">Bières</button>
                 </div>
                 <div id="stats-barres"></div>
                 <div class="accueil-grille" style="margin-top:28px;">
@@ -741,6 +766,8 @@
             <div id="profil-abos"></div>
             <h2 class="titre-bloc" style="margin-top:22px;">Spotify</h2>
             <div id="moi-spotify" class="moi-actions"></div>
+            <h2 class="titre-bloc" style="margin-top:22px;">Couleurs</h2>
+            <div id="choix-palettes" class="palettes"></div>
             <h2 class="titre-bloc" style="margin-top:22px;">Appli</h2>
             <div class="moi-actions">
                 <button type="button" class="btn-mini btn-secondaire" id="btn-theme-moi" onclick="basculerThemeMoi()">Passer en thème sombre</button>
@@ -1107,11 +1134,11 @@
                 </div>
 
                 <div style="background: var(--bg-box); border: 1px solid var(--border-input); border-radius: 12px; padding: 25px; margin-top: 25px;">
-                    <h3 style="margin-top:0; margin-bottom: 10px;">Rappels J-1</h3>
-                    <p style="font-size: 13px; color: var(--text-faded); margin: 0 0 15px 0;">Reçois une notif sur ton téléphone la veille de chaque concert (avec météo). Nécessite d'installer l'appli sur l'écran d'accueil (PWA) et d'autoriser les notifications.</p>
+                    <h3 style="margin-top:0; margin-bottom: 10px;">Notifications sur cet appareil</h3>
+                    <p style="font-size: 13px; color: var(--text-faded); margin: 0 0 15px 0;">Une seule autorisation pour toutes les notifications : rappels de concert, jour J, billets à acheter, propositions et demandes d'amis, nouvelles dates. Choisis lesquelles recevoir dans « Notifications que je veux recevoir ». Sur iPhone, l'appli doit être installée sur l'écran d'accueil.</p>
                     <div id="zone-push-statut" style="margin-bottom:12px; font-size:13px; color:var(--text-faded);"></div>
-                    <button type="button" id="btn-activer-push" class="btn-principal" style="margin-top:0;" onclick="activerNotificationsPush()">Activer les rappels J-1</button>
-                    <button type="button" id="btn-desactiver-push" class="btn-principal" style="margin-top:8px; background: transparent; color: var(--text-muted); border: 1px solid var(--border-input); display:none;" onclick="desactiverNotificationsPush()">Désactiver les rappels</button>
+                    <button type="button" id="btn-activer-push" class="btn-principal" style="margin-top:0;" onclick="activerNotificationsPush()">Activer les notifications</button>
+                    <button type="button" id="btn-desactiver-push" class="btn-principal" style="margin-top:8px; background: transparent; color: var(--text-muted); border: 1px solid var(--border-input); display:none;" onclick="desactiverNotificationsPush()">Désactiver les notifications</button>
                 </div>
 
                 <div style="background: var(--bg-box); border: 1px solid var(--border-input); border-radius: 12px; padding: 25px; margin-top: 25px;">
@@ -1335,6 +1362,7 @@
         async function afficherApplication() {
             document.getElementById('auth-section').style.display = 'none'; document.getElementById('app-section').style.display = 'block';
             await assurerProfil(); await chargerProfils(); await chargerAmis(); await chargerSallesCommunaute(); await verifierPropositions(); await chargerNotifs(); await changerVueUtilisateur("ME");
+            synchroniserAbonnementPush();
             ouvrirLienNotification();
         }
         // Une notification peut ouvrir directement la fiche d'un concert ou les recommandations
@@ -2807,16 +2835,33 @@
                 const reg = await navigator.serviceWorker.ready;
                 const sub = await reg.pushManager.getSubscription();
                 if (sub && Notification.permission === 'granted') {
-                    zone.innerHTML = '✅ Rappels J-1 activés sur cet appareil.';
+                    zone.innerHTML = 'Notifications activées sur cet appareil.';
                     btnOn.style.display = 'none'; btnOff.style.display = 'block';
                 } else {
-                    zone.innerHTML = 'Rappels désactivés sur cet appareil.';
+                    zone.innerHTML = Notification.permission === 'denied' ? 'Notifications bloquées dans les réglages du téléphone pour cette appli.' : 'Notifications désactivées sur cet appareil.';
                     btnOn.style.display = 'block'; btnOff.style.display = 'none';
                 }
             } catch(e) { zone.innerHTML = '⚠️ ' + e.message; }
         }
 
+        // À chaque ouverture : si l'autorisation est déjà donnée, l'abonnement est recréé au besoin et renvoyé au serveur
+        async function synchroniserAbonnementPush() {
+            try {
+                if (!pushSupporte() || Notification.permission !== 'granted' || !currentUser) return;
+                if (localStorage.getItem('live_push_off') === '1') return;
+                const reg = await navigator.serviceWorker.ready; const cle = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+                let sub = await reg.pushManager.getSubscription();
+                if (sub && sub.options && sub.options.applicationServerKey) {
+                    const a = new Uint8Array(sub.options.applicationServerKey);
+                    if (a.length !== cle.length || a.some((x, i) => x !== cle[i])) { await sub.unsubscribe(); sub = null; }
+                }
+                if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: cle });
+                const json = sub.toJSON();
+                await clientSupabase.from('push_subscriptions').upsert({ user_id: currentUser.id, endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth, user_agent: navigator.userAgent.slice(0, 200) }, { onConflict: 'endpoint' });
+            } catch (e) { console.error(e); }
+        }
         window.activerNotificationsPush = async function() {
+            try { localStorage.removeItem('live_push_off'); } catch (e) {}
             const btn = document.getElementById('btn-activer-push');
             if (!pushSupporte()) { showToast("Push non supporté sur ce navigateur", "error"); return; }
             btn.disabled = true; const labelOrig = btn.innerHTML; btn.innerHTML = '⏳ Demande d\'autorisation...';
@@ -2840,7 +2885,7 @@
                     user_agent: navigator.userAgent.slice(0, 200)
                 }, { onConflict: 'endpoint' });
                 if (error) throw error;
-                showToast("Rappels J-1 activés 🔔", "success");
+                showToast("Notifications activées.", "success");
             } catch(e) {
                 console.error(e); showToast("Erreur : " + e.message, "error");
             } finally {
@@ -2856,7 +2901,8 @@
                     await clientSupabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
                     await sub.unsubscribe();
                 }
-                showToast("Rappels désactivés sur cet appareil", "info");
+                try { localStorage.setItem('live_push_off', '1'); } catch (e) {}
+                showToast("Notifications désactivées sur cet appareil.", "info");
             } catch(e) { showToast("Erreur : " + e.message, "error"); }
             finally { rafraichirStatutPush(); }
         }
@@ -3074,8 +3120,23 @@
             const nb = amisData.filter(a => a.statut === 'en_attente' && a.destinataire_id === currentUser.id).length;
             const badge = document.getElementById('nav-badge-amis'); badge.hidden = nb === 0; badge.textContent = nb ? String(nb) : '';
         }
+        // Palette de couleurs, mémorisée sur l'appareil
+        const PALETTES = {"sauge": {"nom": "Sauge et forêt", "clair": ["#C9D5C3", "#1F3327"], "sombre": ["#1E3A32", "#EFE6D2"]}, "sable": {"nom": "Sable et brique", "clair": ["#E9DCC6", "#5A2A1E"], "sombre": ["#3A2420", "#F1E3CC"]}, "ardoise": {"nom": "Ardoise et moutarde", "clair": ["#DDE2E6", "#22303C"], "sombre": ["#1C2630", "#E8ECEF"]}, "ocean": {"nom": "Océan", "clair": ["#D6E4EE", "#12355B"], "sombre": ["#0F2236", "#E3EEF6"]}, "prune": {"nom": "Lavande et prune", "clair": ["#E2D9EA", "#3B2346"], "sombre": ["#2A1B33", "#EFE4F5"]}, "encre": {"nom": "Encre et papier", "clair": ["#EDE9E0", "#151515"], "sombre": ["#141414", "#F2EFE8"]}};
+        function appliquerPalette(k) {
+            if (!PALETTES[k]) k = 'sauge';
+            if (k === 'sauge') document.body.removeAttribute('data-palette'); else document.body.setAttribute('data-palette', k);
+            const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', getComputedStyle(document.body).getPropertyValue('--ink').trim() || '#1F3327');
+            rendreChoixPalettes();
+        }
+        function paletteCourante() { try { return localStorage.getItem('live_palette') || 'sauge'; } catch (e) { return 'sauge'; } }
+        window.choisirPalette = function(k) { try { localStorage.setItem('live_palette', k); } catch (e) {} appliquerPalette(k); if (typeof rafraichirVues === 'function') rafraichirVues(); };
+        function rendreChoixPalettes() {
+            const z = document.getElementById('choix-palettes'); if (!z) return; const cur = paletteCourante(); const sombre = document.body.classList.contains('dark-mode');
+            z.innerHTML = Object.entries(PALETTES).map(([k, p]) => { const [fond, encre] = sombre ? p.sombre : p.clair; return `<button type="button" class="palette${k === cur ? ' actif' : ''}" aria-pressed="${k === cur}" onclick="choisirPalette('${k}')"><span class="palette-ech" aria-hidden="true"><i style="background:${fond}"></i><i style="background:${encre}"></i></span>${esc(p.nom)}${k === 'sauge' ? ' (par défaut)' : ''}</button>`; }).join('');
+        }
+        appliquerPalette(paletteCourante());
         function majBoutonTheme() { const b = document.getElementById('btn-theme-moi'); if (b) b.textContent = document.body.classList.contains('dark-mode') ? 'Passer en thème clair' : 'Passer en thème sombre'; }
-        window.basculerThemeMoi = function() { document.getElementById('btn-theme').click(); majBoutonTheme(); };
+        window.basculerThemeMoi = function() { document.getElementById('btn-theme').click(); majBoutonTheme(); appliquerPalette(paletteCourante()); };
 
         const _changerOngletBase = changerOnglet;
         changerOnglet = function(idTab) {
@@ -3165,18 +3226,29 @@
         function marquerSegments(conteneurId, attr, valeur) { document.querySelectorAll('#' + conteneurId + ' button').forEach(b => b.classList.toggle('actif', b.dataset[attr] === valeur)); }
 
         // Un appui sur « À acheter » passe le billet à « acheté »
+        window.basculerAnnule = async function(id) {
+            const c = concertParId(id); if (!c) return; const annuler = c.Annule !== true;
+            if (annuler && !confirm("Marquer ce concert comme annulé ? Il restera dans ton agenda mais ne comptera plus dans tes stats, artistes vus et rappels.")) return;
+            const { error } = await clientSupabase.from('Concerts').update({ Annule: annuler }).eq('id', id).eq('user_id', currentUser.id);
+            if (error) { showToast("La modification n'a pas pu être enregistrée.", "error"); return; }
+            [tousLesConcerts, mesConcertsPersos].forEach(L => (L || []).forEach(x => { if (String(x.id) === String(id)) x.Annule = annuler; }));
+            equipeCache.ts = 0;
+            showToast(annuler ? "Concert marqué comme annulé." : "Concert rétabli.", "success");
+            rafraichirVues(); const d = el('crd-' + idSur(id)); if (d && !d.hidden) d.innerHTML = detailConcertHtml(concertParId(id), aujourdHuiLocal());
+        };
         window.marquerAchete = async function(id, bouton) {
             const c = concertParId(id); if (!c || c.Statut_billet !== 'a_acheter') return;
             if (bouton) { bouton.disabled = true; bouton.textContent = '…'; }
-            const { error } = await clientSupabase.from('Concerts').update({ Statut_billet: 'achete' }).eq('id', id).eq('user_id', currentUser.id);
+            const { error } = await clientSupabase.from('Concerts').update({ Statut_billet: 'achetee' }).eq('id', id).eq('user_id', currentUser.id);
             if (error) { showToast("Le statut n'a pas pu être modifié. Réessaie.", "error"); if (bouton) { bouton.disabled = false; bouton.textContent = 'À acheter'; } return; }
-            [tousLesConcerts, mesConcertsPersos].forEach(L => (L || []).forEach(x => { if (String(x.id) === String(id)) x.Statut_billet = 'achete'; }));
-            if (equipeCache && equipeCache.data) equipeCache.data.forEach(x => { if (String(x.id) === String(id)) x.Statut_billet = 'achete'; });
+            [tousLesConcerts, mesConcertsPersos].forEach(L => (L || []).forEach(x => { if (String(x.id) === String(id)) x.Statut_billet = 'achetee'; }));
+            if (equipeCache && equipeCache.data) equipeCache.data.forEach(x => { if (String(x.id) === String(id)) x.Statut_billet = 'achetee'; });
             showToast("Billet marqué comme acheté.", "success");
             rafraichirVues();
         };
         function pillStatut(c, today) {
             const d = dateISO(c); const passe = d && d < today;
+            if (c.Annule === true) return `<span class="pills"><span class="pill pill-annule">Annulé</span></span>`;
             const st = c.Statut_billet === 'a_acheter' ? `<span class="pill pill-clair">${passe ? 'Non acheté' : 'À acheter'}</span>` : (c.Statut_billet === 'cadeau' ? `<span class="pill pill-plein">Offert</span>` : `<span class="pill pill-plein">Acheté</span>`);
             const note = (passe && parseFloat(c.Note) > 0) ? `<span class="pill pill-clair">★ ${esc(String(c.Note).replace('.', ','))}</span>` : '';
             return `<span class="pills">${note}${st}</span>`;
@@ -3192,8 +3264,8 @@
             if (!estFestival(c) && listeVus(c) && artistesVusDe(c).length < artistesDe(c).length && artistesDe(c).length) { sousLieu = [sousLieu, artistesVusDe(c).length + ' artiste' + (artistesVusDe(c).length > 1 ? 's vus' : ' vu') + ' sur ' + artistesDe(c).length].filter(Boolean).join(' · '); }
             if (estFestival(c) && artistesDe(c).length) { const nA = artistesDe(c).length; const commence = d && d <= (o.today || aujourdHuiLocal()); sousLieu = nA + (nA > 1 ? ' artistes à l’affiche' : ' artiste à l’affiche') + (commence && listeVus(c) ? ' · ' + artistesVusDe(c).length + ' vu' + (artistesVusDe(c).length > 1 ? 's' : '') : ''); }
             // Mon concert à venir, billet « à acheter » : la pastille devient un bouton pour passer à « acheté »
-            const achetable = o.droite === undefined && c.Statut_billet === 'a_acheter' && !!d && d >= (o.today || aujourdHuiLocal()) && !!currentUser && String(c.user_id) === String(currentUser.id) && !chezUnAmi() && /^\d+$/.test(String(c.id));
-            const corps = `<span class="cr-date"><span class="cr-jour">${esc(jour)}</span><span class="cr-sem">${esc(sem)}</span></span><span class="cr-corps">${etiquettes ? `<span class="cr-style">${esc(etiquettes)}</span>` : ''}<span class="cr-titre">${esc(titreConcert(c))}${coeur}</span>${sousLieu ? `<span class="cr-lieu">${esc(sousLieu)}</span>` : ''}${o.sous ? `<span class="cr-lieu">${esc(o.sous)}</span>` : ''}</span>${o.droite !== undefined ? o.droite : (achetable ? '' : pillStatut(c, o.today || aujourdHuiLocal()))}`;
+            const achetable = o.droite === undefined && c.Statut_billet === 'a_acheter' && c.Annule !== true && !!d && d >= (o.today || aujourdHuiLocal()) && !!currentUser && String(c.user_id) === String(currentUser.id) && !chezUnAmi() && /^\d+$/.test(String(c.id));
+            const corps = `<span class="cr-date"><span class="cr-jour">${esc(jour)}</span><span class="cr-sem">${esc(sem)}</span></span><span class="cr-corps">${etiquettes ? `<span class="cr-style">${esc(etiquettes)}</span>` : ''}<span class="cr-titre${c.Annule === true ? ' annule' : ''}">${esc(titreConcert(c))}${coeur}</span>${sousLieu ? `<span class="cr-lieu">${esc(sousLieu)}</span>` : ''}${o.sous ? `<span class="cr-lieu">${esc(o.sous)}</span>` : ''}</span>${o.droite !== undefined ? o.droite : (achetable ? '' : pillStatut(c, o.today || aujourdHuiLocal()))}`;
             const check = o.check ? `<input type="checkbox" class="${o.checkClass}" value="${id}" aria-label="Sélectionner ${esc(titreConcert(c))}" onchange="${o.onCheck}">` : (o.marque || '');
             const tete = o.action ? `<button type="button" class="cr-tete" onclick="${o.action}"${o.expand ? ` aria-expanded="${o.ouvert ? 'true' : 'false'}"` : ''}>${corps}</button>` : `<div class="cr-tete">${corps}</div>`;
             const boutonAchat = achetable ? `<button type="button" class="pill pill-clair pill-action" onclick="marquerAchete('${id}', this)" title="Marquer le billet comme acheté" aria-label="Billet à acheter : marquer comme acheté">À acheter</button>` : '';
@@ -3296,7 +3368,7 @@
         async function concertsAmisLe(dates) {
             const manque = Array.from(new Set(dates.filter(d => d && !concertsAmisCache.has(d))));
             if (manque.length) {
-                const { data, error } = await clientSupabase.from('Concerts').select('user_id, Artiste_principal, Lieu, Date, Statut_billet').in('Date', manque).neq('user_id', currentUser.id);
+                const { data, error } = await clientSupabase.from('Concerts').select('user_id, Artiste_principal, Lieu, Date, Statut_billet').in('Date', manque).neq('user_id', currentUser.id).eq('Annule', false);
                 if (error) return null;
                 manque.forEach(d => concertsAmisCache.set(d, []));
                 (data || []).forEach(x => { const l = concertsAmisCache.get(dateISO(x)); if (l) l.push(x); });
@@ -3349,6 +3421,7 @@
         function detailConcertHtml(c, today) {
             const id = idSur(c.id); const proprio = !chezUnAmi(); const d = dateISO(c); const passe = !!(d && d < today); const arts = artistesDe(c); const lieu = lieuPropreDe(c);
             let h = '';
+            if (c.Annule === true) h += `<div class="bandeau-annule">Concert annulé : il ne compte plus dans tes stats.</div>`;
             const infos = [d ? dateFr(d, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).replace(/^./, m => m.toUpperCase()) : '', prixNum(c) > 0 ? fmtEuro(prixNum(c)) : '', c.Role === 'benevole' ? 'Bénévole' : ''].filter(Boolean).join(' · ');
             if (infos) h += `<div class="cr-infos">${esc(infos)}</div>`;
             const commence = !!(d && d <= today);
@@ -3365,6 +3438,7 @@
                 });
                 h += `</div>`;
             }
+            if (!passe && commence && proprio && c.Annule !== true) { const nb = parseInt(c.Bieres, 10) || 0; h += `<div class="note-ligne"><b>Bières</b><span class="compteur"><button type="button" aria-label="Une bière de moins" onclick="modifierBiere('${id}', ${nb}, -1)">−</button><span>${nb}</span><button type="button" aria-label="Une bière de plus" onclick="modifierBiere('${id}', ${nb}, 1)">+</button></span></div>`; }
             if (passe) {
                 let notes = c.Notes_artistes || {}; if (typeof notes === 'string') { try { notes = JSON.parse(notes); } catch (e) { notes = {}; } }
                 if (listeArtistes) {} else if (arts.length > 1) arts.forEach((a, i) => { h += `<div class="note-ligne"><b>${esc(a)}</b>${etoilesHtml(id, i, parseFloat(notes[a]) || 0, proprio)}</div>`; });
@@ -3387,6 +3461,7 @@
                 if (passe && d) a.push(`<a class="btn-txt" target="_blank" rel="noopener" href="https://www.setlist.fm/search?query=${encodeURIComponent('artist:(' + a0.replace(/[()]/g, ' ') + ') date:' + d)}">Setlist</a>`);
             }
             if (!passe && d) a.push(`<button type="button" class="btn-txt" aria-expanded="false" onclick="basculerChoixCalendrier('${id}', this)">Ajouter au calendrier</button>`);
+            if (proprio) a.push(`<button type="button" class="btn-txt" onclick="basculerAnnule('${id}')">${c.Annule === true ? 'Rétablir le concert' : 'Concert annulé'}</button>`);
             if (proprio) a.push(`<button type="button" class="btn-txt discret" onclick="supprimerConcert('${id}')">Supprimer</button>`);
             if (arts.length) h += `<div class="lecteur-spotify" id="lecteur-${id}"></div>`;
             if (proprio) h += `<div class="qui-y-va" id="quiva-${id}"></div>`;
@@ -3451,7 +3526,7 @@
         let equipeCache = { ts: 0, data: [] };
         async function chargerEquipeAvenir(force) {
             if (!force && Date.now() - equipeCache.ts < 60000) return equipeCache.data;
-            const { data, error } = await clientSupabase.from('Concerts').select('id, user_id, Artiste_principal, Lieu, Date, Prix, Style, Statut_billet').gte('Date', aujourdHuiLocal()).order('Date', { ascending: true });
+            const { data, error } = await clientSupabase.from('Concerts').select('id, user_id, Artiste_principal, Lieu, Date, Prix, Style, Statut_billet, Annule').gte('Date', aujourdHuiLocal()).eq('Annule', false).order('Date', { ascending: true });
             if (error) return null;
             equipeCache = { ts: Date.now(), data: data || [] }; return equipeCache.data;
         }
@@ -3474,7 +3549,7 @@
             if (!currentUser) return;
             const today = aujourdHuiLocal();
             const miens = (chezUnAmi() ? mesConcertsPersos : tousLesConcerts) || [];
-            const avenir = miens.filter(c => dateISO(c) && dateISO(c) >= today).sort((a, b) => dateISO(a).localeCompare(dateISO(b)));
+            const avenir = miens.filter(c => dateISO(c) && dateISO(c) >= today && c.Annule !== true).sort((a, b) => dateISO(a).localeCompare(dateISO(b)));
             const hero = el('accueil-hero');
             const boutonsHero = '';
             const actionsSous = `<div class="accueil-actions-haut"><button type="button" class="btn-mini" onclick="ouvrirAjoutConcert()">+ Ajouter un concert</button><button type="button" class="btn-mini btn-secondaire" onclick="allerA('tab-reco')">Recommandations</button><button type="button" class="btn-mini btn-secondaire" id="btn-notifs-accueil" onclick="allerA('tab-notifs')">Notifications<span class="notif-compte" id="compte-notifs-accueil" hidden></span></button></div>`;
@@ -3644,7 +3719,7 @@
         // ---------- HISTORIQUE ----------
         let histoVue = 'artistes';
         window.ouvrirHistorique = function(v) { histoVue = v; if (ongletActifId() !== 'tab-historique') { changerOnglet('tab-historique'); window.scrollTo(0, 0); } else rendreHistorique(); };
-        function concertsVus() { const today = aujourdHuiLocal(); return tousLesConcerts.filter(c => dateISO(c) && dateISO(c) <= today && c.Statut_billet !== 'a_acheter'); }
+        function concertsVus() { const today = aujourdHuiLocal(); return tousLesConcerts.filter(c => dateISO(c) && dateISO(c) <= today && c.Statut_billet !== 'a_acheter' && c.Annule !== true); }
         function rendreHistorique() {
             el('histo-titre').textContent = chezUnAmi() ? 'Historique de ' + nomAmiCourant() : 'Historique';
             marquerSegments('histo-onglets', 'vue', histoVue);
@@ -3696,7 +3771,7 @@
             const corps = `<span class="barre-lib">${esc(lib)}</span><span class="barre-piste"><span class="barre" style="display:block; width:${pct}%;"></span></span><span class="barre-val">${esc(valTxt)}</span>`;
             return action ? `<button type="button" class="barre-ligne${large ? ' large' : ''}" onclick="${action}">${corps}</button>` : `<div class="barre-ligne${large ? ' large' : ''}">${corps}</div>`;
         }
-        function mesure(L) { return statsMetrique === 'concerts' ? L.length : statsMetrique === 'artistes' ? new Set(L.flatMap(c => artistesVusDe(c).map(cleArtiste))).size : L.reduce((s, c) => s + prixNum(c), 0); }
+        function mesure(L) { return statsMetrique === 'concerts' ? L.length : statsMetrique === 'artistes' ? new Set(L.flatMap(c => artistesVusDe(c).map(cleArtiste))).size : statsMetrique === 'bieres' ? L.reduce((s, c) => s + (parseInt(c.Bieres, 10) || 0), 0) : L.reduce((s, c) => s + prixNum(c), 0); }
         function rendreStats() {
             const vus = concertsVus();
             const annees = Array.from(new Set(vus.map(c => dateISO(c).slice(0, 4)))).filter(a => /^\d{4}$/.test(a)).sort().reverse();
@@ -3705,9 +3780,9 @@
             el('stats-annees').innerHTML = `<button type="button" class="${statsAnnee === 'tout' ? 'actif' : ''}" onclick="choisirAnnee('tout')">Tout</button>` + annees.map(a => `<button type="button" class="${statsAnnee === a ? 'actif' : ''}" onclick="choisirAnnee('${a}')">${a}</button>`).join('');
             const L = statsAnnee === 'tout' ? vus : vus.filter(c => dateISO(c).slice(0, 4) === statsAnnee);
             const nbArt = new Set(L.flatMap(c => artistesVusDe(c).map(cleArtiste))).size; const depense = L.reduce((s, c) => s + prixNum(c), 0); const nbSalles = new Set(L.map(c => uniformiserSalle(c.Lieu || '')).filter(x => x !== 'inconnu')).size;
-            el('stats-kpi').innerHTML = `<div><b>${L.length}</b><span>Concerts</span></div><div><b>${nbArt}</b><span>Artistes</span></div><div><b>${esc(fmtEuro(Math.round(depense)))}</b><span>Dépensé</span></div><div><b>${nbSalles}</b><span>Salles</span></div>`;
+            el('stats-kpi').innerHTML = `<div><b>${L.length}</b><span>Concerts</span></div><div><b>${nbArt}</b><span>Artistes</span></div><div><b>${esc(fmtEuro(Math.round(depense)))}</b><span>Dépensé</span></div><div><b>${nbSalles}</b><span>Salles</span></div><div><b>${L.reduce((s, c) => s + (parseInt(c.Bieres, 10) || 0), 0)}</b><span>Bières</span></div>`;
             marquerSegments('stats-metriques', 'm', statsMetrique);
-            const noms = { concerts: 'Concerts', artistes: 'Artistes', depenses: 'Dépenses' };
+            const noms = { concerts: 'Concerts', artistes: 'Artistes', depenses: 'Dépenses', bieres: 'Bières' };
             const fmt = v => statsMetrique === 'depenses' ? fmtEuro(Math.round(v)) : String(v);
             let lignes = [];
             if (statsAnnee === 'tout') { el('stats-titre').textContent = noms[statsMetrique] + ' par année'; lignes = annees.slice().reverse().map(a => [a, mesure(vus.filter(c => dateISO(c).slice(0, 4) === a))]); }
