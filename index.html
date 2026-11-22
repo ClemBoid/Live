@@ -562,13 +562,36 @@
         .palette-ech { display: inline-flex; flex: 0 0 auto; border: 2px solid var(--ink); }
         .palette-ech i { display: block; width: 16px; height: 28px; }
         .palette-perso { grid-column: 1 / -1; padding: 4px 12px 14px; border: 3px solid var(--ink); background: var(--paper); color: var(--ink); }
-        .palette-perso label { display: block; font-weight: 700; font-size: 13px; margin: 10px 0 6px; }
-        .curseur { width: 100%; height: 24px; margin: 0; -webkit-appearance: none; appearance: none; border: 2px solid var(--ink); border-radius: 0; background: transparent; cursor: pointer; }
-        .curseur::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 32px; background: var(--paper); border: 3px solid var(--ink); border-radius: 0; }
-        .curseur::-moz-range-thumb { width: 16px; height: 26px; background: var(--paper); border: 3px solid var(--ink); border-radius: 0; }
-        .curseur:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
-        #curseur-teinte { background: linear-gradient(90deg, hsl(0,65%,50%), hsl(60,65%,50%), hsl(120,65%,45%), hsl(180,65%,45%), hsl(240,65%,55%), hsl(300,65%,50%), hsl(360,65%,50%)); }
-        #curseur-intensite { background: linear-gradient(90deg, hsl(var(--h-perso, 150), 0%, 55%), hsl(var(--h-perso, 150), 70%, 45%)); }
+        .couleur-choix { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+        .couleur-choix input[type="color"] { flex: 0 0 auto; width: 64px; height: 48px; padding: 3px; border: 3px solid var(--ink); border-radius: 0; background: var(--paper); cursor: pointer; }
+        .couleur-choix input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        .couleur-choix input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 0; }
+        .couleur-choix input[type="color"]::-moz-color-swatch { border: 0; border-radius: 0; }
+        .couleur-choix input[type="color"]:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+        .couleur-choix label { font-weight: 700; font-size: 14px; cursor: pointer; }
+        .couleur-choix small { display: block; font-weight: 500; font-size: 12px; color: var(--text-faded); letter-spacing: 0.04em; }
+        .avis-contraste { margin: 12px 0 0; padding: 8px 10px; border: 2px dashed var(--danger); color: var(--danger); font-size: 13px; font-weight: 600; }
+        /* Profil : cartes et abonnements */
+        .abos-kpi { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 18px; }
+        .abos-kpi b { font-size: 26px; }
+        .abos-liste > .abo:first-child, .abos-sous-titre + .abo { border-top: 3px solid var(--ink); }
+        .abo { border-bottom: 1px solid var(--border-ligne); padding: 14px 0; }
+        .abo-ligne { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: start; }
+        .abo-salle { display: block; font-weight: 900; font-size: 20px; line-height: 1.15; text-transform: uppercase; letter-spacing: 0.3px; overflow-wrap: anywhere; }
+        .abo-sous { display: block; margin-top: 4px; font-size: 14px; color: var(--text-faded); }
+        .abo-num { color: var(--ink); font-weight: 700; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; user-select: all; -webkit-user-select: all; }
+        .abo-droite { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+        .abo-prix { font-weight: 900; font-size: 22px; line-height: 1; white-space: nowrap; }
+        .abo-bientot { border-color: var(--accent); color: var(--accent); }
+        .abo-expiree { border-style: dashed; }
+        .abo-passee .abo-salle, .abo-passee .abo-prix { color: var(--text-faded); }
+        .abo-actions { margin-top: 12px; }
+        .abos-sous-titre { margin: 26px 0 0; padding-bottom: 8px; font-weight: 900; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+        .abos-ajout { margin-top: 16px; }
+        .abo-form { margin-top: 16px; padding: 16px; border: 3px solid var(--ink); background: var(--paper); }
+        .abo-form-titre { margin: 0 0 12px; font-weight: 900; font-size: 16px; letter-spacing: 1px; text-transform: uppercase; }
+        .abo-form-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0 14px; }
+        @media (max-width: 600px) { .abos-kpi b { font-size: 20px; } .abos-kpi > div { padding: 12px 4px; } .abos-kpi span { font-size: 11px; letter-spacing: 0.5px; } .abo-salle { font-size: 18px; } .abo-prix { font-size: 20px; } .abo-actions .btn-txt { flex: 1 1 0; justify-content: center; } }
         /* Team : filtre par amis (menu déroulant à cases) */
         .filtre-amis { position: relative; margin-bottom: 14px; max-width: 560px; }
         .filtre-amis > summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 46px; padding: 0 14px; border: 3px solid var(--ink); background: var(--paper); color: var(--ink); font-weight: 700; cursor: pointer; }
@@ -1030,53 +1053,25 @@
 
 
         <div id="tab-abos" class="vue-onglet">
-            <div class="carte">
-                <div class="titre-section">
-                    <h2>Mes Cartes & Abonnements</h2>
-                    <div class="actions-titre">
-                        <button class="btn-mini btn-vue admin-only" onclick="toggleFormAbo()">Nouvel Abonnement</button>
-                    </div>
-                </div>
-                <div class="stats-container" style="margin-bottom: 20px;">
-                    <div class="stat-box">Abonnements Actifs<span id="stat-abos-actifs">0</span></div>
-                    <div class="stat-box">Budget Abonnements<span id="stat-abos-prix" class="highlight">0,00 €</span></div>
-                </div>
-                <div class="entete-abo">
-                    <div>Salle</div><div>N° Abonné</div><div>Achat / Renouv.</div><div>Fin Validité</div><div>Prix</div><div style="text-align: right;" class="admin-only">Actions</div>
-                </div>
-                <div id="liste-abos"></div>
+            <div class="kpi abos-kpi">
+                <div><b id="stat-abos-actifs">0</b><span>Actives</span></div>
+                <div><b id="stat-abos-prix">0 €</b><span>En cours</span></div>
+                <div><b id="stat-abos-total">0 €</b><span>Total payé</span></div>
             </div>
-
-            <div class="carte admin-only form-carte" id="form-abo-container" style="display: none;">
-                <h1>Ajouter un Abonnement</h1>
+            <div id="liste-abos" class="abos-liste"></div>
+            <div class="ligne-actions admin-only abos-ajout" id="abos-ajout"><button type="button" class="btn-mini" onclick="toggleFormAbo()">+ Nouvel abonnement</button></div>
+            <div class="abo-form admin-only" id="form-abo-container" style="display: none;">
+                <h3 class="abo-form-titre" id="abo-form-titre">Nouvel abonnement</h3>
                 <form id="aboForm">
                     <input type="hidden" id="abo_id">
-                    <div class="flex-row">
-                        <div class="form-group flex-1">
-                            <label>Salle concernée :</label>
-                            <input type="text" id="abo_salle" required placeholder="Ex: L'Aéronef, Le Grand Mix">
-                        </div>
-                        <div class="form-group flex-1">
-                            <label>Numéro d'abonné :</label>
-                            <input type="text" id="abo_numero" placeholder="Ex: 123456789 (Optionnel)">
-                        </div>
-                        <div class="form-group flex-1">
-                            <label>Prix de la carte (€) :</label>
-                            <input type="number" id="abo_prix" step="0.01" required placeholder="Ex: 15">
-                        </div>
+                    <div class="abo-form-grille">
+                        <div class="form-group"><label for="abo_salle">Salle</label><input type="text" id="abo_salle" required placeholder="Ex. : L'Aéronef" autocomplete="off"></div>
+                        <div class="form-group"><label for="abo_numero">Numéro d'abonné (facultatif)</label><input type="text" id="abo_numero" autocomplete="off"></div>
+                        <div class="form-group"><label for="abo_prix">Prix de la carte (€)</label><input type="number" id="abo_prix" step="0.01" min="0" inputmode="decimal" required></div>
+                        <div class="form-group"><label for="abo_debut">Date d'achat</label><input type="date" id="abo_debut" required></div>
+                        <div class="form-group"><label for="abo_fin">Fin de validité</label><input type="date" id="abo_fin" required></div>
                     </div>
-                    <div class="flex-row">
-                        <div class="form-group flex-1">
-                            <label>Date d'achat :</label>
-                            <input type="date" id="abo_debut" required>
-                        </div>
-                        <div class="form-group flex-1">
-                            <label>Date de fin de validité :</label>
-                            <input type="date" id="abo_fin" required>
-                        </div>
-                    </div>
-                    <button type="submit" id="btn-submit-abo" class="btn-principal">Enregistrer l'abonnement</button>
-                    <button type="button" id="btn-annuler-abo" class="btn-annuler" onclick="annulerEditionAbo()">Annuler</button>
+                    <div class="ligne-actions"><button type="submit" id="btn-submit-abo" class="btn-mini">Enregistrer</button><button type="button" id="btn-annuler-abo" class="btn-mini btn-secondaire" onclick="annulerEditionAbo()">Annuler</button></div>
                 </form>
             </div>
         </div>
@@ -2494,32 +2489,44 @@
 
         function afficherAbos() {
             try {
-                const today = new Date().toISOString().split('T')[0]; let html = "", totalPrix = 0, actifs = 0;
-                if (!tousLesAbos || tousLesAbos.length === 0) { html = "<p style='text-align:center; padding:20px; color:var(--text-faded);'>Aucun abonnement.</p>"; }
-                else {
-                    tousLesAbos.forEach(a => {
-                        let estActif = a.Date_fin && a.Date_fin >= today; if(estActif) actifs++; if(a.Prix) totalPrix += parseFloat(String(a.Prix).replace(',','.'));
-                        let dDebut = a.Date_achat ? new Date(a.Date_achat).toLocaleDateString('fr-FR') : "-"; let dFin = a.Date_fin ? new Date(a.Date_fin).toLocaleDateString('fr-FR') : "-";
-                        let px = a.Prix ? parseFloat(String(a.Prix).replace(',','.')).toFixed(2).replace('.',',') + ' €' : '-'; let num = a.Numero_abonne ? String(a.Numero_abonne) : '<span class="donnee-manquante">-</span>';
-                        let classe = estActif ? "abo-item" : "abo-item abo-expire"; let iconeEtat = estActif ? "🟢" : "🔴";
-                        html += `<div class="${classe}"><div class="col-salle">${iconeEtat} ${String(a.Salle||'')}</div><div class="col-texte" data-label="N°">${num}</div><div class="col-date" data-label="Achat">${dDebut}</div><div class="col-date" data-label="Fin" style="${!estActif?'color:var(--danger);':''}">${dFin}</div><div class="col-prix" data-label="Prix">${px}</div><div class="boutons-actions admin-only"><button class="btn-icon btn-edit" onclick="preparerEditionAbo('${a.id}')">✏️</button><button class="btn-icon btn-del" onclick="supprimerAbo('${a.id}')">❌</button></div></div>`;
-                    });
-                }
-                document.getElementById('stat-abos-actifs').textContent = actifs; document.getElementById('stat-abos-prix').textContent = totalPrix.toFixed(2).replace('.', ',') + " €"; document.getElementById('liste-abos').innerHTML = html;
-            } catch(e) {}
+                const today = aujourdHuiLocal();
+                const prixDe = a => { const n = parseFloat(String(a.Prix == null ? '' : a.Prix).replace(',', '.')); return isFinite(n) ? n : 0; };
+                const fr = d => { const t = String(d || '').slice(0, 10); return /^\d{4}-\d{2}-\d{2}$/.test(t) ? new Date(t + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : ''; };
+                const fin = a => String(a.Date_fin || '').slice(0, 10);
+                const L = tousLesAbos || [];
+                const actives = L.filter(a => fin(a) && fin(a) >= today).sort((x, y) => fin(x).localeCompare(fin(y)));
+                const passees = L.filter(a => !(fin(a) && fin(a) >= today)).sort((x, y) => fin(y).localeCompare(fin(x)));
+                const ligne = (a, active) => {
+                    const id = idSur(a.id); const j = active ? Math.round((new Date(fin(a) + 'T00:00:00') - new Date(today + 'T00:00:00')) / 864e5) : 0;
+                    const etat = active ? (j <= 30 ? `<span class="pill pill-clair abo-bientot">${j === 0 ? "Expire aujourd'hui" : 'Expire dans ' + j + ' j'}</span>` : `<span class="pill pill-plein">Active</span>`) : `<span class="pill pill-clair abo-expiree">Expirée</span>`;
+                    const du = fr(a.Date_achat), au = fr(a.Date_fin);
+                    const validite = du && au ? `Du ${du} au ${au}` : (au ? `Jusqu'au ${au}` : (du ? `Achetée le ${du}` : ''));
+                    const num = a.Numero_abonne ? `<span class="abo-sous">N° <span class="abo-num">${esc(String(a.Numero_abonne))}</span></span>` : '';
+                    const actions = id ? `<div class="ligne-actions admin-only abo-actions"><button type="button" class="btn-txt" onclick="preparerEditionAbo('${id}')">Modifier</button><button type="button" class="btn-txt discret" onclick="supprimerAbo('${id}')">Supprimer</button></div>` : '';
+                    return `<div class="abo${active ? '' : ' abo-passee'}"><div class="abo-ligne"><div class="abo-corps"><span class="abo-salle">${esc(String(a.Salle || 'Salle'))}</span>${num}${validite ? `<span class="abo-sous">${esc(validite)}</span>` : ''}</div><div class="abo-droite">${etat}${prixDe(a) > 0 ? `<b class="abo-prix">${esc(fmtEuro(prixDe(a)))}</b>` : ''}</div></div>${actions}</div>`;
+                };
+                let html = actives.map(a => ligne(a, true)).join('');
+                if (passees.length) html += `<h3 class="abos-sous-titre">Expirées</h3>` + passees.map(a => ligne(a, false)).join('');
+                if (!L.length) html = `<p class="vide">Aucune carte ni abonnement. Ajoute ta carte d'abonné pour suivre sa date de fin.</p>`;
+                el('stat-abos-actifs').textContent = String(actives.length);
+                el('stat-abos-prix').textContent = fmtEuro(actives.reduce((t, a) => t + prixDe(a), 0));
+                el('stat-abos-total').textContent = fmtEuro(L.reduce((t, a) => t + prixDe(a), 0));
+                el('liste-abos').innerHTML = html;
+            } catch (e) { console.error(e); }
         }
         
-        window.toggleFormAbo = function() { const formBox = document.getElementById('form-abo-container'); if (formBox.style.display === 'none' || formBox.style.display === '') { formBox.style.display = 'block'; document.getElementById('abo_salle').focus(); } else { formBox.style.display = 'none'; annulerEditionAbo(); } }
+        function ouvrirFormAbo(titre) { el('abo-form-titre').textContent = titre; el('form-abo-container').style.display = 'block'; el('abos-ajout').hidden = true; el('form-abo-container').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        window.toggleFormAbo = function() { if (el('form-abo-container').style.display === 'block') { annulerEditionAbo(); return; } el('aboForm').reset(); el('abo_id').value = ''; ouvrirFormAbo('Nouvel abonnement'); setTimeout(() => el('abo_salle').focus({ preventScroll: true }), 300); };
         document.getElementById('aboForm').addEventListener('submit', async function(e) {
             e.preventDefault(); const id = document.getElementById('abo_id').value;
             const p = { user_id: currentUser.id, Salle: document.getElementById('abo_salle').value, Numero_abonne: document.getElementById('abo_numero').value || null, Date_achat: document.getElementById('abo_debut').value, Date_fin: document.getElementById('abo_fin').value, Prix: document.getElementById('abo_prix').value };
             let err; if(id){ const{error}=await clientSupabase.from('Abonnements').update(p).eq('id',id); err=error;} else{ const{error}=await clientSupabase.from('Abonnements').insert([p]); err=error;}
-            if(!err) { annulerEditionAbo(); chargerAbos(); showToast("Abonnement sauvegardé !"); document.getElementById('form-abo-container').style.display = 'none';} else showToast("Erreur DB", "error");
+            if(!err) { annulerEditionAbo(); chargerAbos(); showToast("Abonnement enregistré.", "success"); document.getElementById('form-abo-container').style.display = 'none';} else showToast("Erreur DB", "error");
         });
 
-        window.preparerEditionAbo = function(id) { const a = tousLesAbos.find(x => String(x.id) === String(id)); if(a) { document.getElementById('abo_id').value = a.id; document.getElementById('abo_salle').value = a.Salle || ""; document.getElementById('abo_prix').value = a.Prix || ""; document.getElementById('abo_numero').value = a.Numero_abonne || ""; document.getElementById('abo_debut').value = a.Date_achat || ""; document.getElementById('abo_fin').value = a.Date_fin || ""; document.getElementById('btn-annuler-abo').style.display = "block"; document.getElementById('form-abo-container').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' }); } }
-        window.annulerEditionAbo = function() { document.getElementById('aboForm').reset(); document.getElementById('abo_id').value = ""; document.getElementById('btn-annuler-abo').style.display = "none"; document.getElementById('form-abo-container').style.display = "none";}
-        window.supprimerAbo = async function(id) { if(confirm("Supprimer l'abonnement ?")) { await clientSupabase.from('Abonnements').delete().eq('id', id); chargerAbos(); showToast("Supprimé", "warning");} }
+        window.preparerEditionAbo = function(id) { const a = tousLesAbos.find(x => String(x.id) === String(id)); if(a) { document.getElementById('abo_id').value = a.id; document.getElementById('abo_salle').value = a.Salle || ""; document.getElementById('abo_prix').value = a.Prix || ""; document.getElementById('abo_numero').value = a.Numero_abonne || ""; document.getElementById('abo_debut').value = a.Date_achat || ""; document.getElementById('abo_fin').value = a.Date_fin || ""; ouvrirFormAbo("Modifier l'abonnement"); } }
+        window.annulerEditionAbo = function() { el('aboForm').reset(); el('abo_id').value = ''; el('form-abo-container').style.display = 'none'; el('abos-ajout').hidden = false; };
+        window.supprimerAbo = async function(id) { if(confirm("Supprimer cet abonnement ? Cette action est définitive.")) { await clientSupabase.from('Abonnements').delete().eq('id', id); chargerAbos(); showToast("Supprimé", "warning");} }
 
         window.exporterExcel = function() {
             let csv = "Artistes;Lieu;Date;Prix;Billet;Role;Bieres;Note;Coup_de_coeur;Commentaire;Ticket_URL;Statut\n"; const today = new Date().toISOString().split('T')[0];
@@ -3143,41 +3150,58 @@
         }
         // Palette de couleurs, mémorisée sur l'appareil
         const PALETTES = {"sauge": {"nom": "Sauge et forêt", "clair": ["#C9D5C3", "#1F3327"], "sombre": ["#1E3A32", "#EFE6D2"]}, "sable": {"nom": "Sable et brique", "clair": ["#E9DCC6", "#5A2A1E"], "sombre": ["#3A2420", "#F1E3CC"]}, "ardoise": {"nom": "Ardoise et moutarde", "clair": ["#DDE2E6", "#22303C"], "sombre": ["#1C2630", "#E8ECEF"]}, "ocean": {"nom": "Océan", "clair": ["#D6E4EE", "#12355B"], "sombre": ["#0F2236", "#E3EEF6"]}, "prune": {"nom": "Lavande et prune", "clair": ["#E2D9EA", "#3B2346"], "sombre": ["#2A1B33", "#EFE4F5"]}, "encre": {"nom": "Encre et papier", "clair": ["#EDE9E0", "#151515"], "sombre": ["#141414", "#F2EFE8"]}};
-        // Couleurs personnalisées : une teinte (0-360) et une intensité (0-100), déclinées en clair et en sombre
-        const VARS_PERSO = ['--ink', '--ground', '--paper', '--bg-body', '--bg-carte', '--border-carte', '--text-main', '--text-muted', '--text-faded', '--bg-input', '--border-input', '--bg-box', '--border-ligne', '--hover-ligne', '--zebra-bg', '--h-perso'];
+        // Couleurs personnalisées : deux couleurs choisies (fond, texte) ; en thème sombre elles sont inversées
+        const VARS_PERSO = ['--ink', '--ground', '--paper', '--bg-body', '--bg-carte', '--border-carte', '--text-main', '--text-muted', '--text-faded', '--bg-input', '--border-input', '--bg-box', '--border-ligne', '--hover-ligne', '--zebra-bg'];
+        const HEX = /^#[0-9a-f]{6}$/i;
+        function hslHex(h, s, l) { s /= 100; l /= 100; const f = n => { const k = (n + h / 30) % 12; const c = l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1)); return Math.round(c * 255).toString(16).padStart(2, '0'); }; return '#' + f(0) + f(8) + f(4); }
         function persoCourant() {
-            try { const p = JSON.parse(localStorage.getItem('live_palette_perso') || 'null'); if (p && isFinite(p.h) && isFinite(p.s)) return { h: Math.max(0, Math.min(360, Math.round(+p.h))), s: Math.max(0, Math.min(100, Math.round(+p.s))) }; } catch (e) {}
-            return { h: 150, s: 35 };
+            try {
+                const p = JSON.parse(localStorage.getItem('live_palette_perso') || 'null');
+                if (p && HEX.test(p.fond) && HEX.test(p.encre)) return { fond: p.fond.toUpperCase(), encre: p.encre.toUpperCase() };
+                if (p && isFinite(p.h) && isFinite(p.s)) { const k = +p.s / 100; return { fond: hslHex(+p.h, 40 * k, 83).toUpperCase(), encre: hslHex(+p.h, 55 * k, 16).toUpperCase() }; }
+            } catch (e) {}
+            return { fond: '#E3D3C3', encre: '#3A2418' };
         }
-        function couleursPerso(h, s, sombre) {
-            const k = s / 100; const c = (sat, lum) => `hsl(${h}, ${Math.round(sat * k)}%, ${lum}%)`;
-            const ink = sombre ? c(35, 92) : c(55, 16), ground = sombre ? c(40, 15) : c(40, 83), paper = sombre ? c(35, 22) : c(30, 99);
-            return { '--ink': ink, '--ground': ground, '--paper': paper, '--bg-body': ground, '--bg-carte': paper, '--border-carte': ink, '--text-main': ink, '--text-muted': ink, '--text-faded': sombre ? c(20, 76) : c(30, 32), '--bg-input': sombre ? ground : paper, '--border-input': ink, '--bg-box': sombre ? c(38, 18) : c(35, 92), '--border-ligne': `color-mix(in srgb, ${ink} 25%, transparent)`, '--hover-ligne': `color-mix(in srgb, ${ink} 7%, transparent)`, '--zebra-bg': `color-mix(in srgb, ${ink} 3%, transparent)`, '--h-perso': String(h) };
+        function luminance(hex) { const v = [1, 3, 5].map(i => parseInt(hex.substr(i, 2), 16) / 255).map(c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; }
+        function contraste(a, b) { const x = luminance(a), y = luminance(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+        function couleursPerso(pp, sombre) {
+            const ground = sombre ? pp.encre : pp.fond, ink = sombre ? pp.fond : pp.encre; const fonce = luminance(ground) < 0.18;
+            const paper = fonce ? `color-mix(in srgb, ${ground} 85%, #ffffff)` : `color-mix(in srgb, ${ground} 20%, #ffffff)`;
+            return { '--ink': ink, '--ground': ground, '--paper': paper, '--bg-body': ground, '--bg-carte': paper, '--border-carte': ink, '--text-main': ink, '--text-muted': ink, '--text-faded': `color-mix(in srgb, ${ink} 78%, ${ground})`, '--bg-input': fonce ? ground : paper, '--border-input': ink, '--bg-box': fonce ? `color-mix(in srgb, ${ground} 93%, #ffffff)` : `color-mix(in srgb, ${ground} 55%, #ffffff)`, '--border-ligne': `color-mix(in srgb, ${ink} 25%, transparent)`, '--hover-ligne': `color-mix(in srgb, ${ink} 7%, transparent)`, '--zebra-bg': `color-mix(in srgb, ${ink} 3%, transparent)` };
         }
         function appliquerPalette(k, sansRendu) {
             if (k !== 'perso' && !PALETTES[k]) k = 'sauge';
             const b = document.body;
-            if (k === 'perso') { const p = persoCourant(); b.setAttribute('data-palette', 'perso'); Object.entries(couleursPerso(p.h, p.s, b.classList.contains('dark-mode'))).forEach(([n, v]) => b.style.setProperty(n, v)); }
+            if (k === 'perso') { b.setAttribute('data-palette', 'perso'); Object.entries(couleursPerso(persoCourant(), b.classList.contains('dark-mode'))).forEach(([n, v]) => b.style.setProperty(n, v)); }
             else { VARS_PERSO.forEach(n => b.style.removeProperty(n)); if (k === 'sauge') b.removeAttribute('data-palette'); else b.setAttribute('data-palette', k); }
             const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', getComputedStyle(b).getPropertyValue('--ink').trim() || '#1F3327');
             if (!sansRendu) rendreChoixPalettes();
         }
-        // Curseurs : on applique en direct sans reconstruire la zone (le curseur reste en main)
+        function avisContraste(pp) { const r = contraste(pp.fond, pp.encre); return r < 4.5 ? `Contraste faible (${r.toFixed(1).replace('.', ',')} pour 1) : le texte risque d'être difficile à lire. Choisis des couleurs plus éloignées.` : ''; }
+        // Sélecteurs de couleur : appliqué en direct sans reconstruire la zone
         window.reglerPerso = function() {
-            const h = parseInt(el('curseur-teinte').value, 10) || 0, s = parseInt(el('curseur-intensite').value, 10) || 0;
-            try { localStorage.setItem('live_palette_perso', JSON.stringify({ h, s })); localStorage.setItem('live_palette', 'perso'); } catch (e) {}
+            const fond = el('couleur-fond').value, encre = el('couleur-encre').value; if (!HEX.test(fond) || !HEX.test(encre)) return;
+            const pp = { fond: fond.toUpperCase(), encre: encre.toUpperCase() };
+            try { localStorage.setItem('live_palette_perso', JSON.stringify(pp)); localStorage.setItem('live_palette', 'perso'); } catch (e) {}
             appliquerPalette('perso', true);
-            const sombre = document.body.classList.contains('dark-mode'); const v = couleursPerso(h, s, sombre);
-            const e = document.querySelectorAll('#palette-btn-perso .palette-ech i'); if (e.length === 2) { e[0].style.background = v['--ground']; e[1].style.background = v['--ink']; }
-            el('curseur-teinte').setAttribute('aria-valuetext', 'Teinte ' + h + ' degrés'); el('curseur-intensite').setAttribute('aria-valuetext', 'Intensité ' + s + ' %');
+            const sombre = document.body.classList.contains('dark-mode');
+            const e = document.querySelectorAll('#palette-btn-perso .palette-ech i'); if (e.length === 2) { e[0].style.background = sombre ? pp.encre : pp.fond; e[1].style.background = sombre ? pp.fond : pp.encre; }
+            el('couleur-fond-code').textContent = pp.fond; el('couleur-encre-code').textContent = pp.encre;
+            const av = el('avis-contraste'); const t = avisContraste(pp); av.textContent = t; av.hidden = !t;
         };
+        window.inverserPerso = function() { const f = el('couleur-fond'), e = el('couleur-encre'); const x = f.value; f.value = e.value; e.value = x; reglerPerso(); };
         function paletteCourante() { try { return localStorage.getItem('live_palette') || 'sauge'; } catch (e) { return 'sauge'; } }
         window.choisirPalette = function(k) { try { localStorage.setItem('live_palette', k); } catch (e) {} appliquerPalette(k); if (typeof rafraichirVues === 'function') rafraichirVues(); };
         function rendreChoixPalettes() {
             const z = document.getElementById('choix-palettes'); if (!z) return; const cur = paletteCourante(); const sombre = document.body.classList.contains('dark-mode');
             z.innerHTML = Object.entries(PALETTES).map(([k, p]) => { const [fond, encre] = sombre ? p.sombre : p.clair; return `<button type="button" class="palette${k === cur ? ' actif' : ''}" aria-pressed="${k === cur}" onclick="choisirPalette('${k}')"><span class="palette-ech" aria-hidden="true"><i style="background:${fond}"></i><i style="background:${encre}"></i></span>${esc(p.nom)}${k === 'sauge' ? ' (par défaut)' : ''}</button>`; }).join('')
-                + (() => { const pp = persoCourant(); const v = couleursPerso(pp.h, pp.s, sombre); const on = cur === 'perso'; return `<button type="button" id="palette-btn-perso" class="palette${on ? ' actif' : ''}" aria-pressed="${on}" aria-expanded="${on}" aria-controls="palette-perso" onclick="choisirPalette('perso')"><span class="palette-ech" aria-hidden="true"><i style="background:${v['--ground']}"></i><i style="background:${v['--ink']}"></i></span>Couleurs personnalisées</button>`
-                    + `<div class="palette-perso" id="palette-perso"${on ? '' : ' hidden'}><label for="curseur-teinte">Teinte</label><input type="range" id="curseur-teinte" class="curseur" min="0" max="360" step="1" value="${pp.h}" aria-valuetext="Teinte ${pp.h} degrés" oninput="reglerPerso()"><label for="curseur-intensite">Intensité</label><input type="range" id="curseur-intensite" class="curseur" min="0" max="100" step="1" value="${pp.s}" aria-valuetext="Intensité ${pp.s} %" oninput="reglerPerso()"><p class="texte-aide" style="margin:10px 0 0;">Les couleurs s'adaptent aussi au thème sombre.</p></div>`; })();
+                + (() => { const pp = persoCourant(); const on = cur === 'perso'; const av = avisContraste(pp); return `<button type="button" id="palette-btn-perso" class="palette${on ? ' actif' : ''}" aria-pressed="${on}" aria-expanded="${on}" aria-controls="palette-perso" onclick="choisirPalette('perso')"><span class="palette-ech" aria-hidden="true"><i style="background:${sombre ? pp.encre : pp.fond}"></i><i style="background:${sombre ? pp.fond : pp.encre}"></i></span>Couleurs personnalisées</button>`
+                    + `<div class="palette-perso" id="palette-perso"${on ? '' : ' hidden'}>`
+                    + `<div class="couleur-choix"><input type="color" id="couleur-fond" value="${pp.fond.toLowerCase()}" oninput="reglerPerso()" onchange="reglerPerso()"><label for="couleur-fond">Couleur de fond<small id="couleur-fond-code">${pp.fond}</small></label></div>`
+                    + `<div class="couleur-choix"><input type="color" id="couleur-encre" value="${pp.encre.toLowerCase()}" oninput="reglerPerso()" onchange="reglerPerso()"><label for="couleur-encre">Couleur du texte et des bordures<small id="couleur-encre-code">${pp.encre}</small></label></div>`
+                    + `<p class="avis-contraste" id="avis-contraste" role="status"${av ? '' : ' hidden'}>${esc(av)}</p>`
+                    + `<div class="ligne-actions" style="margin-top:12px;"><button type="button" class="btn-mini btn-secondaire" onclick="inverserPerso()">Inverser les deux couleurs</button></div>`
+                    + `<p class="texte-aide" style="margin:10px 0 0;">En thème sombre, les deux couleurs sont inversées automatiquement.</p></div>`; })();
         }
         // Thème clair / sombre basculé : on recalcule les couleurs personnalisées
         new MutationObserver(() => { if (document.body.getAttribute('data-palette') === 'perso') appliquerPalette('perso', true); }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
@@ -3287,6 +3311,7 @@
         };
         window.marquerAchete = async function(id, bouton) {
             const c = concertParId(id); if (!c || c.Statut_billet !== 'a_acheter') return;
+            if (!confirm(`Marquer le billet pour ${titreConcert(c)} comme acheté ?`)) return;
             if (bouton) { bouton.disabled = true; bouton.textContent = '…'; }
             const { error } = await clientSupabase.from('Concerts').update({ Statut_billet: 'achetee' }).eq('id', id).eq('user_id', currentUser.id);
             if (error) { showToast("Le statut n'a pas pu être modifié. Réessaie.", "error"); if (bouton) { bouton.disabled = false; bouton.textContent = 'À acheter'; } return; }
