@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Live!</title>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://vrjmvhmcizgrozjwkcoy.supabase.co wss://vrjmvhmcizgrozjwkcoy.supabase.co https://api.spotify.com https://accounts.spotify.com https://geocoding-api.open-meteo.com https://api.open-meteo.com https://nominatim.openstreetmap.org https://public.opendatasoft.com https://theblacklab.fr; frame-src https://open.spotify.com; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self'; manifest-src 'self'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://vrjmvhmcizgrozjwkcoy.supabase.co wss://vrjmvhmcizgrozjwkcoy.supabase.co https://api.spotify.com https://accounts.spotify.com https://geocoding-api.open-meteo.com https://api.open-meteo.com https://nominatim.openstreetmap.org https://public.opendatasoft.com https://theblacklab.fr; frame-src https://open.spotify.com https://widget.deezer.com; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self'; manifest-src 'self'">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     
     <link rel="manifest" href="manifest.json">
@@ -810,8 +810,9 @@
             </div>
             <h2 class="titre-bloc" style="margin-top:8px;">Abonnements</h2>
             <div id="profil-abos"></div>
-            <h2 class="titre-bloc" style="margin-top:22px;">Spotify</h2>
+            <h2 class="titre-bloc" style="margin-top:22px;">Musique</h2>
             <div id="moi-spotify" class="moi-actions"></div>
+            <div id="choix-lecteur"></div>
             <h2 class="titre-bloc" style="margin-top:22px;">Couleurs</h2>
             <div id="choix-palettes" class="palettes"></div>
             <h2 class="titre-bloc" style="margin-top:22px;">Appli</h2>
@@ -1159,7 +1160,7 @@
                     <button type="button" id="btn-desactiver-push" class="btn-principal" style="margin-top:8px; background: transparent; color: var(--text-muted); border: 1px solid var(--border-input); display:none;" onclick="desactiverNotificationsPush()">Désactiver les notifications</button>
                 </div>
 
-                <div style="background: var(--bg-box); border: 1px solid var(--border-input); border-radius: 12px; padding: 25px; margin-top: 25px;">
+                <div id="bloc-normaliser" style="background: var(--bg-box); border: 1px solid var(--border-input); border-radius: 12px; padding: 25px; margin-top: 25px;">
                     <h3 style="margin-top:0; margin-bottom: 10px;">Maintenance des données</h3>
                     <p style="font-size: 13px; color: var(--text-faded); margin: 0 0 15px 0;">Nettoie tes concerts en remplaçant les orthographes d'artistes par la version officielle Spotify (Bandit bandit → Bandit Bandit). Nécessite d'être connecté à Spotify.</p>
                     <button type="button" id="btn-normaliser-spotify" class="btn-principal" style="background: linear-gradient(135deg, #1ed760 0%, #15a349 100%); margin-top:0;" onclick="normaliserArtistesViaSpotify()">Normaliser mes artistes via Spotify</button>
@@ -2265,7 +2266,7 @@
 
                             if(c.Ticket_PDF && isOwner) { btnTicketPDF = `<button type="button" onclick="voirBillet('${c.Ticket_PDF}')" class="btn-icon btn-ticket" title="Voir mon billet 🎟️">🎟️</button>`; }
                             if(artisteRecherche && artisteRecherche !== "-") {
-                                let urlSpotify = `https://open.spotify.com/search/${encodeURIComponent(artisteRecherche)}`; btnSpotify = `<a href="${urlSpotify}" target="_blank" rel="noopener" class="btn-icon btn-spotify" title="Écouter">🎧</a>`;
+                                let urlSpotify = lienEcouter(artisteRecherche); btnSpotify = `<a href="${urlSpotify}" target="_blank" rel="noopener" class="btn-icon btn-spotify" title="Écouter">🎧</a>`;
                                 let urlSetlist;
                                 if (safeDateC) {
                                     let [yyyy, mm, dd] = safeDateC.split('-');
@@ -2658,6 +2659,40 @@
             localStorage.setItem('cache_spotify_v4', 'true');
         }
 
+        // Spotify n'est plus proposé : il reste pour les comptes déjà liés (ou ouverts avec ?spotify=1 sur un nouvel appareil)
+        try { if (new URLSearchParams(location.search).get('spotify') === '1' || localStorage.getItem('spotify_refresh')) localStorage.setItem('live_spotify_ok', '1'); } catch (e) {}
+        function spotifyAutorise() { try { return localStorage.getItem('live_spotify_ok') === '1' || !!localStorage.getItem('spotify_refresh'); } catch (e) { return false; } }
+        // Mini-lecteur : Spotify pour les comptes liés (sauf choix de Deezer), Deezer pour tous les autres
+        function lecteurPrefere() { let p = ''; try { p = localStorage.getItem('live_lecteur') || ''; } catch (e) {} return (typeof spotifyToken !== 'undefined' && spotifyToken && p !== 'deezer') ? 'spotify' : 'deezer'; }
+        function lienEcouter(nom) { const q = encodeURIComponent(String(nom || '').replace(/’/g, "'")); return lecteurPrefere() === 'spotify' ? 'https://open.spotify.com/search/' + q : 'https://www.deezer.com/search/' + q; }
+        window.choisirLecteur = function(v) { try { localStorage.setItem('live_lecteur', v); } catch (e) {} rendreMusique(); document.querySelectorAll('.lecteur-spotify').forEach(z => { z.innerHTML = ''; delete z.dataset.charge; }); document.querySelectorAll('.cr-detail:not([hidden])').forEach(d => { const z = d.querySelector('.lecteur-spotify'); if (z) chargerLecteur(z.id.replace('lecteur-', ''), /^g\d+$/.test(z.id.replace('lecteur-', '')) ? concertTeam(parseInt(z.id.slice(9), 10)) : undefined); }); };
+        function rendreMusique() {
+            const ok = spotifyAutorise(), lie = typeof spotifyToken !== 'undefined' && !!spotifyToken;
+            const bc = document.getElementById('btn-spotify-connect'); if (bc) bc.hidden = !ok;
+            const ba = document.getElementById('btn-spotify-accueil'); if (ba) ba.hidden = !ok || lie;
+            const bn = document.getElementById('bloc-normaliser'); if (bn) bn.hidden = !lie;
+            const z = document.getElementById('choix-lecteur'); if (!z) return;
+            const aide = `<p class="texte-aide" style="margin:${ok ? '12px' : '0'} 0 0;">Le mini-lecteur des concerts utilise Deezer : extraits de 30 secondes, ou titres en entier si tu es connecté à Deezer dans ce navigateur.</p>`;
+            if (!lie) { z.innerHTML = aide; return; }
+            const p = lecteurPrefere();
+            z.innerHTML = `<p class="texte-aide" style="margin:14px 0 6px;">Mini-lecteur des concerts</p><div class="segments" id="segments-lecteur" style="max-width:320px;"><button type="button" class="${p === 'spotify' ? 'actif' : ''}" aria-pressed="${p === 'spotify'}" onclick="choisirLecteur('spotify')">Spotify</button><button type="button" class="${p === 'deezer' ? 'actif' : ''}" aria-pressed="${p === 'deezer'}" onclick="choisirLecteur('deezer')">Deezer</button></div>`;
+        }
+        // Identifiants Deezer des artistes (recherche via le serveur, mémorisée sur l'appareil)
+        const DEEZER_CLE = 'live_deezer_v1';
+        let erreurDeezer = null;
+        async function idsDeezer(noms) {
+            let cache = {}; try { cache = JSON.parse(localStorage.getItem(DEEZER_CLE)) || {}; } catch (e) {}
+            const manquants = noms.filter(n => !(normaliserTexte(n) in cache));
+            if (manquants.length) {
+                try {
+                    const { data, error } = await clientSupabase.functions.invoke('billetterie', { body: { action: 'deezer', noms: manquants } });
+                    if (error) erreurDeezer = error;
+                    if (data && Array.isArray(data.artistes)) { manquants.forEach((n, i) => { const a = data.artistes[i]; cache[normaliserTexte(n)] = a && Number.isInteger(a.id) ? a.id : 0; }); try { localStorage.setItem(DEEZER_CLE, JSON.stringify(cache)); } catch (e) {} }
+                } catch (e) { erreurDeezer = e; }
+            }
+            if (noms.some(n => !(normaliserTexte(n) in cache))) { if (typeof console !== 'undefined') console.warn('Lecteur Deezer : recherche impossible', erreurDeezer); if (!noms.some(n => cache[normaliserTexte(n)] > 0)) return null; }
+            return noms.map(n => ({ nom: n, id: cache[normaliserTexte(n)] || 0 })).filter(x => x.id > 0);
+        }
         let spotifyToken = localStorage.getItem('spotify_token');
         let spotifyTokenExp = localStorage.getItem('spotify_token_exp');
         let spotifyCache = JSON.parse(localStorage.getItem('spotify_artist_cache')) || {};
@@ -2769,6 +2804,7 @@
                         localStorage.setItem('spotify_token', spotifyToken);
                         localStorage.setItem('spotify_token_exp', spotifyTokenExp);
                         if (data.refresh_token) localStorage.setItem('spotify_refresh', data.refresh_token);
+                        try { localStorage.setItem('live_spotify_ok', '1'); } catch (e) {}
                         programmerRenouvellementSpotify();
                         
                         window.history.replaceState({}, document.title, window.location.pathname);
@@ -2782,7 +2818,7 @@
             if (!spotifyToken || Date.now() > Number(spotifyTokenExp) - 60000) {
                 if (!(await renouvelerSpotify())) { spotifyToken = null; localStorage.removeItem('spotify_token'); }
             } else programmerRenouvellementSpotify();
-            { const b = document.getElementById('btn-spotify-accueil'); if (b) b.hidden = !!spotifyToken; }
+            { const b = document.getElementById('btn-spotify-accueil'); if (b) b.hidden = !!spotifyToken || !spotifyAutorise(); }
             if (spotifyToken) {
                 const btn = document.getElementById('btn-spotify-connect');
                 if(btn) { btn.innerHTML = '✅ Spotify Connecté'; btn.style.background = 'transparent'; btn.style.border = '1px solid #1ed760'; btn.style.color = '#1ed760'; btn.style.pointerEvents = 'none'; }
@@ -2791,6 +2827,7 @@
                 const btnPA = document.getElementById('btn-playlist-annee');
                 if(btnPA) btnPA.style.display = 'inline-flex';
             }
+            rendreMusique();
         }
         verifierRetourSpotify();
 
@@ -3488,13 +3525,35 @@
         async function chargerLecteur(id, cObj) {
             if (!cObj) remplirQuiYVa(id);
             const z = el('lecteur-' + id); const c = cObj || concertParId(id); if (!z || !c || z.dataset.charge) return; z.dataset.charge = '1';
-            if (typeof spotifyToken === 'undefined' || !spotifyToken) return;
-            const trouves = [];
-            for (const a of artistesDe(c).slice(0, 6)) { try { const d = await getSpotifyData(a); if (d && /^[A-Za-z0-9]+$/.test(String(d.id || ''))) trouves.push({ nom: a, id: String(d.id) }); } catch (e) {} }
-            if (!trouves.length || !document.body.contains(z)) return;
-            z._cadre = sid => `<iframe title="Lecteur Spotify" style="border:0; width:100%; max-width:480px;" height="152" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" src="${OPEN_URL}/embed/artist/${sid}?utm_source=generator&theme=0"></iframe>`;
+            const arts = artistesDe(c).slice(0, 6); if (!arts.length) return;
+            z.innerHTML = `<p class="texte-aide" style="margin:0;">Recherche d'extraits…</p>`;
+            let source = lecteurPrefere(), trouves = [];
+            if (source === 'spotify') {
+                for (const a of arts) { try { const d = await getSpotifyData(a); if (d && /^[A-Za-z0-9]+$/.test(String(d.id || ''))) trouves.push({ nom: a, id: String(d.id) }); } catch (e) {} }
+                if (!trouves.length) source = 'deezer'; // Spotify ne répond pas : on bascule sur Deezer
+            }
+            let erreur = false;
+            if (source === 'deezer') { const r = await idsDeezer(arts); if (r === null) erreur = true; else trouves = r.map(x => ({ nom: x.nom, id: String(x.id) })); }
+            if (!document.body.contains(z)) return;
+            if (!trouves.length) { z.innerHTML = `<p class="texte-aide" style="margin:0;">${erreur ? "Le lecteur n'a pas pu être chargé. Réessaie plus tard." : (arts.length > 1 ? 'Pas d’extrait trouvé sur Deezer pour ces artistes.' : 'Pas d’extrait trouvé sur Deezer pour cet artiste.')}</p>`; if (erreur) delete z.dataset.charge; return; }
+            z._cadre = source === 'deezer'
+                ? sid => `<iframe title="Lecteur Deezer" style="border:0; width:100%; max-width:480px;" height="300" loading="lazy" allow="encrypted-media; clipboard-write" src="https://widget.deezer.com/widget/${document.body.classList.contains('dark-mode') ? 'dark' : 'light'}/artist/${sid}/top_tracks"></iframe>`
+                : sid => `<iframe title="Lecteur Spotify" style="border:0; width:100%; max-width:480px;" height="152" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" src="${OPEN_URL}/embed/artist/${sid}?utm_source=generator&theme=0"></iframe>`;
             z.innerHTML = (trouves.length > 1 ? `<div class="cr-actions" style="margin-bottom:8px;">${trouves.map(t => `<button type="button" class="btn-txt" onclick="changerLecteur('${idSur(id)}', '${t.id}')">${esc(t.nom)}</button>`).join('')}</div>` : '') + `<div class="lecteur-cadre">${z._cadre(trouves[0].id)}</div>`;
         }
+        // Un seul lecteur à la fois (Spotify ou Deezer) : quand on touche un lecteur, les autres sont rechargés, donc arrêtés.
+        // Les lecteurs sont des cadres d'autres sites : on repère celui qui reçoit le focus.
+        (function() {
+            let actif = null;
+            const estLecteur = f => f && f.tagName === 'IFRAME' && /^https:\/\/(open\.spotify\.com|widget\.deezer\.com)\//.test(f.src);
+            function verifier() {
+                const f = document.activeElement; if (!estLecteur(f) || f === actif) return;
+                document.querySelectorAll('iframe').forEach(x => { if (x !== f && estLecteur(x)) { const src = x.src; x.src = 'about:blank'; setTimeout(() => { if (document.body.contains(x)) x.src = src; }, 50); } });
+                actif = f;
+            }
+            window.addEventListener('blur', () => setTimeout(verifier, 0));
+            setInterval(() => { if (document.activeElement && document.activeElement.tagName === 'IFRAME') verifier(); }, 500);
+        })();
         window.changerLecteur = function(id, sid) { const z = el('lecteur-' + id); if (!z || !z._cadre || !/^[A-Za-z0-9]+$/.test(sid)) return; const c = z.querySelector('.lecteur-cadre'); if (c) c.innerHTML = z._cadre(sid); };
         window.basculerConcert = function(id, bouton) {
             const cr = bouton && bouton.closest('.cr'); const d = (cr && cr.querySelector('.cr-detail')) || el('crd-' + id); const c = concertParId(id); if (!d || !c) return;
@@ -3553,7 +3612,7 @@
             } else a.push(`<button type="button" class="btn-txt" onclick="clonerConcert('${id}')">Ajouter à mon agenda</button>`);
             if (arts.length) {
                 const a0 = arts[0].replace(/’/g, "'");
-                a.push(`<a class="btn-txt" target="_blank" rel="noopener" href="https://open.spotify.com/search/${encodeURIComponent(a0)}">Écouter</a>`);
+                a.push(`<a class="btn-txt" target="_blank" rel="noopener" href="${esc(lienEcouter(a0))}">Écouter</a>`);
                 if (passe && d) a.push(`<a class="btn-txt" target="_blank" rel="noopener" href="https://www.setlist.fm/search?query=${encodeURIComponent('artist:(' + a0.replace(/[()]/g, ' ') + ') date:' + d)}">Setlist</a>`);
             }
             if (!passe && d) a.push(`<button type="button" class="btn-txt" aria-expanded="false" onclick="basculerChoixCalendrier('${id}', this)">Ajouter au calendrier</button>`);
@@ -3816,7 +3875,7 @@
             if (g.moi && idSur(g.moiId)) a.push(`<button type="button" class="btn-txt" onclick="voirDansMonAgenda('${idSur(g.moiId)}')">Voir dans mon agenda</button>`);
             else a.push(`<button type="button" class="btn-txt" onclick="ajouterUnTeam(${i})">Ajouter à mon agenda</button>`);
             if (!g.moi || g.moiStatut === 'a_acheter') a.push(`<button type="button" class="btn-txt" onclick="trouverBillets(null, concertTeam(${i}))">Trouver des billets</button>`);
-            if (arts.length) a.push(`<a class="btn-txt" target="_blank" rel="noopener" href="https://open.spotify.com/search/${encodeURIComponent(arts[0].replace(/’/g, "'"))}">Écouter</a>`);
+            if (arts.length) a.push(`<a class="btn-txt" target="_blank" rel="noopener" href="${esc(lienEcouter(arts[0]))}">Écouter</a>`);
             if (d) a.push(`<button type="button" class="btn-txt" aria-expanded="false" onclick="basculerChoixCalendrier('g${i}', this, concertTeam(${i}))">Ajouter au calendrier</button>`);
             h += `<div class="cr-actions">${a.join('')}</div>`;
             if (d) h += `<div class="choix-calendrier" id="cal-choix-g${i}" hidden></div>`;
@@ -4273,7 +4332,7 @@
             if (idTab === 'tab-historique') rendreHistorique();
             if (idTab === 'tab-notifs') { rendreCentreNotifs(); chargerNotifs().then(rendreCentreNotifs); }
             if (idTab === 'tab-reco') initReco();
-            if (idTab === 'tab-profil') { chargerParametres(); rafraichirStatutPush(); majBoutonTheme(); chargerPrefsNotif(); }
+            if (idTab === 'tab-profil') { chargerParametres(); rafraichirStatutPush(); majBoutonTheme(); chargerPrefsNotif(); rendreMusique(); }
         };
         (function() {
             const tab = el('tab-concerts'); const form = tab.querySelector(':scope > .form-carte'); if (form) tab.insertBefore(form, tab.firstElementChild);
