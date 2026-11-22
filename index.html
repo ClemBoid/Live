@@ -407,9 +407,11 @@
         .pill { display: inline-flex; align-items: center; min-height: 30px; padding: 0 10px; font-weight: 700; font-size: 13px; white-space: nowrap; border: 2px solid var(--ink); }
         .pill-plein { background: var(--ink); color: var(--ground); }
         .pill-action { cursor: pointer; font-family: inherit; flex: 0 0 auto; border-style: dashed; }
-        .pill-action:hover, .pill-action:focus-visible { background: var(--ink); color: var(--ground); border-style: solid; }
+        .pill-action:focus-visible { background: var(--ink); color: var(--ground); border-style: solid; }
+        @media (hover: hover) { .pill-action:hover { background: var(--ink); color: var(--ground); border-style: solid; } }
         .pill-plein.pill-action { border-style: solid; }
-        .pill-plein.pill-action:hover, .pill-plein.pill-action:focus-visible { background: var(--ground); color: var(--ink); border-style: dashed; }
+        .pill-plein.pill-action:focus-visible { background: var(--ground); color: var(--ink); border-style: dashed; }
+        @media (hover: hover) { .pill-plein.pill-action:hover { background: var(--ground); color: var(--ink); border-style: dashed; } }
         .pill-clair { background: var(--paper); color: var(--ink); }
         .cr-detail { padding: 2px 0 18px 72px; display: flex; flex-direction: column; gap: 12px; }
         @media (max-width: 600px) { .cr-detail { padding-left: 0; } .cr-titre { font-size: 18px; } .cr-tete { gap: 10px; grid-template-columns: 50px minmax(0, 1fr) auto; } .cr-jour { font-size: 30px; } }
@@ -3311,7 +3313,7 @@
         };
         window.marquerAchete = async function(id, bouton) {
             const c = concertParId(id); if (!c || c.Statut_billet !== 'a_acheter') return;
-            if (!confirm(`Marquer le billet pour ${titreConcert(c)} comme acheté ?`)) return;
+            if (!confirm(`Marquer le billet pour ${titreConcert(c)} comme acheté ?`)) { if (bouton) bouton.blur(); return; }
             if (bouton) { bouton.disabled = true; bouton.textContent = '…'; }
             const { error } = await clientSupabase.from('Concerts').update({ Statut_billet: 'achetee' }).eq('id', id).eq('user_id', currentUser.id);
             if (error) { showToast("Le statut n'a pas pu être modifié. Réessaie.", "error"); if (bouton) { bouton.disabled = false; bouton.textContent = 'À acheter'; } return; }
@@ -3322,7 +3324,7 @@
         };
         window.remettreAAcheter = async function(id, bouton) {
             const c = concertParId(id); if (!c || c.Statut_billet === 'a_acheter') return;
-            if (!confirm(`Remettre le billet pour ${titreConcert(c)} en « à acheter » ?`)) return;
+            if (!confirm(`Remettre le billet pour ${titreConcert(c)} en « à acheter » ?`)) { if (bouton) bouton.blur(); return; }
             if (bouton) { bouton.disabled = true; bouton.textContent = '…'; }
             const { error } = await clientSupabase.from('Concerts').update({ Statut_billet: 'a_acheter' }).eq('id', id).eq('user_id', currentUser.id);
             if (error) { showToast("Le statut n'a pas pu être modifié. Réessaie.", "error"); if (bouton) { bouton.disabled = false; bouton.textContent = 'Acheté'; } return; }
@@ -3355,7 +3357,8 @@
             const corps = `<span class="cr-date"><span class="cr-jour">${esc(jour)}</span><span class="cr-sem">${esc(sem)}</span></span><span class="cr-corps">${etiquettes ? `<span class="cr-style">${esc(etiquettes)}</span>` : ''}<span class="cr-titre${c.Annule === true ? ' annule' : ''}">${esc(titreConcert(c))}${coeur}</span>${sousLieu ? `<span class="cr-lieu">${esc(sousLieu)}</span>` : ''}${o.sous ? `<span class="cr-lieu">${esc(o.sous)}</span>` : ''}</span>${o.droite !== undefined ? o.droite : ((achetable || remettable) ? '' : pillStatut(c, o.today || aujourdHuiLocal()))}`;
             const check = o.check ? `<input type="checkbox" class="${o.checkClass}" value="${id}" aria-label="Sélectionner ${esc(titreConcert(c))}" onchange="${o.onCheck}">` : (o.marque || '');
             const tete = o.action ? `<button type="button" class="cr-tete" onclick="${o.action}"${o.expand ? ` aria-expanded="${o.ouvert ? 'true' : 'false'}"` : ''}>${corps}</button>` : `<div class="cr-tete">${corps}</div>`;
-            const boutonAchat = achetable ? `<button type="button" class="pill pill-clair pill-action" onclick="marquerAchete('${id}', this)" title="Marquer le billet comme acheté" aria-label="Billet à acheter : marquer comme acheté">À acheter</button>`
+            const boutonAchat = (achetable && o.billetterie) ? `<button type="button" class="pill pill-clair pill-action" onclick="trouverBillets('${id}')" title="Ouvrir la billetterie" aria-label="Ouvrir la billetterie de ${esc(titreConcert(c))}">Billetterie</button>`
+                : achetable ? `<button type="button" class="pill pill-clair pill-action" onclick="marquerAchete('${id}', this)" title="Marquer le billet comme acheté" aria-label="Billet à acheter : marquer comme acheté">À acheter</button>`
                 : (remettable ? `<button type="button" class="pill pill-plein pill-action" onclick="remettreAAcheter('${id}', this)" title="Remettre le billet en « à acheter »" aria-label="Billet acheté : remettre en à acheter">Acheté</button>` : '');
             return `<div class="cr"><div class="cr-ligne">${check}${tete}${boutonAchat}</div>${o.detail || ''}</div>`;
         }
@@ -3641,7 +3644,7 @@
             const id = idSur(c.id);
             if (chezUnAmi() || !id || !concertParId(id)) return ligneConcertHtml(c, Object.assign({ today, mois: true, sous }, defaut));
             const cle = liste + ':' + id; const ouvert = accueilOuverts.has(cle);
-            return ligneConcertHtml(c, { today, mois: true, sous, action: `basculerConcert('${id}', this)`, expand: true, ouvert, detail: `<div class="cr-detail" data-cid="${id}" data-cle="${cle}"${ouvert ? '' : ' hidden'}>${ouvert ? detailConcertHtml(c, today) : ''}</div>` });
+            return ligneConcertHtml(c, { today, mois: true, sous, billetterie: liste === 'bi', action: `basculerConcert('${id}', this)`, expand: true, ouvert, detail: `<div class="cr-detail" data-cid="${id}" data-cle="${cle}"${ouvert ? '' : ' hidden'}>${ouvert ? detailConcertHtml(c, today) : ''}</div>` });
         }
         function lecteursAccueil() { document.querySelectorAll('#tab-accueil .cr-detail[data-cle]:not([hidden])').forEach(d => chargerLecteur(d.dataset.cid)); }
         function rendreAccueilAvenir(avenir, today) {
@@ -4044,7 +4047,7 @@
         const SALLES_SUIVIES = [
             { nom: "l'Aéronef", motif: 'aeronef', ville: 'Lille', recherche: 'Aéronef', lat: 50.6375, lon: 3.0758, ods: true },
             { nom: 'la Malterie', motif: 'malterie', ville: 'Lille', recherche: 'Malterie', lat: 50.6286, lon: 3.0471, ods: true },
-            { nom: 'la Bulle Café', motif: 'bulle cafe', ville: 'Lille', recherche: 'Bulle Café', lat: 50.6346, lon: 3.0554, ods: true },
+            { nom: 'la Bulle Café', motif: 'bulle cafe', ville: 'Lille', recherche: 'Bulle Café', lat: 50.6267, lon: 3.0703, ods: true, strict: true },
             { nom: 'The Black Lab', motif: 'black lab', ville: 'Wasquehal', recherche: 'Black Lab', lat: 50.6713, lon: 3.1305, ods: true },
             { nom: 'Café Augustin', motif: 'cafe augustin', ville: 'Lille', recherche: 'Augustin', lat: 50.6292, lon: 3.0573, ods: true, folk: true },
             { nom: 'le Grand Mix', motif: 'grand mix', ville: 'Tourcoing', recherche: 'Grand Mix', lat: 50.7259, lon: 3.1610, ods: true, strict: true },
