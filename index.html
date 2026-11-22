@@ -408,6 +408,8 @@
         .pill-plein { background: var(--ink); color: var(--ground); }
         .pill-action { cursor: pointer; font-family: inherit; flex: 0 0 auto; border-style: dashed; }
         .pill-action:hover, .pill-action:focus-visible { background: var(--ink); color: var(--ground); border-style: solid; }
+        .pill-plein.pill-action { border-style: solid; }
+        .pill-plein.pill-action:hover, .pill-plein.pill-action:focus-visible { background: var(--ground); color: var(--ink); border-style: dashed; }
         .pill-clair { background: var(--paper); color: var(--ink); }
         .cr-detail { padding: 2px 0 18px 72px; display: flex; flex-direction: column; gap: 12px; }
         @media (max-width: 600px) { .cr-detail { padding-left: 0; } .cr-titre { font-size: 18px; } .cr-tete { gap: 10px; grid-template-columns: 50px minmax(0, 1fr) auto; } .cr-jour { font-size: 30px; } }
@@ -559,6 +561,25 @@
         .palette.actif { border: 3px solid var(--ink); }
         .palette-ech { display: inline-flex; flex: 0 0 auto; border: 2px solid var(--ink); }
         .palette-ech i { display: block; width: 16px; height: 28px; }
+        .palette-perso { grid-column: 1 / -1; padding: 4px 12px 14px; border: 3px solid var(--ink); background: var(--paper); color: var(--ink); }
+        .palette-perso label { display: block; font-weight: 700; font-size: 13px; margin: 10px 0 6px; }
+        .curseur { width: 100%; height: 24px; margin: 0; -webkit-appearance: none; appearance: none; border: 2px solid var(--ink); border-radius: 0; background: transparent; cursor: pointer; }
+        .curseur::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 32px; background: var(--paper); border: 3px solid var(--ink); border-radius: 0; }
+        .curseur::-moz-range-thumb { width: 16px; height: 26px; background: var(--paper); border: 3px solid var(--ink); border-radius: 0; }
+        .curseur:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+        #curseur-teinte { background: linear-gradient(90deg, hsl(0,65%,50%), hsl(60,65%,50%), hsl(120,65%,45%), hsl(180,65%,45%), hsl(240,65%,55%), hsl(300,65%,50%), hsl(360,65%,50%)); }
+        #curseur-intensite { background: linear-gradient(90deg, hsl(var(--h-perso, 150), 0%, 55%), hsl(var(--h-perso, 150), 70%, 45%)); }
+        /* Team : filtre par amis (menu déroulant à cases) */
+        .filtre-amis { position: relative; margin-bottom: 14px; max-width: 560px; }
+        .filtre-amis > summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 46px; padding: 0 14px; border: 3px solid var(--ink); background: var(--paper); color: var(--ink); font-weight: 700; cursor: pointer; }
+        .filtre-amis > summary::-webkit-details-marker { display: none; }
+        .filtre-amis > summary::after { content: ''; flex: 0 0 auto; width: 9px; height: 9px; border: solid var(--ink); border-width: 0 3px 3px 0; transform: rotate(45deg); margin-top: -5px; }
+        .filtre-amis[open] > summary::after { transform: rotate(-135deg); margin-top: 5px; }
+        .filtre-amis > summary span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .filtre-amis-panneau { position: absolute; left: 0; right: 0; top: 100%; z-index: 30; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); border-top: 0; max-height: 320px; overflow: auto; padding: 6px 0 0; }
+        .filtre-amis-panneau label { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 14px; cursor: pointer; font-weight: 600; }
+        .filtre-amis-panneau label:hover { background: var(--hover-ligne); }
+        .filtre-amis-pied { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-top: 2px solid var(--border-ligne); margin-top: 6px; }
         .pill-annule { background: var(--paper); color: var(--danger); border-color: var(--danger); }
         .cr-titre.annule { text-decoration: line-through; opacity: .65; }
         .bandeau-annule { padding: 10px 12px; margin-bottom: 12px; border: 2px solid var(--danger); color: var(--danger); font-weight: 700; }
@@ -695,7 +716,7 @@
 
         <div id="tab-team" class="vue-onglet">
             <h2 class="titre-page">Agenda de la Team</h2>
-            <div id="team-onglets" class="segments segments-libres"></div>
+            <div id="team-onglets"></div>
             <div class="agenda-outils">
                 <div class="segments" id="team-vues">
                     <button type="button" data-vue="liste" onclick="choisirVueTeam('liste')">Liste</button>
@@ -3122,18 +3143,44 @@
         }
         // Palette de couleurs, mémorisée sur l'appareil
         const PALETTES = {"sauge": {"nom": "Sauge et forêt", "clair": ["#C9D5C3", "#1F3327"], "sombre": ["#1E3A32", "#EFE6D2"]}, "sable": {"nom": "Sable et brique", "clair": ["#E9DCC6", "#5A2A1E"], "sombre": ["#3A2420", "#F1E3CC"]}, "ardoise": {"nom": "Ardoise et moutarde", "clair": ["#DDE2E6", "#22303C"], "sombre": ["#1C2630", "#E8ECEF"]}, "ocean": {"nom": "Océan", "clair": ["#D6E4EE", "#12355B"], "sombre": ["#0F2236", "#E3EEF6"]}, "prune": {"nom": "Lavande et prune", "clair": ["#E2D9EA", "#3B2346"], "sombre": ["#2A1B33", "#EFE4F5"]}, "encre": {"nom": "Encre et papier", "clair": ["#EDE9E0", "#151515"], "sombre": ["#141414", "#F2EFE8"]}};
-        function appliquerPalette(k) {
-            if (!PALETTES[k]) k = 'sauge';
-            if (k === 'sauge') document.body.removeAttribute('data-palette'); else document.body.setAttribute('data-palette', k);
-            const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', getComputedStyle(document.body).getPropertyValue('--ink').trim() || '#1F3327');
-            rendreChoixPalettes();
+        // Couleurs personnalisées : une teinte (0-360) et une intensité (0-100), déclinées en clair et en sombre
+        const VARS_PERSO = ['--ink', '--ground', '--paper', '--bg-body', '--bg-carte', '--border-carte', '--text-main', '--text-muted', '--text-faded', '--bg-input', '--border-input', '--bg-box', '--border-ligne', '--hover-ligne', '--zebra-bg', '--h-perso'];
+        function persoCourant() {
+            try { const p = JSON.parse(localStorage.getItem('live_palette_perso') || 'null'); if (p && isFinite(p.h) && isFinite(p.s)) return { h: Math.max(0, Math.min(360, Math.round(+p.h))), s: Math.max(0, Math.min(100, Math.round(+p.s))) }; } catch (e) {}
+            return { h: 150, s: 35 };
         }
+        function couleursPerso(h, s, sombre) {
+            const k = s / 100; const c = (sat, lum) => `hsl(${h}, ${Math.round(sat * k)}%, ${lum}%)`;
+            const ink = sombre ? c(35, 92) : c(55, 16), ground = sombre ? c(40, 15) : c(40, 83), paper = sombre ? c(35, 22) : c(30, 99);
+            return { '--ink': ink, '--ground': ground, '--paper': paper, '--bg-body': ground, '--bg-carte': paper, '--border-carte': ink, '--text-main': ink, '--text-muted': ink, '--text-faded': sombre ? c(20, 76) : c(30, 32), '--bg-input': sombre ? ground : paper, '--border-input': ink, '--bg-box': sombre ? c(38, 18) : c(35, 92), '--border-ligne': `color-mix(in srgb, ${ink} 25%, transparent)`, '--hover-ligne': `color-mix(in srgb, ${ink} 7%, transparent)`, '--zebra-bg': `color-mix(in srgb, ${ink} 3%, transparent)`, '--h-perso': String(h) };
+        }
+        function appliquerPalette(k, sansRendu) {
+            if (k !== 'perso' && !PALETTES[k]) k = 'sauge';
+            const b = document.body;
+            if (k === 'perso') { const p = persoCourant(); b.setAttribute('data-palette', 'perso'); Object.entries(couleursPerso(p.h, p.s, b.classList.contains('dark-mode'))).forEach(([n, v]) => b.style.setProperty(n, v)); }
+            else { VARS_PERSO.forEach(n => b.style.removeProperty(n)); if (k === 'sauge') b.removeAttribute('data-palette'); else b.setAttribute('data-palette', k); }
+            const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', getComputedStyle(b).getPropertyValue('--ink').trim() || '#1F3327');
+            if (!sansRendu) rendreChoixPalettes();
+        }
+        // Curseurs : on applique en direct sans reconstruire la zone (le curseur reste en main)
+        window.reglerPerso = function() {
+            const h = parseInt(el('curseur-teinte').value, 10) || 0, s = parseInt(el('curseur-intensite').value, 10) || 0;
+            try { localStorage.setItem('live_palette_perso', JSON.stringify({ h, s })); localStorage.setItem('live_palette', 'perso'); } catch (e) {}
+            appliquerPalette('perso', true);
+            const sombre = document.body.classList.contains('dark-mode'); const v = couleursPerso(h, s, sombre);
+            const e = document.querySelectorAll('#palette-btn-perso .palette-ech i'); if (e.length === 2) { e[0].style.background = v['--ground']; e[1].style.background = v['--ink']; }
+            el('curseur-teinte').setAttribute('aria-valuetext', 'Teinte ' + h + ' degrés'); el('curseur-intensite').setAttribute('aria-valuetext', 'Intensité ' + s + ' %');
+        };
         function paletteCourante() { try { return localStorage.getItem('live_palette') || 'sauge'; } catch (e) { return 'sauge'; } }
         window.choisirPalette = function(k) { try { localStorage.setItem('live_palette', k); } catch (e) {} appliquerPalette(k); if (typeof rafraichirVues === 'function') rafraichirVues(); };
         function rendreChoixPalettes() {
             const z = document.getElementById('choix-palettes'); if (!z) return; const cur = paletteCourante(); const sombre = document.body.classList.contains('dark-mode');
-            z.innerHTML = Object.entries(PALETTES).map(([k, p]) => { const [fond, encre] = sombre ? p.sombre : p.clair; return `<button type="button" class="palette${k === cur ? ' actif' : ''}" aria-pressed="${k === cur}" onclick="choisirPalette('${k}')"><span class="palette-ech" aria-hidden="true"><i style="background:${fond}"></i><i style="background:${encre}"></i></span>${esc(p.nom)}${k === 'sauge' ? ' (par défaut)' : ''}</button>`; }).join('');
+            z.innerHTML = Object.entries(PALETTES).map(([k, p]) => { const [fond, encre] = sombre ? p.sombre : p.clair; return `<button type="button" class="palette${k === cur ? ' actif' : ''}" aria-pressed="${k === cur}" onclick="choisirPalette('${k}')"><span class="palette-ech" aria-hidden="true"><i style="background:${fond}"></i><i style="background:${encre}"></i></span>${esc(p.nom)}${k === 'sauge' ? ' (par défaut)' : ''}</button>`; }).join('')
+                + (() => { const pp = persoCourant(); const v = couleursPerso(pp.h, pp.s, sombre); const on = cur === 'perso'; return `<button type="button" id="palette-btn-perso" class="palette${on ? ' actif' : ''}" aria-pressed="${on}" aria-expanded="${on}" aria-controls="palette-perso" onclick="choisirPalette('perso')"><span class="palette-ech" aria-hidden="true"><i style="background:${v['--ground']}"></i><i style="background:${v['--ink']}"></i></span>Couleurs personnalisées</button>`
+                    + `<div class="palette-perso" id="palette-perso"${on ? '' : ' hidden'}><label for="curseur-teinte">Teinte</label><input type="range" id="curseur-teinte" class="curseur" min="0" max="360" step="1" value="${pp.h}" aria-valuetext="Teinte ${pp.h} degrés" oninput="reglerPerso()"><label for="curseur-intensite">Intensité</label><input type="range" id="curseur-intensite" class="curseur" min="0" max="100" step="1" value="${pp.s}" aria-valuetext="Intensité ${pp.s} %" oninput="reglerPerso()"><p class="texte-aide" style="margin:10px 0 0;">Les couleurs s'adaptent aussi au thème sombre.</p></div>`; })();
         }
+        // Thème clair / sombre basculé : on recalcule les couleurs personnalisées
+        new MutationObserver(() => { if (document.body.getAttribute('data-palette') === 'perso') appliquerPalette('perso', true); }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
         appliquerPalette(paletteCourante());
         function majBoutonTheme() { const b = document.getElementById('btn-theme-moi'); if (b) b.textContent = document.body.classList.contains('dark-mode') ? 'Passer en thème clair' : 'Passer en thème sombre'; }
         window.basculerThemeMoi = function() { document.getElementById('btn-theme').click(); majBoutonTheme(); appliquerPalette(paletteCourante()); };
@@ -3217,11 +3264,13 @@
             const avant = c.Artistes_vus; c.Artistes_vus = v;
             const { error } = await clientSupabase.from('Concerts').update({ Artistes_vus: v }).eq('id', c.id);
             if (error) { c.Artistes_vus = avant; showToast("Le pointage n'a pas pu être enregistré.", "error"); }
-            const d = el('crd-' + id); if (d && !d.hidden) d.innerHTML = detailConcertHtml(c, aujourdHuiLocal());
+            const d = detailOuvertDe(id); if (d && !d.hidden) d.innerHTML = detailConcertHtml(c, aujourdHuiLocal());
             if (!error) rafraichirVues();
         };
         function dateISO(c) { return c && c.Date ? String(c.Date).slice(0, 10) : ''; }
         function concertParId(id) { return tousLesConcerts.find(x => String(x.id) === String(id)); }
+        // Détail ouvert d'un concert dans l'onglet affiché (accueil ou agenda)
+        function detailOuvertDe(id) { const i = idSur(id); return (i && document.querySelector('.vue-onglet.actif .cr-detail[data-cid="' + i + '"]')) || el('crd-' + id); }
         function nomAmiCourant() { const p = profilsData.find(x => String(x.id) === String(viewingUserId)); return p ? (p.pseudo || 'Anonyme') : 'un ami'; }
         function marquerSegments(conteneurId, attr, valeur) { document.querySelectorAll('#' + conteneurId + ' button').forEach(b => b.classList.toggle('actif', b.dataset[attr] === valeur)); }
 
@@ -3234,7 +3283,7 @@
             [tousLesConcerts, mesConcertsPersos].forEach(L => (L || []).forEach(x => { if (String(x.id) === String(id)) x.Annule = annuler; }));
             equipeCache.ts = 0;
             showToast(annuler ? "Concert marqué comme annulé." : "Concert rétabli.", "success");
-            rafraichirVues(); const d = el('crd-' + idSur(id)); if (d && !d.hidden) d.innerHTML = detailConcertHtml(concertParId(id), aujourdHuiLocal());
+            rafraichirVues(); const d = detailOuvertDe(id); if (d && !d.hidden) d.innerHTML = detailConcertHtml(concertParId(id), aujourdHuiLocal());
         };
         window.marquerAchete = async function(id, bouton) {
             const c = concertParId(id); if (!c || c.Statut_billet !== 'a_acheter') return;
@@ -3244,6 +3293,17 @@
             [tousLesConcerts, mesConcertsPersos].forEach(L => (L || []).forEach(x => { if (String(x.id) === String(id)) x.Statut_billet = 'achetee'; }));
             if (equipeCache && equipeCache.data) equipeCache.data.forEach(x => { if (String(x.id) === String(id)) x.Statut_billet = 'achetee'; });
             showToast("Billet marqué comme acheté.", "success");
+            rafraichirVues();
+        };
+        window.remettreAAcheter = async function(id, bouton) {
+            const c = concertParId(id); if (!c || c.Statut_billet === 'a_acheter') return;
+            if (!confirm(`Remettre le billet pour ${titreConcert(c)} en « à acheter » ?`)) return;
+            if (bouton) { bouton.disabled = true; bouton.textContent = '…'; }
+            const { error } = await clientSupabase.from('Concerts').update({ Statut_billet: 'a_acheter' }).eq('id', id).eq('user_id', currentUser.id);
+            if (error) { showToast("Le statut n'a pas pu être modifié. Réessaie.", "error"); if (bouton) { bouton.disabled = false; bouton.textContent = 'Acheté'; } return; }
+            [tousLesConcerts, mesConcertsPersos].forEach(L => (L || []).forEach(x => { if (String(x.id) === String(id)) x.Statut_billet = 'a_acheter'; }));
+            if (equipeCache && equipeCache.data) equipeCache.data.forEach(x => { if (String(x.id) === String(id)) x.Statut_billet = 'a_acheter'; });
+            showToast("Billet remis en « à acheter ».", "success");
             rafraichirVues();
         };
         function pillStatut(c, today) {
@@ -3264,11 +3324,14 @@
             if (!estFestival(c) && listeVus(c) && artistesVusDe(c).length < artistesDe(c).length && artistesDe(c).length) { sousLieu = [sousLieu, artistesVusDe(c).length + ' artiste' + (artistesVusDe(c).length > 1 ? 's vus' : ' vu') + ' sur ' + artistesDe(c).length].filter(Boolean).join(' · '); }
             if (estFestival(c) && artistesDe(c).length) { const nA = artistesDe(c).length; const commence = d && d <= (o.today || aujourdHuiLocal()); sousLieu = nA + (nA > 1 ? ' artistes à l’affiche' : ' artiste à l’affiche') + (commence && listeVus(c) ? ' · ' + artistesVusDe(c).length + ' vu' + (artistesVusDe(c).length > 1 ? 's' : '') : ''); }
             // Mon concert à venir, billet « à acheter » : la pastille devient un bouton pour passer à « acheté »
-            const achetable = o.droite === undefined && c.Statut_billet === 'a_acheter' && c.Annule !== true && !!d && d >= (o.today || aujourdHuiLocal()) && !!currentUser && String(c.user_id) === String(currentUser.id) && !chezUnAmi() && /^\d+$/.test(String(c.id));
-            const corps = `<span class="cr-date"><span class="cr-jour">${esc(jour)}</span><span class="cr-sem">${esc(sem)}</span></span><span class="cr-corps">${etiquettes ? `<span class="cr-style">${esc(etiquettes)}</span>` : ''}<span class="cr-titre${c.Annule === true ? ' annule' : ''}">${esc(titreConcert(c))}${coeur}</span>${sousLieu ? `<span class="cr-lieu">${esc(sousLieu)}</span>` : ''}${o.sous ? `<span class="cr-lieu">${esc(o.sous)}</span>` : ''}</span>${o.droite !== undefined ? o.droite : (achetable ? '' : pillStatut(c, o.today || aujourdHuiLocal()))}`;
+            const monAVenir = o.droite === undefined && c.Annule !== true && !!d && d >= (o.today || aujourdHuiLocal()) && !!currentUser && String(c.user_id) === String(currentUser.id) && !chezUnAmi() && /^\d+$/.test(String(c.id));
+            const achetable = monAVenir && c.Statut_billet === 'a_acheter';
+            const remettable = monAVenir && c.Statut_billet !== 'a_acheter' && c.Statut_billet !== 'cadeau';
+            const corps = `<span class="cr-date"><span class="cr-jour">${esc(jour)}</span><span class="cr-sem">${esc(sem)}</span></span><span class="cr-corps">${etiquettes ? `<span class="cr-style">${esc(etiquettes)}</span>` : ''}<span class="cr-titre${c.Annule === true ? ' annule' : ''}">${esc(titreConcert(c))}${coeur}</span>${sousLieu ? `<span class="cr-lieu">${esc(sousLieu)}</span>` : ''}${o.sous ? `<span class="cr-lieu">${esc(o.sous)}</span>` : ''}</span>${o.droite !== undefined ? o.droite : ((achetable || remettable) ? '' : pillStatut(c, o.today || aujourdHuiLocal()))}`;
             const check = o.check ? `<input type="checkbox" class="${o.checkClass}" value="${id}" aria-label="Sélectionner ${esc(titreConcert(c))}" onchange="${o.onCheck}">` : (o.marque || '');
             const tete = o.action ? `<button type="button" class="cr-tete" onclick="${o.action}"${o.expand ? ` aria-expanded="${o.ouvert ? 'true' : 'false'}"` : ''}>${corps}</button>` : `<div class="cr-tete">${corps}</div>`;
-            const boutonAchat = achetable ? `<button type="button" class="pill pill-clair pill-action" onclick="marquerAchete('${id}', this)" title="Marquer le billet comme acheté" aria-label="Billet à acheter : marquer comme acheté">À acheter</button>` : '';
+            const boutonAchat = achetable ? `<button type="button" class="pill pill-clair pill-action" onclick="marquerAchete('${id}', this)" title="Marquer le billet comme acheté" aria-label="Billet à acheter : marquer comme acheté">À acheter</button>`
+                : (remettable ? `<button type="button" class="pill pill-plein pill-action" onclick="remettreAAcheter('${id}', this)" title="Remettre le billet en « à acheter »" aria-label="Billet acheté : remettre en à acheter">Acheté</button>` : '');
             return `<div class="cr"><div class="cr-ligne">${check}${tete}${boutonAchat}</div>${o.detail || ''}</div>`;
         }
 
@@ -3329,7 +3392,7 @@
                 const d = dateISO(c); const cle = d ? d.slice(0, 7) : 'sans';
                 if (!cal && cle !== moisCourant) { moisCourant = cle; html += `<h3 class="mois-titre">${esc(d ? new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'Date à compléter')}</h3>`; }
                 const id = idSur(c.id); const ouvert = agendaOuverts.has(String(c.id));
-                html += ligneConcertHtml(c, { today, action: `basculerConcert('${id}')`, expand: true, ouvert, check: ami, checkClass: 'chk-clone', onCheck: 'majSelectionAmi()', detail: `<div class="cr-detail" id="crd-${id}"${ouvert ? '' : ' hidden'}>${ouvert ? detailConcertHtml(c, today) : ''}</div>` });
+                html += ligneConcertHtml(c, { today, action: `basculerConcert('${id}', this)`, expand: true, ouvert, check: ami, checkClass: 'chk-clone', onCheck: 'majSelectionAmi()', detail: `<div class="cr-detail" id="crd-${id}" data-cid="${id}"${ouvert ? '' : ' hidden'}>${ouvert ? detailConcertHtml(c, today) : ''}</div>` });
             });
             if (!L.length) html += `<p class="vide">${cal ? "Aucun concert ce mois-ci." : (agendaVue === 'avenir' ? "Aucun concert à venir." : "Aucun concert ne correspond.")}</p>`;
             el('agenda-liste').innerHTML = html;
@@ -3338,8 +3401,8 @@
         }
         // Mini-lecteur Spotify (si Spotify est lié dans le profil)
         // Ajouter au calendrier : Google Agenda (Android) ou fichier .ics (iPhone, Outlook)
-        window.basculerChoixCalendrier = function(id, bouton) {
-            const z = el('cal-choix-' + id); const c = concertParId(id); if (!z || !c) return;
+        window.basculerChoixCalendrier = function(id, bouton, cObj) {
+            const z = el('cal-choix-' + id); const c = cObj || concertParId(id); if (!z || !c) return;
             const ouvrir = z.hidden; z.hidden = !ouvrir; if (bouton) bouton.setAttribute('aria-expanded', String(ouvrir)); if (!ouvrir) return;
             const d = dateISO(c), dc = d.replace(/-/g, ''), fest = estFestival(c), titre = (fest ? '' : 'Concert : ') + titreConcert(c), lieu = lieuPropreDe(c);
             const fin = new Date(d + 'T00:00:00'); fin.setDate(fin.getDate() + 1); const dcFin = fin.getFullYear() + String(fin.getMonth() + 1).padStart(2, '0') + String(fin.getDate()).padStart(2, '0');
@@ -3394,9 +3457,9 @@
             const lignes = await concertsAmisLe(concerts.map(dateISO)); if (!lignes) return;
             concerts.forEach(c => { const z = el('qe-' + idSur(c.id)); if (!z) return; const { pres } = amisDuConcert(c, lignes); z.textContent = pres.length ? 'Avec : ' + pres.join(', ') : ''; z.hidden = !pres.length; });
         }
-        async function chargerLecteur(id) {
-            remplirQuiYVa(id);
-            const z = el('lecteur-' + id); const c = concertParId(id); if (!z || !c || z.dataset.charge) return; z.dataset.charge = '1';
+        async function chargerLecteur(id, cObj) {
+            if (!cObj) remplirQuiYVa(id);
+            const z = el('lecteur-' + id); const c = cObj || concertParId(id); if (!z || !c || z.dataset.charge) return; z.dataset.charge = '1';
             if (typeof spotifyToken === 'undefined' || !spotifyToken) return;
             const trouves = [];
             for (const a of artistesDe(c).slice(0, 6)) { try { const d = await getSpotifyData(a); if (d && /^[A-Za-z0-9]+$/.test(String(d.id || ''))) trouves.push({ nom: a, id: String(d.id) }); } catch (e) {} }
@@ -3405,9 +3468,14 @@
             z.innerHTML = (trouves.length > 1 ? `<div class="cr-actions" style="margin-bottom:8px;">${trouves.map(t => `<button type="button" class="btn-txt" onclick="changerLecteur('${idSur(id)}', '${t.id}')">${esc(t.nom)}</button>`).join('')}</div>` : '') + `<div class="lecteur-cadre">${z._cadre(trouves[0].id)}</div>`;
         }
         window.changerLecteur = function(id, sid) { const z = el('lecteur-' + id); if (!z || !z._cadre || !/^[A-Za-z0-9]+$/.test(sid)) return; const c = z.querySelector('.lecteur-cadre'); if (c) c.innerHTML = z._cadre(sid); };
-        window.basculerConcert = function(id) {
-            const d = el('crd-' + id); const c = concertParId(id); if (!d || !c) return;
-            if (d.hidden) { d.innerHTML = detailConcertHtml(c, aujourdHuiLocal()); d.hidden = false; agendaOuverts.add(String(id)); chargerLecteur(id); } else { d.hidden = true; agendaOuverts.delete(String(id)); }
+        window.basculerConcert = function(id, bouton) {
+            const cr = bouton && bouton.closest('.cr'); const d = (cr && cr.querySelector('.cr-detail')) || el('crd-' + id); const c = concertParId(id); if (!d || !c) return;
+            const ouverts = d.closest('#tab-accueil') ? accueilOuverts : agendaOuverts; const cle = d.dataset.cle || String(id);
+            if (d.hidden) {
+                // Même concert déjà ouvert ailleurs dans l'onglet : on le replie (identifiants internes uniques)
+                document.querySelectorAll('.vue-onglet.actif .cr-detail[data-cid="' + idSur(id) + '"]').forEach(x => { if (x !== d && !x.hidden) { x.hidden = true; x.innerHTML = ''; ouverts.delete(x.dataset.cle || String(id)); const bx = x.parentElement.querySelector('.cr-tete'); if (bx) bx.setAttribute('aria-expanded', 'false'); } });
+                d.innerHTML = detailConcertHtml(c, aujourdHuiLocal()); d.hidden = false; ouverts.add(cle); chargerLecteur(id);
+            } else { d.hidden = true; d.innerHTML = ''; ouverts.delete(cle); }
             const b = d.parentElement.querySelector('.cr-tete'); if (b) b.setAttribute('aria-expanded', String(!d.hidden));
         };
         function etoilesHtml(id, idx, note, modifiable) {
@@ -3507,8 +3575,8 @@
                 return (d.events || []).map(e => ({ titre: decoderEntites(e.title).trim(), date: String(e.start_date || '').slice(0, 10), url: (typeof e.url === 'string' && e.url.startsWith('https://')) ? e.url : '', prix: decoderEntites(e.cost || '') })).filter(e => e.titre && e.date);
             } catch (e) { return []; }
         }
-        window.trouverBillets = async function(id) {
-            const c = concertParId(id) || (mesConcertsPersos || []).find(x => String(x.id) === String(id)); if (!c) return;
+        window.trouverBillets = async function(id, cObj) {
+            const c = cObj || concertParId(id) || (mesConcertsPersos || []).find(x => String(x.id) === String(id)); if (!c) return;
             const w = window.open('about:blank', '_blank');
             let url = '';
             for (const a of artistesDe(c).slice(0, 3)) {
@@ -3542,8 +3610,22 @@
         }
 
         // ---------- ACCUEIL ----------
+        const accueilOuverts = new Set();
+        // Ligne dépliable de l'accueil ; liste = 'av' (à venir) ou 'bi' (billets à acheter)
+        function ligneAccueil(c, today, liste, sous, defaut) {
+            const id = idSur(c.id);
+            if (chezUnAmi() || !id || !concertParId(id)) return ligneConcertHtml(c, Object.assign({ today, mois: true, sous }, defaut));
+            const cle = liste + ':' + id; const ouvert = accueilOuverts.has(cle);
+            return ligneConcertHtml(c, { today, mois: true, sous, action: `basculerConcert('${id}', this)`, expand: true, ouvert, detail: `<div class="cr-detail" data-cid="${id}" data-cle="${cle}"${ouvert ? '' : ' hidden'}>${ouvert ? detailConcertHtml(c, today) : ''}</div>` });
+        }
+        function lecteursAccueil() { document.querySelectorAll('#tab-accueil .cr-detail[data-cle]:not([hidden])').forEach(d => chargerLecteur(d.dataset.cid)); }
         function rendreAccueilAvenir(avenir, today) {
-            el('accueil-avenir').innerHTML = avenir.slice(0, 6).map(c => ligneConcertHtml(c, { today, mois: true, action: "allerA('tab-concerts')", sous: amisSur(c, equipeCache.data) })).join('') || `<p class="vide">Aucun concert à venir.</p>`;
+            // Une fiche ne peut être ouverte qu'à un seul endroit de l'accueil
+            accueilOuverts.forEach(k => { if (k.startsWith('bi:') && accueilOuverts.has('av:' + k.slice(3))) accueilOuverts.delete(k); });
+            el('accueil-avenir').innerHTML = avenir.slice(0, 6).map(c => ligneAccueil(c, today, 'av', amisSur(c, equipeCache.data), { action: "allerA('tab-concerts')" })).join('') || `<p class="vide">Aucun concert à venir.</p>`;
+            const aAcheter = avenir.filter(c => c.Statut_billet === 'a_acheter');
+            el('accueil-billets').innerHTML = aAcheter.slice(0, 6).map(c => ligneAccueil(c, today, 'bi', '', { droite: `<button type="button" class="btn-txt" onclick="trouverBillets('${idSur(c.id)}')">Trouver des billets</button>` })).join('') || `<p class="vide">Aucun billet à acheter, tout est en ordre.</p>`;
+            lecteursAccueil();
         }
         function afficherAccueil() {
             if (!currentUser) return;
@@ -3569,8 +3651,6 @@
             if (Date.now() - notifsEtat.ts > 60000) chargerNotifs();
             rendreAccueilAvenir(avenir, today);
             if (Date.now() - equipeCache.ts >= 60000) chargerEquipeAvenir().then(d => { if (d && ongletActifId() === 'tab-accueil') rendreAccueilAvenir(avenir, today); });
-            const aAcheter = avenir.filter(c => c.Statut_billet === 'a_acheter');
-            el('accueil-billets').innerHTML = aAcheter.slice(0, 6).map(c => ligneConcertHtml(c, { today, mois: true, droite: `<button type="button" class="btn-txt" onclick="trouverBillets('${idSur(c.id)}')">Trouver des billets</button>` })).join('') || `<p class="vide">Aucun billet à acheter, tout est en ordre.</p>`;
         };
 
         // ---------- CENTRE DE NOTIFICATIONS (accueil) ----------
@@ -3648,11 +3728,11 @@
             const groupes = new Map();
             data.forEach(c => {
                 const salle = uniformiserSalle(c.Lieu || ''); const cle = dateISO(c) + '|' + (salle !== 'inconnu' ? salle : uniformiserArtistes(c.Artiste_principal || ''));
-                if (!groupes.has(cle)) groupes.set(cle, { base: c, artistes: new Map(), gens: new Map(), moi: false, moiStatut: '', prix: 0 });
+                if (!groupes.has(cle)) groupes.set(cle, { cle, base: c, artistes: new Map(), gens: new Map(), moi: false, moiStatut: '', moiId: null, prix: 0 });
                 const g = groupes.get(cle);
                 artistesDe(c).forEach(a => { const k = normaliserTexte(a); if (!g.artistes.has(k)) g.artistes.set(k, a); });
                 if (!g.prix && prixNum(c) > 0) g.prix = prixNum(c);
-                if (String(c.user_id) === String(currentUser.id)) { g.moi = true; g.moiStatut = c.Statut_billet; } else g.gens.set(String(c.user_id), c.Statut_billet);
+                if (String(c.user_id) === String(currentUser.id)) { g.moi = true; g.moiStatut = c.Statut_billet; g.moiId = c.id; } else g.gens.set(String(c.user_id), c.Statut_billet);
             });
             teamGroupes = Array.from(groupes.values());
             Array.from(teamFiltre).forEach(u => { if (!mesAmisIds.map(String).includes(u)) teamFiltre.delete(u); });
@@ -3661,7 +3741,7 @@
         let teamVue = 'liste', teamCalMois = null;
         window.choisirVueTeam = function(v) { teamVue = v; rendreTeam(); };
         window.teamCalNaviguer = function(d) { teamCalMois = new Date(teamCalMois.getFullYear(), teamCalMois.getMonth() + d, 1); rendreTeam(); };
-        window.teamAllerA = function(i) { const r = el('team-row-' + i); if (r) { r.scrollIntoView({ behavior: 'smooth', block: 'center' }); r.classList.add('repere'); setTimeout(() => r.classList.remove('repere'), 1600); } };
+        window.teamAllerA = function(i) { const r = el('team-row-' + i); const d = el('tcd-' + i); if (d && d.hidden) basculerTeam(i); if (r) { r.scrollIntoView({ behavior: 'smooth', block: 'center' }); r.classList.add('repere'); setTimeout(() => r.classList.remove('repere'), 1600); } };
         // Grille de calendrier commune : items = [{ date, titre, attente, clic }]
         function grilleCalendrier(items, mois, today, nav) {
             const an = mois.getFullYear(), mo = mois.getMonth(); const cle = an + '-' + String(mo + 1).padStart(2, '0'); const decalage = (new Date(an, mo, 1).getDay() + 6) % 7; const nbJours = new Date(an, mo + 1, 0).getDate();
@@ -3672,9 +3752,65 @@
             const reste = (decalage + nbJours) % 7; if (reste) for (let i = reste; i < 7; i++) h += `<div class="cal-c hors"></div>`;
             return h + `</div>`;
         }
-        window.basculerFiltreTeam = function(id) { if (!id) teamFiltre.clear(); else if (teamFiltre.has(id)) teamFiltre.delete(id); else teamFiltre.add(id); rendreTeam(); };
+        // Filtre par amis : menu déroulant à cases ; plusieurs amis cochés = concerts où ils vont tous
+        let teamFiltreOuvert = false; const teamOuverts = new Set();
+        window.majFiltreOuvert = function(o) { teamFiltreOuvert = !!o; };
+        window.basculerFiltreTeam = function(id) {
+            if (!id) teamFiltre.clear(); else { teamFiltreOuvert = true; if (teamFiltre.has(id)) teamFiltre.delete(id); else teamFiltre.add(id); }
+            rendreTeam();
+            const f = id && document.querySelector('#filtre-amis input[value="' + id + '"]'); if (f) f.focus();
+        };
+        document.addEventListener('click', e => { const f = document.getElementById('filtre-amis'); if (f && f.open && !f.contains(e.target)) { f.open = false; teamFiltreOuvert = false; } });
+        function rendreFiltreAmis() {
+            const amis = mesAmisIds.map(fid => ({ id: idSur(fid), p: profilsData.find(x => String(x.id) === String(fid)) })).filter(x => x.id && x.p).sort((a, b) => String(a.p.pseudo || '').localeCompare(String(b.p.pseudo || ''), 'fr'));
+            Array.from(teamFiltre).forEach(u => { if (!amis.some(x => x.id === u)) teamFiltre.delete(u); });
+            const choisis = amis.filter(x => teamFiltre.has(x.id)).map(x => x.p.pseudo || 'Anonyme');
+            const resume = choisis.length ? choisis.join(' + ') : 'Tous les concerts';
+            const cases = amis.length ? amis.map(x => `<label><input type="checkbox" class="chk-team" value="${x.id}"${teamFiltre.has(x.id) ? ' checked' : ''} onchange="basculerFiltreTeam('${x.id}')"><span>${esc(x.p.pseudo || 'Anonyme')}</span></label>`).join('') : `<p class="texte-aide" style="margin:0; padding:8px 14px;">Ajoute des amis pour filtrer leurs concerts.</p>`;
+            const pied = `<div class="filtre-amis-pied"><span class="texte-aide" style="margin:0;">${choisis.length > 1 ? 'Concerts où ils vont tous' : (choisis.length ? 'Concerts de cet ami' : 'Coche un ou plusieurs amis')}</span>${choisis.length ? `<button type="button" class="btn-txt" onclick="basculerFiltreTeam('')">Tout afficher</button>` : ''}</div>`;
+            return `<details class="filtre-amis" id="filtre-amis"${teamFiltreOuvert ? ' open' : ''} ontoggle="majFiltreOuvert(this.open)"><summary><span>Amis : ${esc(resume)}</span></summary><div class="filtre-amis-panneau">${cases}${pied}</div></details>`;
+        }
+        function concertTeam(i) { const g = teamGroupes[i]; return g ? { id: 'g' + i, Artiste_principal: Array.from(g.artistes.values()).join(', '), Lieu: g.base.Lieu, Date: g.base.Date, Style: g.base.Style, Prix: g.prix || null } : null; }
+        function detailTeamHtml(i) {
+            const g = teamGroupes[i]; const c = concertTeam(i); if (!g || !c) return '';
+            const d = dateISO(c), arts = artistesDe(c);
+            const nomDe = uid => { const p = profilsData.find(x => String(x.id) === uid); return p ? (p.pseudo || 'Anonyme') : 'Un ami'; };
+            let h = '';
+            const infos = [d ? dateFr(d, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).replace(/^./, m => m.toUpperCase()) : '', g.prix > 0 ? fmtEuro(g.prix) : ''].filter(Boolean).join(' · ');
+            if (infos) h += `<div class="cr-infos">${esc(infos)}</div>`;
+            if (arts.length > 1 || (estFestival(c) && arts.length)) h += `<div class="fest-titre">Programmation</div><div class="fest-liste">${arts.map(a => `<div class="note-ligne fest-ligne"><span class="fest-art">${esc(a)}</span></div>`).join('')}</div>`;
+            const pres = [], inter = [];
+            if (g.moi) (g.moiStatut === 'a_acheter' ? inter : pres).push('toi');
+            g.gens.forEach((st, uid) => { (st === 'a_acheter' ? inter : pres).push(nomDe(uid)); });
+            h += `<div class="qui-y-va"><div class="fest-titre">Qui y va ?</div>${pres.length ? `<div class="quiva-ligne"><b>Billet pris</b><span>${esc(pres.join(', '))}</span></div>` : ''}${inter.length ? `<div class="quiva-ligne"><b>Intéressés</b><span>${esc(inter.join(', '))}</span></div>` : ''}</div>`;
+            if (arts.length) h += `<div class="lecteur-spotify" id="lecteur-g${i}"></div>`;
+            const a = [];
+            if (g.moi && idSur(g.moiId)) a.push(`<button type="button" class="btn-txt" onclick="voirDansMonAgenda('${idSur(g.moiId)}')">Voir dans mon agenda</button>`);
+            else a.push(`<button type="button" class="btn-txt" onclick="ajouterUnTeam(${i})">Ajouter à mon agenda</button>`);
+            if (!g.moi || g.moiStatut === 'a_acheter') a.push(`<button type="button" class="btn-txt" onclick="trouverBillets(null, concertTeam(${i}))">Trouver des billets</button>`);
+            if (arts.length) a.push(`<a class="btn-txt" target="_blank" rel="noopener" href="https://open.spotify.com/search/${encodeURIComponent(arts[0].replace(/’/g, "'"))}">Écouter</a>`);
+            if (d) a.push(`<button type="button" class="btn-txt" aria-expanded="false" onclick="basculerChoixCalendrier('g${i}', this, concertTeam(${i}))">Ajouter au calendrier</button>`);
+            h += `<div class="cr-actions">${a.join('')}</div>`;
+            if (d) h += `<div class="choix-calendrier" id="cal-choix-g${i}" hidden></div>`;
+            return h;
+        }
+        window.concertTeam = concertTeam;
+        window.basculerTeam = function(i) {
+            const g = teamGroupes[i]; const d = el('tcd-' + i); if (!g || !d) return;
+            if (d.hidden) { d.innerHTML = detailTeamHtml(i); d.hidden = false; teamOuverts.add(g.cle); chargerLecteur('g' + i, concertTeam(i)); } else { d.hidden = true; d.innerHTML = ''; teamOuverts.delete(g.cle); }
+            const b = d.parentElement.querySelector('.cr-tete'); if (b) b.setAttribute('aria-expanded', String(!d.hidden));
+        };
+        window.voirDansMonAgenda = function(id) { allerA('tab-concerts').then(() => { agendaVue = 'avenir'; calOuvrir(id); }); };
+        window.ajouterUnTeam = async function(i) {
+            const g = teamGroupes[i]; if (!g || g.moi) return;
+            if (!confirm(`Ajouter ${titreConcert(concertTeam(i))} à ton agenda ? Le billet sera marqué « à acheter ».`)) return;
+            const { error } = await clientSupabase.from('Concerts').insert([payloadTeam(g)]);
+            if (error) { showToast("L'ajout n'a pas fonctionné. Réessaie.", "error"); console.error(error); return; }
+            showToast("Concert ajouté à ton agenda.", "success");
+            await chargerConcerts(); chargerTeam();
+        };
         function rendreTeam() {
-            el('team-onglets').innerHTML = `<button type="button" class="${teamFiltre.size ? '' : 'actif'}" aria-pressed="${!teamFiltre.size}" onclick="basculerFiltreTeam('')">Tous</button>` + mesAmisIds.map(fid => { const id = idSur(fid); const p = profilsData.find(x => String(x.id) === String(fid)); const on = teamFiltre.has(String(fid)); return (id && p) ? `<button type="button" class="${on ? 'actif' : ''}" aria-pressed="${on}" onclick="basculerFiltreTeam('${id}')">${esc(p.pseudo || 'Anonyme')}</button>` : ''; }).join('');
+            el('team-onglets').innerHTML = rendreFiltreAmis();
             const today = aujourdHuiLocal(); let html = '', moisCourant = null;
             const nomDe = uid => { const p = profilsData.find(x => String(x.id) === uid); return p ? (p.pseudo || 'Anonyme') : 'Un ami'; };
             marquerSegments('team-vues', 'vue', teamVue);
@@ -3682,7 +3818,7 @@
             const cal = teamVue === 'calendrier'; if (cal && !teamCalMois) { const n = new Date(); teamCalMois = new Date(n.getFullYear(), n.getMonth(), 1); }
             const moisCal = cal ? teamCalMois.getFullYear() + '-' + String(teamCalMois.getMonth() + 1).padStart(2, '0') : '';
             const retenus = teamGroupes.map((g, i) => ({ g, i })).filter(({ g }) => {
-                if (teamFiltre.size && !Array.from(teamFiltre).some(u => g.gens.has(u))) return false;
+                if (teamFiltre.size && !Array.from(teamFiltre).every(u => g.gens.has(u))) return false;
                 if (q) { const texte = normaliserTexte(Array.from(g.artistes.values()).join(' ') + ' ' + (g.base.Lieu || '') + ' ' + (g.base.Style || '') + ' ' + Array.from(g.gens.keys()).map(nomDe).join(' ')); if (!texte.includes(q)) return false; }
                 return true;
             });
@@ -3696,10 +3832,12 @@
                 g.gens.forEach((st, uid) => { (st === 'a_acheter' ? interesses : participent).push(nomDe(uid)); });
                 const sous = [participent.length ? 'Participent : ' + participent.join(', ') : '', interesses.length ? 'Intéressés : ' + interesses.join(', ') : '', g.prix > 0 ? 'Tarif : ' + fmtEuro(g.prix) : ''].filter(Boolean).join(' · ');
                 const faux = { id: 'g' + i, Artiste_principal: Array.from(g.artistes.values()).join(', '), Lieu: g.base.Lieu, Date: g.base.Date, Style: g.base.Style };
-                html += `<div id="team-row-${i}">` + ligneConcertHtml(faux, { today, sous, check: !g.moi, checkClass: 'chk-team', onCheck: 'majSelectionTeam()', marque: `<span class="deja-agenda" role="img" aria-label="Déjà dans ton agenda" title="Déjà dans ton agenda"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3"/></svg></span>`, droite: '' }) + `</div>`;
+                const ouvert = teamOuverts.has(g.cle);
+                html += `<div id="team-row-${i}">` + ligneConcertHtml(faux, { today, sous, action: `basculerTeam(${i})`, expand: true, ouvert, detail: `<div class="cr-detail" id="tcd-${i}"${ouvert ? '' : ' hidden'}>${ouvert ? detailTeamHtml(i) : ''}</div>`, check: !g.moi, checkClass: 'chk-team', onCheck: 'majSelectionTeam()', marque: `<span class="deja-agenda" role="img" aria-label="Déjà dans ton agenda" title="Déjà dans ton agenda"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3"/></svg></span>`, droite: '' }) + `</div>`;
             });
-            if (!retenus.length || (cal && !retenus.some(({ g }) => dateISO(g.base).slice(0, 7) === moisCal))) html += `<p class="vide">${(teamFiltre.size || q) ? "Aucun concert ne correspond." : (cal ? "Aucun concert de la Team ce mois-ci." : "Aucun concert à venir dans la Team pour l'instant.")}</p>`;
+            if (!retenus.length || (cal && !retenus.some(({ g }) => dateISO(g.base).slice(0, 7) === moisCal))) html += `<p class="vide">${(teamFiltre.size > 1 && !q) ? "Aucun concert où ces amis vont tous ensemble." : ((teamFiltre.size || q) ? "Aucun concert ne correspond." : (cal ? "Aucun concert de la Team ce mois-ci." : "Aucun concert à venir dans la Team pour l'instant."))}</p>`;
             el('team-liste').innerHTML = html;
+            retenus.forEach(({ g, i }) => { if (teamOuverts.has(g.cle) && el('tcd-' + i)) chargerLecteur('g' + i, concertTeam(i)); });
             majSelectionTeam();
         }
         window.majSelectionTeam = function() { const n = document.querySelectorAll('#team-liste .chk-team:checked').length; const b = el('team-btn-ajout'); b.disabled = n === 0; b.textContent = n ? `Ajouter la sélection (${n})` : 'Ajouter la sélection'; };
@@ -4101,6 +4239,7 @@
         const _changerOngletV3 = changerOnglet;
         changerOnglet = function(idTab) {
             _changerOngletV3(idTab);
+            document.querySelectorAll('#tab-accueil:not(.actif) .cr-detail, #tab-concerts:not(.actif) .cr-detail, #tab-team:not(.actif) .cr-detail').forEach(d => { d.innerHTML = ''; d.hidden = true; });
             if (idTab === 'tab-concerts') rendreAgenda();
             if (idTab === 'tab-team') chargerTeam();
             if (idTab === 'tab-historique') rendreHistorique();
