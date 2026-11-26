@@ -418,7 +418,9 @@
         .cr-infos { font-size: 14px; color: var(--text-main); }
         .cr-actions { display: flex; flex-wrap: wrap; gap: 8px; }
         .btn-txt { min-height: 40px; padding: 0 12px; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; font-family: inherit; }
-        .btn-txt:hover { background: var(--ink); color: var(--ground); }
+        @media (hover: hover) { .btn-txt:hover { background: var(--ink); color: var(--ground); } }
+        .btn-txt.btn-fort { background: var(--ink); color: var(--ground); }
+        @media (hover: hover) { .btn-txt.btn-fort:hover { background: var(--paper); color: var(--ink); } }
         .btn-txt.discret { border-style: dashed; }
         .note-ligne { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; }
         .etoiles { display: inline-flex; }
@@ -802,7 +804,7 @@
                 <h3 style="margin-top:0;">Notifications que je veux recevoir</h3>
                 <p class="texte-aide">Ces réglages s'appliquent à tous tes appareils abonnés.</p>
                 <label class="chk-ligne"><input type="checkbox" id="pref-j1" onchange="sauverPrefsNotif()">Rappel la veille d'un concert</label>
-                <label class="chk-ligne"><input type="checkbox" id="pref-jour_j" onchange="sauverPrefsNotif()">Le jour J au matin (itinéraire et billet en un geste)</label>
+                <label class="chk-ligne"><input type="checkbox" id="pref-jour_j" onchange="sauverPrefsNotif()">Le jour J au matin (météo et billet en un geste)</label>
                 <label class="chk-ligne"><input type="checkbox" id="pref-alertes" onchange="sauverPrefsNotif()">Nouvelle date d'un artiste que j'ai déjà vu (salles suivies)</label>
                 <label class="chk-ligne"><input type="checkbox" id="pref-billet" onchange="sauverPrefsNotif()">Rappel de billet à acheter (7 jours et 2 jours avant)</label>
                 <label class="chk-ligne"><input type="checkbox" id="pref-propositions" onchange="sauverPrefsNotif()">Un ami me propose un concert</label>
@@ -875,7 +877,7 @@
 
             <div class="carte admin-only form-carte">
                 <h1 id="titre-formulaire" onclick="toggleFormConcert()" style="cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:0; transition:color 0.2s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color=''">
-                    <span id="titre-formulaire-texte">Ajouter un Concert</span>
+                    <span id="titre-formulaire-texte">Ajouter un concert</span>
                 </h1>
                 <div id="form-container-wrapper" style="display:none; margin-top:30px;">
                 <form id="concertForm">
@@ -1284,7 +1286,7 @@
                     const { data, error } = await clientSupabase.auth.signUp({ email, password, options: { data: { pseudo, prenom, nom, est_benevole: isBenevole }, emailRedirectTo: window.location.origin + window.location.pathname } });
                     if (error) { let msg = error.message; if(msg.includes("already registered")) msg = "Cette adresse email est déjà utilisée."; if(msg.includes("Password should be")) msg = "Le mot de passe doit faire au moins 8 caractères."; showToast("Erreur : " + msg, "error"); }
                     else if (data.user && !data.session) { showToast("Compte créé. Clique sur le lien reçu par email pour le confirmer, puis connecte-toi.", "success"); setAuthMode('login'); }
-                    else if (data.user) { if (data.session) await clientSupabase.rpc('enregistrer_profil', { p_pseudo: pseudo, p_prenom: prenom, p_nom: nom, p_benevole: isBenevole }); showToast("Compte créé avec succès ! Bienvenue 🤘", "success"); currentUser = data.user; viewingUserId = currentUser.id; afficherApplication(); }
+                    else if (data.user) { if (data.session) await clientSupabase.rpc('enregistrer_profil', { p_pseudo: pseudo, p_prenom: prenom, p_nom: nom, p_benevole: isBenevole }); showToast("Compte créé avec succès ! Bienvenue", "success"); currentUser = data.user; viewingUserId = currentUser.id; afficherApplication(); }
                 } else if (authMode === 'forgot') {
                     const { error } = await clientSupabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
                     if (error) showToast("Erreur : " + error.message, "error"); else showToast("Vérifiez votre boîte mail (et vos spams) !", "success");
@@ -1295,7 +1297,7 @@
                     if (error) { showToast("Erreur : " + error.message, "error"); } else {
                         const userActuel = (await clientSupabase.auth.getUser()).data.user;
                         if (userActuel) { await clientSupabase.rpc('enregistrer_profil', { p_pseudo: pseudo, p_prenom: prenom, p_nom: nom, p_benevole: isBenevole }); }
-                        showToast("Compte finalisé avec succès ! Bienvenue 🤘", "success"); setAuthMode('login'); window.location.hash = ''; afficherApplication(); 
+                        showToast("Compte finalisé avec succès ! Bienvenue", "success"); setAuthMode('login'); window.location.hash = ''; afficherApplication(); 
                     }
                 }
             } catch(e) { console.error(e); }
@@ -1423,7 +1425,7 @@
             let options = '';
             mesAmisIds.forEach(fid => {
                 let p = profilsData.find(pr => String(pr.id) === String(fid));
-                if (p) options += `<option value="${p.id}">👀 Agenda de ${p.pseudo || 'Anonyme'}</option>`;
+                if (p) options += `<option value="${p.id}">Agenda de ${p.pseudo || 'Anonyme'}</option>`;
             });
             document.getElementById('crew-list').innerHTML = options;
             // Badge demandes reçues
@@ -1451,7 +1453,7 @@
                     let sender = profilsData.find(profil => String(profil.id) === String(p.sender_id)); let senderPseudo = sender ? sender.pseudo : "Un ami";
                     let dFR = ""; if(p.date) { dFR = " le " + new Date(p.date).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'}); }
                     let txtEvent = (p.lieu || "").includes('🎪') ? (p.lieu || "").replace(/🎪/g, '').trim() : `${p.artiste} à ${p.lieu}`;
-                    html += `<div class="banniere banniere-proposition" id="prop-banner-${p.id}"><div>📣 <b>${senderPseudo}</b> te propose d'aller à <b>${txtEvent}</b>${dFR} !</div><div style="display:flex; gap:10px;"><button class="btn-mini" style="background:var(--ground); color:var(--ink);" onclick="accepterProposition('${p.id}')">Ajouter</button><button class="btn-mini" style="background:transparent; border:1px solid white; color:white;" onclick="refuserProposition('${p.id}')">Ignorer</button></div></div>`;
+                    html += `<div class="banniere banniere-proposition" id="prop-banner-${p.id}"><div><b>${senderPseudo}</b> te propose d'aller à <b>${txtEvent}</b>${dFR} !</div><div style="display:flex; gap:10px;"><button class="btn-mini" style="background:var(--ground); color:var(--ink);" onclick="accepterProposition('${p.id}')">Ajouter</button><button class="btn-mini" style="background:transparent; border:1px solid white; color:white;" onclick="refuserProposition('${p.id}')">Ignorer</button></div></div>`;
                 });
                 document.getElementById('propositions-container').innerHTML = html;
             }
@@ -1471,7 +1473,7 @@
             document.getElementById('date').value = p.date || ""; document.getElementById('prix').value = p.prix || ""; document.getElementById('statut_billet').value = "a_acheter";
             if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
             document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = "";
-            document.getElementById('titre-formulaire-texte').innerHTML = `🎸 Ajouter ce concert proposé`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
+            document.getElementById('titre-formulaire-texte').innerHTML = `Ajouter ce concert proposé`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
             
             await clientSupabase.from('Propositions').delete().eq('id', propId); const banner = document.getElementById('prop-banner-'+propId); if(banner) banner.remove();
             
@@ -1484,10 +1486,10 @@
         window.ouvrirModalProposition = function(concertId) {
             const c = tousLesConcerts.find(x => String(x.id) === String(concertId)); if(!c) return; currentProposeConcertId = c.id;
             let isFest = (c.Lieu || "").includes('🎪'); let lieuPropre = (c.Lieu || "").replace(/🎪/g, '').trim(); let dFR = c.Date ? new Date(c.Date).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'}) : "";
-            let txt = isFest ? `🎪 ${lieuPropre}` : `🎸 ${c.Artiste_principal} @ ${lieuPropre}`; if(dFR) txt += ` le ${dFR}`; document.getElementById('propose-concert-details').innerHTML = txt;
+            let txt = isFest ? `${lieuPropre}` : `${c.Artiste_principal} @ ${lieuPropre}`; if(dFR) txt += ` le ${dFR}`; document.getElementById('propose-concert-details').innerHTML = txt;
             let friendsHTML = '';
             mesAmisIds.forEach(fid => { let p = profilsData.find(pr => String(pr.id) === String(fid)); if(p) { friendsHTML += `<label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px; background:var(--bg-box); border-radius:8px;"><input type="checkbox" class="chk-friend-propose" value="${p.id}" style="width:18px; height:18px; cursor:pointer;"><span style="color:var(--text-main); font-weight:600;">${esc(p.pseudo || 'Anonyme')}</span></label>`; } });
-            document.getElementById('propose-friends-list').innerHTML = friendsHTML || "<p style='color:var(--text-faded);'>Aucun ami pour l'instant. Ajoute des amis dans l'onglet 👥 Amis.</p>";
+            document.getElementById('propose-friends-list').innerHTML = friendsHTML || "<p style='color:var(--text-faded);'>Aucun ami pour l'instant. Ajoute des amis dans l'onglet Amis.</p>";
             document.getElementById('modal-propose').style.display = 'flex';
         }
         window.fermerModalProposition = function() { document.getElementById('modal-propose').style.display = 'none'; currentProposeConcertId = null; }
@@ -1498,7 +1500,7 @@
             const receivers = Array.from(checkboxes).map(cb => cb.value);
             const payloads = receivers.map(rid => ({ sender_id: currentUser.id, receiver_id: rid, artiste: c.Artiste_principal || null, lieu: c.Lieu || null, date: c.Date ? c.Date : null, prix: c.Prix || null }));
             const { error } = await clientSupabase.from('Propositions').insert(payloads);
-            if(error) { showToast("Erreur d'envoi.", "error"); console.error(error); } else { showToast("Invitations envoyées à la Team ! 🚀", "success"); fermerModalProposition(); }
+            if(error) { showToast("Erreur d'envoi.", "error"); console.error(error); } else { showToast("Invitations envoyées à la Team !", "success"); fermerModalProposition(); }
         }
 
         // ===== SYSTÈME D'AMIS =====
@@ -1527,7 +1529,7 @@
                 let p = profilsData.find(pr => String(pr.id) === String(fid));
                 let pseudo = p ? (p.pseudo || 'Anonyme') : 'Un membre';
                 let lien = amisData.find(a => a.statut === 'accepte' && (a.demandeur_id === fid || a.destinataire_id === fid));
-                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-box); border-radius:8px;"><span style="font-weight:600;">🤝 ${pseudo}</span><button class="btn-mini" style="background:transparent; border:1px solid var(--border-input); color:var(--text-faded);" onclick="retirerAmi('${lien.id}')">Retirer</button></div>`;
+                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-box); border-radius:8px;"><span style="font-weight:600;">${pseudo}</span><button class="btn-mini" style="background:transparent; border:1px solid var(--border-input); color:var(--text-faded);" onclick="retirerAmi('${lien.id}')">Retirer</button></div>`;
             }).join('');
             document.getElementById('liste-amis').innerHTML = htmlAmis || "<p style='color:var(--text-faded); margin:0;'>Tu n'as pas encore d'amis. Cherche un pseudo ci-dessus.</p>";
         }
@@ -1554,14 +1556,14 @@
         window.envoyerDemandeAmi = async function(otherId) {
             const { error } = await clientSupabase.from('Amis').insert({ demandeur_id: currentUser.id, destinataire_id: otherId, statut: 'en_attente' });
             if (error) { showToast("Erreur lors de l'envoi.", "error"); console.error(error); return; }
-            showToast("Demande d'ami envoyée ! 🤝", "success");
+            showToast("Demande d'ami envoyée !", "success");
             await chargerAmis(); rafraichirOngletAmis();
         }
 
         window.accepterAmi = async function(lienId) {
             const { error } = await clientSupabase.from('Amis').update({ statut: 'accepte' }).eq('id', lienId);
             if (error) { showToast("Erreur.", "error"); console.error(error); return; }
-            showToast("Vous êtes maintenant amis ! 🎉", "success");
+            showToast("Vous êtes maintenant amis !", "success");
             await chargerAmis(); rafraichirOngletAmis();
         }
 
@@ -1580,11 +1582,11 @@
             let actualTargetId = userId; isCloneMode = false; let currentActiveTabId = document.querySelector('.vue-onglet.actif').id;
             
             if (userId === "ME") {
-                actualTargetId = currentUser.id; viewingUserId = currentUser.id; document.body.classList.remove('mode-vitrine'); document.getElementById('titre-collection').innerText = "🎛️ Mon Agenda";
+                actualTargetId = currentUser.id; viewingUserId = currentUser.id; document.body.classList.remove('mode-vitrine'); document.getElementById('titre-collection').innerText = "Mon Agenda";
                 document.getElementById('btn-activer-clone').style.display = 'none'; document.getElementById('btn-select-all').style.display = 'none'; document.getElementById('btn-excel').style.display = 'flex'; document.getElementById('clone-sticky-banner').style.display = 'none'; document.getElementById('propositions-container').style.display = 'flex';
             } else {
                 viewingUserId = userId; document.body.classList.add('mode-vitrine'); const optionList = document.getElementById('view-selector').options;
-                for(let i=0; i<optionList.length; i++) { if(optionList[i].value === userId) { document.getElementById('titre-collection').innerText = optionList[i].text.replace('👀 ', ''); } }
+                for(let i=0; i<optionList.length; i++) { if(optionList[i].value === userId) { document.getElementById('titre-collection').innerText = optionList[i].text.replace('', ''); } }
                 document.getElementById('btn-activer-clone').style.display = 'flex'; document.getElementById('btn-select-all').style.display = 'none'; document.getElementById('btn-excel').style.display = 'none'; document.getElementById('btn-select-all').innerHTML = "✅ Tout cocher"; document.getElementById('propositions-container').style.display = 'none';
             }
             
@@ -1609,7 +1611,7 @@
                 const doublon = mesConcertsPersos.find(myC => myC.Date === c.Date);
                 if (doublon) {
                     let artDoublon = doublon.Artiste_principal || "un artiste";
-                    if (!confirm(`⚠️ Attention : Tu as déjà prévu d'aller voir "${artDoublon}" le ${new Date(c.Date).toLocaleDateString('fr-FR')} (même date).\n\nVeux-tu tout de même pré-remplir le formulaire pour ajouter ce concert à ton agenda ?`)) { return; }
+                    if (!confirm(`Attention : Tu as déjà prévu d'aller voir "${artDoublon}" le ${new Date(c.Date).toLocaleDateString('fr-FR')} (même date).\n\nVeux-tu tout de même pré-remplir le formulaire pour ajouter ce concert à ton agenda ?`)) { return; }
                 }
             }
             
@@ -1626,7 +1628,7 @@
             if(document.getElementById('role')) document.getElementById('role').value = "spectateur";
             
             document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('concert_id').value = ""; 
-            document.getElementById('titre-formulaire-texte').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
+            document.getElementById('titre-formulaire-texte').innerHTML = `Ajouter un concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `Ajouter à mon agenda`; document.getElementById('btn-annuler').style.display = "block"; 
             
             toggleFormConcert(true);
             setTimeout(() => { document.getElementById('titre-formulaire').scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast("Concert prêt à être ajouté ! Vérifie ton prix et valide.", "info"); }, 100);
@@ -1653,27 +1655,27 @@
             });
 
             if (nbDoublons > 0) {
-                if (distinctConcerts.length === 0) { alert(`❌ Annulation : Tous les concerts sélectionnés (${nbDoublons}) sont déjà prévus dans ton agenda (par exemple à la date du ${premierDoublonDate}).`); btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false; return; }
-                if (!confirm(`⚠️ Attention : ${nbDoublons} concert(s) sélectionnés sont déjà prévus dans ton agenda (ex: le ${premierDoublonDate}).\n\nAjouter les ${distinctConcerts.length} NOUVEAUX concerts restants ?`)) { btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false; return; }
+                if (distinctConcerts.length === 0) { alert(`Annulation : Tous les concerts sélectionnés (${nbDoublons}) sont déjà prévus dans ton agenda (par exemple à la date du ${premierDoublonDate}).`); btn.innerHTML = "Valider l'ajout"; btn.disabled = false; return; }
+                if (!confirm(`Attention : ${nbDoublons} concert(s) sélectionnés sont déjà prévus dans ton agenda (ex: le ${premierDoublonDate}).\n\nAjouter les ${distinctConcerts.length} NOUVEAUX concerts restants ?`)) { btn.innerHTML = "Valider l'ajout"; btn.disabled = false; return; }
             } else {
-                if(!confirm(`Tu vas copier ${distinctConcerts.length} concert(s) dans ton agenda.\nLeur statut sera "À acheter". Continuer ?`)) { btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false; return; }
+                if(!confirm(`Tu vas copier ${distinctConcerts.length} concert(s) dans ton agenda.\nLeur statut sera "À acheter". Continuer ?`)) { btn.innerHTML = "Valider l'ajout"; btn.disabled = false; return; }
             }
 
             btn.innerHTML = "⏳ Ajout en cours...";
             const payloads = distinctConcerts.map(c => ({ user_id: currentUser.id, Artiste_principal: c.Artiste_principal, Lieu: c.Lieu, Date: c.Date ? c.Date : null, Prix: c.Prix, Statut_billet: 'a_acheter', Role: 'spectateur', Ticket_PDF: null, Bieres: 0, Coup_de_coeur: false }));
             const { error } = await clientSupabase.from('Concerts').insert(payloads);
             
-            btn.innerHTML = "💾 Valider l'ajout"; btn.disabled = false;
+            btn.innerHTML = "Valider l'ajout"; btn.disabled = false;
             if(error) { showToast("Erreur lors de l'ajout.", "error"); console.error(error); } else { 
-                showToast(`${distinctConcerts.length} concert(s) ajouté(s) ! 🎉`, "success"); await chargerMesConcerts(); document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME"); 
+                showToast(`${distinctConcerts.length} concert(s) ajouté(s) !`, "success"); await chargerMesConcerts(); document.getElementById('view-selector').value = "ME"; changerVueUtilisateur("ME"); 
             }
         }
 
         window.addEventListener('scroll', () => { const btnTop = document.getElementById('btn-top'); if (window.scrollY > 300) { btnTop.style.display = 'flex'; setTimeout(()=>btnTop.style.opacity = '1', 10); } else { btnTop.style.opacity = '0'; setTimeout(()=>btnTop.style.display = 'none', 300); } });
 
         function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container'); const toast = document.createElement('div'); let icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : (type === 'warning' ? '⚠️' : 'ℹ️'));
-            toast.className = `toast ${type}`; toast.textContent = icon + ' ' + message; container.appendChild(toast); setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
+            const container = document.getElementById('toast-container'); const toast = document.createElement('div'); let icon = type === 'success' ? '' : (type === 'error' ? '' : (type === 'warning' ? '' : ''));
+            toast.className = `toast ${type}`; toast.textContent = message; container.appendChild(toast); setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
         const btnTheme = document.getElementById('btn-theme');
@@ -1721,7 +1723,7 @@
                 await chargerProfils(); await chargerAmis();
                 if(viewingUserId === currentUser.id) changerVueUtilisateur("ME");
             }
-            btn.disabled = false; btn.innerHTML = "💾 Enregistrer le profil";
+            btn.disabled = false; btn.innerHTML = "Enregistrer le profil";
         }
 
         window.sauvegarderMdp = async function(e) {
@@ -1740,7 +1742,7 @@
                 showToast("Mot de passe modifié avec succès !", "success"); 
                 document.getElementById('form-param-mdp').reset();
             }
-            btn.disabled = false; btn.innerHTML = "🔒 Changer le mot de passe";
+            btn.disabled = false; btn.innerHTML = "Changer le mot de passe";
         }
 
         function setupAutocompleteForInput(input, list, getData, isMulti) {
@@ -1871,7 +1873,7 @@
             if (isFirstLoad) { const currYear = new Date().getFullYear().toString(); const chk = document.querySelector(`.chk-annee[value="${currYear}"]`); if (chk) chk.checked = true; isFirstLoad = false; }
             afficherConcerts();
             if (currentUser && viewingUserId === currentUser.id) mesConcertsPersos = resultats;
-            if (source === 'cache') showToast("📴 Mode hors-ligne — données du dernier chargement", "warning");
+            if (source === 'cache') showToast("Mode hors-ligne — données du dernier chargement", "warning");
         }
 
         async function chargerConcerts() {
@@ -1907,7 +1909,7 @@
                 tousLesConcerts[index].Note = note;
                 const { error } = await clientSupabase.from('Concerts').update({ Note: note }).eq('id', id);
                 if (error) showToast("Erreur DB : " + error.message, "error");
-                else { showToast(note === 0 ? "Note retirée" : "Note enregistrée ! ⭐", "success"); afficherConcerts(); setTimeout(()=>document.getElementById('details-'+id).classList.add('open'), 50); }
+                else { showToast(note === 0 ? "Note retirée" : "Note enregistrée !", "success"); afficherConcerts(); setTimeout(()=>document.getElementById('details-'+id).classList.add('open'), 50); }
             }
         }
 
@@ -1933,7 +1935,7 @@
                 
                 const { error } = await clientSupabase.from('Concerts').update({ Notes_artistes: notesJson, Note: moyenne }).eq('id', id);
                 if (error) showToast("Erreur DB : " + error.message, "error");
-                else { showToast(note === 0 ? `Note retirée pour ${artiste}` : `Note de ${String(note).replace('.',',')} pour ${artiste} enregistrée ! ⭐`, "success"); afficherConcerts(); setTimeout(()=>document.getElementById('details-'+id).classList.add('open'), 50); }
+                else { showToast(note === 0 ? `Note retirée pour ${artiste}` : `Note de ${String(note).replace('.',',')} pour ${artiste} enregistrée !`, "success"); afficherConcerts(); setTimeout(()=>document.getElementById('details-'+id).classList.add('open'), 50); }
             }
         }
         
@@ -1944,7 +1946,7 @@
                 tousLesConcerts[index].Coup_de_coeur = newVal;
                 const { error } = await clientSupabase.from('Concerts').update({ Coup_de_coeur: newVal }).eq('id', id);
                 if (error) showToast("Erreur DB : " + error.message, "error");
-                else { showToast(newVal ? "Coup de cœur ajouté ! 💖" : "Coup de cœur retiré.", "success"); afficherConcerts(); setTimeout(()=>document.getElementById('details-'+id).classList.add('open'), 50); }
+                else { showToast(newVal ? "Coup de cœur ajouté !" : "Coup de cœur retiré.", "success"); afficherConcerts(); setTimeout(()=>document.getElementById('details-'+id).classList.add('open'), 50); }
             }
         }
 
@@ -1963,7 +1965,7 @@
                 tousLesConcerts[index].Commentaire = comm;
                 const { error } = await clientSupabase.from('Concerts').update({ Commentaire: comm }).eq('id', id);
                 if (error) showToast("Erreur DB : " + error.message, "error");
-                else { showToast("Souvenir sauvegardé ! 📝", "success"); afficherConcerts(); setTimeout(()=>document.getElementById('details-'+id).classList.add('open'), 50); }
+                else { showToast("Souvenir sauvegardé !", "success"); afficherConcerts(); setTimeout(()=>document.getElementById('details-'+id).classList.add('open'), 50); }
             }
         }
 
@@ -1974,7 +1976,7 @@
             if(index !== -1) {
                 tousLesConcerts[index].Bieres = newCount; afficherConcerts(); 
                 const { error } = await clientSupabase.from('Concerts').update({ Bieres: newCount }).eq('id', id);
-                if (error) { showToast("Erreur DB : " + error.message, "error"); tousLesConcerts[index].Bieres = currentCount; afficherConcerts(); } else if (delta > 0) { showToast("Santé ! 🍻", "success"); }
+                if (error) { showToast("Erreur DB : " + error.message, "error"); tousLesConcerts[index].Bieres = currentCount; afficherConcerts(); } else if (delta > 0) { showToast("Santé !", "success"); }
             }
         }
 
@@ -2011,10 +2013,10 @@
             const artisteHTML = String(conflit.concert.Artiste_principal || "un artiste").replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const lieuHTML = String(conflit.concert.Lieu || "").replace(/🎪/g, '').trim().replace(/</g, '&lt;').replace(/>/g, '&gt;');
             if (conflit.type === 'doublon') {
-                alertDiv.innerHTML = `🚨 Doublon probable : tu as déjà <b>${artisteHTML}</b>${lieuHTML ? ` @ <b>${lieuHTML}</b>` : ''} à cette date.`;
+                alertDiv.innerHTML = `Doublon probable : tu as déjà <b>${artisteHTML}</b>${lieuHTML ? ` @ <b>${lieuHTML}</b>` : ''} à cette date.`;
                 alertDiv.style.background = 'color-mix(in srgb, var(--danger) 15%, transparent)';
             } else {
-                alertDiv.innerHTML = `⚠️ Tu as déjà prévu d'aller voir <b>${artisteHTML}</b> ce jour-là.`;
+                alertDiv.innerHTML = `Tu as déjà prévu d'aller voir <b>${artisteHTML}</b> ce jour-là.`;
                 alertDiv.style.background = 'color-mix(in srgb, var(--danger) 10%, transparent)';
             }
             alertDiv.style.display = 'block';
@@ -2089,10 +2091,10 @@
                 
                 let dateIndex = meteoData.daily.time.indexOf(cProchain.Date);
                 if(dateIndex !== -1) {
-                    let tMax = meteoData.daily.temperature_2m_max[dateIndex]; let code = meteoData.daily.weathercode[dateIndex]; let icon = "🌤️"; let desc = "Clément";
-                    if(code <= 1) { icon = "☀️"; desc = "Ensoleillé"; } else if(code <= 3) { icon = "⛅"; desc = "Nuageux"; } else if(code <= 49) { icon = "🌫️"; desc = "Brouillard"; } else if(code <= 69) { icon = "🌧️"; desc = "Pluie"; } else if(code <= 79) { icon = "❄️"; desc = "Neige"; } else { icon = "⛈️"; desc = "Averses"; }
+                    let tMax = meteoData.daily.temperature_2m_max[dateIndex]; let code = meteoData.daily.weathercode[dateIndex]; let icon = ""; let desc = "Clément";
+                    if(code <= 1) { icon = ""; desc = "Ensoleillé"; } else if(code <= 3) { icon = ""; desc = "Nuageux"; } else if(code <= 49) { icon = ""; desc = "Brouillard"; } else if(code <= 69) { icon = ""; desc = "Pluie"; } else if(code <= 79) { icon = ""; desc = "Neige"; } else { icon = ""; desc = "Averses"; }
                     lastFetchedMeteoConcertId = cProchain.id;
-                    lastFetchedMeteoHTML = `<div class="banniere banniere-meteo">${icon} Point Météo pour ${lieuPropre} (J-${diffJours}) : Temps ${desc} avec ${tMax}°C attendus !</div>`;
+                    lastFetchedMeteoHTML = `<div class="banniere banniere-meteo">Point météo pour ${lieuPropre} (J-${diffJours}) : Temps ${desc} avec ${tMax}°C attendus !</div>`;
                     document.getElementById('meteo-container').innerHTML = lastFetchedMeteoHTML;
                 }
             } catch(e) {}
@@ -2132,7 +2134,7 @@
                 lastFetchedTeamConcertId = cProchain.id; lastFetchedTeamHTML = "";
                 if (participants.length > 0 || interesses.length > 0) {
                     let teamInfo = `<div style="font-size:13px; font-weight:normal; background:rgba(0,0,0,0.15); padding:6px 12px; border-radius:8px; display:inline-block; margin-top:5px;">`;
-                    if (participants.length > 0) teamInfo += `✅ <b>Présents :</b> ${participants.join(', ')} `;
+                    if (participants.length > 0) teamInfo += `<b>Présents :</b> ${participants.join(', ')} `;
                     if (interesses.length > 0) { if (participants.length > 0) teamInfo += `  |  `; teamInfo += `⏳ <b>Intéressés :</b> ${interesses.join(', ')}`; }
                     teamInfo += `</div>`;
                     lastFetchedTeamHTML = teamInfo;
@@ -2401,9 +2403,9 @@
                 document.getElementById('is_prive').checked = c.Prive === true;
                 
                 document.getElementById('ticket_file').value = ""; document.getElementById('ticket_url_existant').value = c.Ticket_PDF || "";
-                if(c.Ticket_PDF) { document.getElementById('ticket_nom_existant_container').style.display = "flex"; document.getElementById('ticket_nom_existant').innerHTML = "✅ Billet enregistré"; } 
+                if(c.Ticket_PDF) { document.getElementById('ticket_nom_existant_container').style.display = "flex"; document.getElementById('ticket_nom_existant').innerHTML = "Billet enregistré"; } 
                 else { document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('ticket_nom_existant').innerHTML = ""; }
-                document.getElementById('titre-formulaire-texte').innerHTML = `✏️ Modifier le concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Enregistrer les modifications`; document.getElementById('btn-annuler').style.display = "block"; document.getElementById('alerte-conflit').style.display = 'none'; 
+                document.getElementById('titre-formulaire-texte').innerHTML = `Modifier le concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `Enregistrer les modifications`; document.getElementById('btn-annuler').style.display = "block"; document.getElementById('alerte-conflit').style.display = 'none'; 
                 toggleFormConcert(true);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
@@ -2423,7 +2425,7 @@
 
         window.annulerEdition = function() {
             document.getElementById('concertForm').reset(); document.getElementById('concert_id').value = ""; document.getElementById('ticket_url_existant').value = ""; document.getElementById('ticket_nom_existant_container').style.display = "none"; document.getElementById('alerte-conflit').style.display = 'none'; setArtistesFromString("");
-            document.getElementById('titre-formulaire-texte').innerHTML = `🎸 Ajouter un Concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `💾 Enregistrer le concert`; document.getElementById('btn-annuler').style.display = "none"; document.getElementById('zone-agenda').innerHTML = ""; 
+            document.getElementById('titre-formulaire-texte').innerHTML = `Ajouter un concert`; document.getElementById('btn-submit').querySelector('#btn-text').textContent = `Enregistrer le concert`; document.getElementById('btn-annuler').style.display = "none"; document.getElementById('zone-agenda').innerHTML = ""; 
             toggleFormConcert(false);
         }
 
@@ -2469,8 +2471,8 @@
             
             btnText.style.display = 'inline'; btnLoader.style.display = 'none'; btnSubmit.disabled = false;
             if (err) { showToast(`Erreur DB : ${err.message}`, "error"); } else {
-                showToast(idEd ? "Modifié avec succès ! 🎉" : "Ajouté avec succès ! 🎉"); let agendaBtnHTML = "";
-                if (vDt !== "") { let d = vDt.replace(/-/g, ''); let artStr = document.getElementById('artiste_principal').value || "Concert"; let titre = encodeURIComponent("Concert : " + artStr); let lieuCal = encodeURIComponent(document.getElementById('lieu').value); let urlCal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titre}&dates=${d}T200000/${d}T233000&location=${lieuCal}`; agendaBtnHTML = `<a href="${urlCal}" target="_blank" rel="noopener" class="btn-google" style="margin-top: 15px;">📅 Ajouter à Google Agenda</a>`; }
+                showToast(idEd ? "Modifié avec succès !" : "Ajouté avec succès !"); let agendaBtnHTML = "";
+                if (vDt !== "") { let d = vDt.replace(/-/g, ''); let artStr = document.getElementById('artiste_principal').value || "Concert"; let titre = encodeURIComponent("Concert : " + artStr); let lieuCal = encodeURIComponent(document.getElementById('lieu').value); let urlCal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titre}&dates=${d}T200000/${d}T233000&location=${lieuCal}`; agendaBtnHTML = `<a href="${urlCal}" target="_blank" rel="noopener" class="btn-google" style="margin-top: 15px;">Ajouter à Google Agenda</a>`; }
                 annulerEdition(); chargerConcerts(); document.getElementById('zone-agenda').innerHTML = agendaBtnHTML;
             }
         });
@@ -2505,7 +2507,7 @@
                     const du = fr(a.Date_achat), au = fr(a.Date_fin);
                     const validite = du && au ? `Du ${du} au ${au}` : (au ? `Jusqu'au ${au}` : (du ? `Achetée le ${du}` : ''));
                     const num = a.Numero_abonne ? `<span class="abo-sous">N° <span class="abo-num">${esc(String(a.Numero_abonne))}</span></span>` : '';
-                    const actions = id ? `<div class="ligne-actions admin-only abo-actions"><button type="button" class="btn-txt" onclick="preparerEditionAbo('${id}')">Modifier</button><button type="button" class="btn-txt discret" onclick="supprimerAbo('${id}')">Supprimer</button></div>` : '';
+                    const actions = id ? `<div class="ligne-actions admin-only abo-actions"><button type="button" class="btn-txt btn-fort" onclick="preparerEditionAbo('${id}')">Modifier</button><button type="button" class="btn-txt discret" onclick="supprimerAbo('${id}')">Supprimer</button></div>` : '';
                     return `<div class="abo${active ? '' : ' abo-passee'}"><div class="abo-ligne"><div class="abo-corps"><span class="abo-salle">${esc(String(a.Salle || 'Salle'))}</span>${num}${validite ? `<span class="abo-sous">${esc(validite)}</span>` : ''}</div><div class="abo-droite">${etat}${prixDe(a) > 0 ? `<b class="abo-prix">${esc(fmtEuro(prixDe(a)))}</b>` : ''}</div></div>${actions}</div>`;
                 };
                 let html = actives.map(a => ligne(a, true)).join('');
@@ -2808,7 +2810,7 @@
                         programmerRenouvellementSpotify();
                         
                         window.history.replaceState({}, document.title, window.location.pathname);
-                        showToast("Spotify connecté ! 🎧", "success");
+                        showToast("Spotify connecté !", "success");
                     } else {
                         showToast("Erreur de connexion Spotify", "error");
                     }
@@ -2821,7 +2823,7 @@
             { const b = document.getElementById('btn-spotify-accueil'); if (b) b.hidden = !!spotifyToken || !spotifyAutorise(); }
             if (spotifyToken) {
                 const btn = document.getElementById('btn-spotify-connect');
-                if(btn) { btn.innerHTML = '✅ Spotify Connecté'; btn.style.background = 'transparent'; btn.style.border = '1px solid #1ed760'; btn.style.color = '#1ed760'; btn.style.pointerEvents = 'none'; }
+                if(btn) { btn.innerHTML = 'Spotify Connecté'; btn.style.background = 'transparent'; btn.style.border = '1px solid #1ed760'; btn.style.color = '#1ed760'; btn.style.pointerEvents = 'none'; }
                 
                 const btnSA = document.getElementById('btn-spotify-accueil'); if (btnSA) btnSA.hidden = true;
                 const btnPA = document.getElementById('btn-playlist-annee');
@@ -2896,8 +2898,8 @@
             const btnOn = document.getElementById('btn-activer-push');
             const btnOff = document.getElementById('btn-desactiver-push');
             if (!zone || !btnOn || !btnOff) return;
-            if (!pushSupporte()) { zone.innerHTML = '⚠️ Ton navigateur ne supporte pas les notifications push.'; btnOn.disabled = true; return; }
-            if (VAPID_PUBLIC_KEY === "REMPLACE_PAR_TA_CLE_PUBLIQUE_VAPID") { zone.innerHTML = '⚠️ Clé VAPID pas encore configurée (voir <code>supabase/README.md</code>).'; btnOn.disabled = true; return; }
+            if (!pushSupporte()) { zone.innerHTML = 'Ton navigateur ne supporte pas les notifications push.'; btnOn.disabled = true; return; }
+            if (VAPID_PUBLIC_KEY === "REMPLACE_PAR_TA_CLE_PUBLIQUE_VAPID") { zone.innerHTML = 'Clé VAPID pas encore configurée (voir <code>supabase/README.md</code>).'; btnOn.disabled = true; return; }
             try {
                 const reg = await navigator.serviceWorker.ready;
                 const sub = await reg.pushManager.getSubscription();
@@ -2908,7 +2910,7 @@
                     zone.innerHTML = Notification.permission === 'denied' ? 'Notifications bloquées dans les réglages du téléphone pour cette appli.' : 'Notifications désactivées sur cet appareil.';
                     btnOn.style.display = 'block'; btnOff.style.display = 'none';
                 }
-            } catch(e) { zone.innerHTML = '⚠️ ' + e.message; }
+            } catch(e) { zone.innerHTML = '' + e.message; }
         }
 
         // À chaque ouverture : si l'autorisation est déjà donnée, l'abonnement est recréé au besoin et renvoyé au serveur
@@ -2977,7 +2979,7 @@
         window.normaliserArtistesViaSpotify = async function() {
             const zone = document.getElementById('zone-normalisation-spotify');
             const btn = document.getElementById('btn-normaliser-spotify');
-            if (!spotifyToken) { zone.innerHTML = '<span style="color:var(--danger);">❌ Connecte-toi d\'abord à Spotify (onglet Concerts → bouton "🎧 Lier Spotify").</span>'; return; }
+            if (!spotifyToken) { zone.innerHTML = '<span style="color:var(--danger);">Connecte-toi d\'abord à Spotify (onglet Concerts → bouton "Lier Spotify").</span>'; return; }
 
             const concertsAvecArtistes = tousLesConcerts.filter(c => c.user_id === currentUser.id && c.Artiste_principal && String(c.Artiste_principal).trim() !== "");
             if (concertsAvecArtistes.length === 0) { zone.innerHTML = '<span style="color:var(--text-faded);">Aucun concert à normaliser.</span>'; return; }
@@ -3014,7 +3016,7 @@
             }
 
             btn.disabled = false; btn.innerHTML = labelOrig;
-            zone.innerHTML = `<div style="background:color-mix(in srgb, var(--ink) 10%, transparent); border:1px solid color-mix(in srgb, var(--ink) 40%, transparent); padding:12px; border-radius:8px; color:var(--text-main);">✅ Terminé : <b>${modifies}</b> concert(s) mis à jour, ${inchanges} déjà OK${erreurs ? `, <span style="color:var(--danger);">${erreurs} erreur(s)</span>` : ''}.</div>`;
+            zone.innerHTML = `<div style="background:color-mix(in srgb, var(--ink) 10%, transparent); border:1px solid color-mix(in srgb, var(--ink) 40%, transparent); padding:12px; border-radius:8px; color:var(--text-main);">Terminé : <b>${modifies}</b> concert(s) mis à jour, ${inchanges} déjà OK${erreurs ? `, <span style="color:var(--danger);">${erreurs} erreur(s)</span>` : ''}.</div>`;
             showToast(`${modifies} concert(s) normalisé(s)`, modifies > 0 ? "success" : "info");
             if (modifies > 0) { mettreAJourMenusFiltres(); afficherConcerts(); }
         }
@@ -3161,7 +3163,7 @@
                         });
                     }
                 }
-                showToast(`Playlist « ${nomPlaylist} » créée ! 🎧`, "success");
+                showToast(`Playlist « ${nomPlaylist} » créée !`, "success");
                 setTimeout(() => { window.open(OPEN_URL + '/playlist/' + playlistId, '_blank'); }, 1200);
             } catch(err) { console.error(err); showToast("Erreur lors de la création.", "error"); }
             btn.innerHTML = originalText; btn.disabled = false;
@@ -3604,7 +3606,7 @@
             }
             let a = [];
             if (proprio) {
-                a.push(`<button type="button" class="btn-txt" onclick="preparerEdition('${id}')">Modifier</button>`);
+                a.push(`<button type="button" class="btn-txt btn-fort" onclick="preparerEdition('${id}')">Modifier</button>`);
                 if (c.Ticket_PDF) a.push(`<button type="button" class="btn-txt" onclick="voirBilletDe('${id}')">Voir mon billet</button>`);
                 if (!passe && c.Statut_billet === 'a_acheter') a.push(`<button type="button" class="btn-txt" onclick="trouverBillets('${id}')">Trouver des billets</button>`);
                 if (!passe) a.push(`<button type="button" class="btn-txt" onclick="ouvrirModalProposition('${id}')">Proposer à un ami</button>`);
@@ -4315,6 +4317,9 @@
             const carte = document.querySelector('#tab-concerts > .form-carte'); const ouvert = el('form-container-wrapper').style.display !== 'none';
             if (carte) { carte.classList.toggle('ouvert', ouvert); if (ouvert) setTimeout(() => carte.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60); }
         };
+        // Modifier depuis l'accueil (ou un autre onglet) : on passe d'abord sur Mon agenda, où se trouve le formulaire
+        const _preparerEditionBase = window.preparerEdition;
+        window.preparerEdition = async function(id) { if (ongletActifId() !== 'tab-concerts' || chezUnAmi()) await allerA('tab-concerts'); _preparerEditionBase(id); };
         window.ouvrirAjoutConcert = async function() { await allerA('tab-concerts'); if (el('concert_id').value) annulerEdition(); const z = el('choix-tarifs'); if (z) { z.hidden = true; z.innerHTML = ''; } toggleFormConcert(true); };
         window.allerAjoutAmi = function() { const b = el('bloc-ajout-ami'); if (b) b.scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(() => { const i = el('recherche-ami'); if (i) i.focus(); }, 300); };
         function rafraichirVues() {
